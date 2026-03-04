@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque | Busca Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:    #27367D;
+      --red:     #DC2627;
+      --white:   #FDFDFB;
+      --deep:    #111d45;
+      --muted:   #777;
+      --border:  #e2e2df;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Barlow', sans-serif; background: #f5f5f2; color: var(--blue); overflow-x: hidden; }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      height: 68px; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 2.5rem;
+      background: var(--blue); border-bottom: 2.5px solid var(--red);
+      transition: background 0.3s;
+    }
+    header.scrolled { background: rgba(17,29,69,0.96); backdrop-filter: blur(14px); }
+
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-img { height: 44px; object-fit: contain; }
+    .logo-flag { width: 30px; height: 30px; flex-shrink: 0; }
+    .logo-txt { font-family: 'Bebas Neue', sans-serif; font-size: 1.85rem; line-height: 1; letter-spacing: 0.04em; }
+    .logo-txt .b { color: var(--white); }
+    .logo-txt .r { color: var(--red); }
+
+    nav { display: flex; align-items: center; gap: 2rem; }
+    nav a {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.88rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(253,253,251,0.7); text-decoration: none;
+      position: relative; padding-bottom: 3px; transition: color 0.2s;
+    }
+    nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--red); transition: width 0.25s; }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after, nav a.active::after { width: 100%; }
+    nav a.active { color: var(--white); }
+
+    .header-phone {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.88rem; letter-spacing: 0.08em; color: var(--white);
+      background: var(--red); padding: 9px 22px; text-decoration: none;
+      clip-path: polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%);
+      transition: background 0.2s; display: flex; align-items: center; gap: 7px;
+    }
+    .header-phone:hover { background: #ff2f2f; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 1px; }
+    .mobile-nav{display:none;position:fixed;inset:68px 0 0;background:var(--deep);flex-direction:column;padding:2rem;z-index:190}
+    .mobile-nav.open{display:flex}
+    .mobile-nav a{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07);transition:color .2s}
+    .mobile-nav a:hover{color:var(--red)}
+
+    /* ── PAGE BANNER ── */
+    .page-banner {
+      background: var(--blue); padding: 3.5rem 3vw 3rem;
+      position: relative; overflow: hidden;
+    }
+    .page-banner::before {
+      content: 'ESTOQUE';
+      position: absolute; font-family: 'Bebas Neue', sans-serif;
+      font-size: 22vw; color: rgba(255,255,255,0.03);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none; white-space: nowrap;
+    }
+    .banner-stripe {
+      position: absolute; top: 0; bottom: 0; right: 30%;
+      width: 4px; background: var(--red); transform: skewX(-7deg);
+    }
+    .banner-stripe-2 {
+      position: absolute; top: 0; bottom: 0; right: calc(30% + 12px);
+      width: 1.5px; background: var(--red); opacity: 0.4; transform: skewX(-7deg);
+    }
+    .banner-inner { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+    .breadcrumb {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.45); margin-bottom: 0.75rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .breadcrumb a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--red); }
+    .breadcrumb span { color: var(--red); }
+    .banner-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.9; color: var(--white);
+    }
+    .banner-title em { color: var(--red); font-style: normal; }
+
+    /* ── FILTERS ── */
+    .filters-bar {
+      position: sticky; top: 68px; z-index: 100;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 1rem 3vw; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .filters-inner { max-width: 1400px; margin: 0 auto; }
+    .filters-row {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+    }
+    .search-wrap {
+      position: relative; flex: 1; min-width: 200px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: #999; pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 38px;
+      border: 1.5px solid var(--border); background: #f8f8f6;
+      font-family: 'Barlow', sans-serif; font-size: 0.9rem; color: var(--blue);
+      outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--blue); background: var(--white); }
+    .filter-select {
+      padding: 9px 32px 9px 12px; border: 1.5px solid var(--border);
+      background: #f8f8f6 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23777' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.88rem;
+      font-weight: 600; letter-spacing: 0.05em; color: var(--blue);
+      outline: none; appearance: none; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .filter-select:focus { border-color: var(--blue); background-color: var(--white); }
+
+    .filters-meta {
+      margin-top: 0.6rem;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem;
+      color: #888;
+    }
+    .results-count strong { color: var(--blue); }
+    .clear-filters {
+      background: none; border: none; cursor: pointer; color: var(--red);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem;
+      font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      display: none;
+    }
+    .clear-filters.visible { display: block; }
+
+    /* ── PRODUCTS GRID ── */
+    .products-section { padding: 3rem 3vw 5rem; max-width: 1400px; margin: 0 auto; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* ── PRODUCT CARD ── */
+    .moto-card {
+      background: var(--white); overflow: hidden; cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative; display: flex; flex-direction: column;
+      text-decoration: none; color: inherit;
+    }
+    .moto-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: var(--red);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .moto-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(39,54,125,0.12); }
+    .moto-card:hover::after { transform: scaleX(1); }
+
+    .card-img {
+      width: 100%; height: 210px; overflow: hidden;
+      background: #f0f0ee; position: relative;
+    }
+    .card-img img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .moto-card:hover .card-img img { transform: scale(1.04); }
+    .card-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card-badges {
+      position: absolute; top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .badge {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 3px 8px; display: inline-block;
+    }
+    .badge-nova    { background: #27a745; color: #fff; }
+    .badge-usada   { background: #e67e22; color: #fff; }
+    .badge-dest    { background: var(--red); color: #fff;
+      clip-path: polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%); }
+
+    .card-cat {
+      position: absolute; bottom: 12px; right: 12px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--white); background: rgba(39,54,125,0.85); padding: 3px 8px;
+    }
+
+    .card-body {
+      padding: 1.4rem 1.4rem 1.25rem; display: flex;
+      flex-direction: column; gap: 0.35rem; flex: 1;
+    }
+    .card-brand {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--red);
+    }
+    .card-name {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.65rem;
+      line-height: 1; color: var(--blue);
+    }
+    .card-specs {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.83rem;
+      color: #999; margin-top: 2px;
+    }
+    .card-desc {
+      font-size: 0.85rem; color: #888; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+      margin-top: 4px;
+    }
+    .card-footer {
+      margin-top: auto; padding-top: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border);
+    }
+    .card-price { font-family: 'Bebas Neue', sans-serif; font-size: 1.65rem; color: var(--blue); }
+    .card-price small {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem;
+      color: #aaa; display: block; line-height: 1.2;
+    }
+    .card-price .original {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem;
+      color: #bbb; text-decoration: line-through; display: block;
+    }
+    .card-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--white); background: var(--blue);
+      padding: 9px 16px; text-decoration: none;
+      clip-path: polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);
+      transition: background 0.2s;
+    }
+    .card-cta:hover { background: var(--red); }
+
+    /* ── STATES ── */
+    .loading-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+    .skel-card { background: var(--white); overflow: hidden; }
+    .skel-img { height: 210px; background: linear-gradient(90deg,#f0f0ee 25%,#e4e4e1 50%,#f0f0ee 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    .skel-body { padding: 1.4rem; }
+    .skel-line { height: 12px; background: linear-gradient(90deg,#f0f0ee 25%,#e4e4e1 50%,#f0f0ee 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; margin-bottom: 10px; border-radius: 2px; }
+    .skel-line.w60 { width: 60%; }
+    .skel-line.w40 { width: 40%; }
+    .skel-line.w80 { width: 80%; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .empty-state {
+      text-align: center; padding: 5rem 2rem; grid-column: 1/-1;
+    }
+    .empty-state svg { margin-bottom: 1.5rem; opacity: 0.25; }
+    .empty-state h3 { font-family: 'Bebas Neue',sans-serif; font-size: 2rem; color: var(--blue); margin-bottom: 0.5rem; }
+    .empty-state p { color: #999; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .btn-red {
+      font-family: 'Barlow Condensed',sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--white); background: var(--red); border: none;
+      padding: 12px 28px; cursor: pointer; display: inline-block;
+      clip-path: polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%);
+      transition: background 0.2s;
+    }
+    .btn-red:hover { background: #ff2f2f; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--deep); padding: 4rem 3vw 2rem; position: relative; margin-top: 3rem; }
+    footer::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg,var(--blue),var(--red),var(--blue)); }
+    .footer-grid { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1.5fr; gap:4rem; padding-bottom:3rem; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .footer-logo-a { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; text-decoration:none; display:inline-block; margin-bottom:0.75rem; }
+    .footer-logo-a .fb { color:var(--white); }
+    .footer-logo-a .fr { color:var(--red); }
+    .footer-logo-img { height: 48px; object-fit: contain; margin-bottom: 0.75rem; display: block; }
+    .footer-about { font-size:.88rem; color:rgba(255,255,255,0.4); line-height:1.7; margin-bottom:1.5rem; }
+    .socials { display:flex; gap:10px; }
+    .soc { width:36px; height:36px; background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.55); cursor:pointer; transition:background 0.2s,color 0.2s; text-decoration:none; }
+    .soc:hover { background:var(--red); color:var(--white); }
+    .fcol-h { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:1.1rem; }
+    .flinks { list-style:none; display:flex; flex-direction:column; gap:8px; }
+    .flinks a { font-family:'Barlow Condensed',sans-serif; font-size:.95rem; color:rgba(255,255,255,0.5); text-decoration:none; display:flex; align-items:center; gap:8px; transition:color 0.2s; }
+    .flinks a::before { content:''; width:4px; height:4px; background:var(--red); border-radius:50%; flex-shrink:0; }
+    .flinks a:hover { color:var(--white); }
+    .fcontact { display:flex; gap:10px; margin-bottom:1rem; align-items:flex-start; }
+    .fcontact-ico { width:16px; height:16px; color:var(--red); flex-shrink:0; margin-top:3px; }
+    .fcontact-txt { font-family:'Barlow Condensed',sans-serif; font-size:.9rem; color:rgba(255,255,255,0.5); line-height:1.5; }
+    .fcontact-txt strong { color:rgba(255,255,255,0.8); display:block; }
+    .footer-bottom { max-width:1400px; margin:2rem auto 0; display:flex; align-items:center; justify-content:space-between; }
+    .fcopy { font-family:'Barlow Condensed',sans-serif; font-size:.78rem; color:rgba(255,255,255,0.25); }
+    .fcopy span { color:var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1100px){ .products-grid,.loading-grid{grid-template-columns:repeat(2,1fr);} .footer-grid{grid-template-columns:1fr 1fr;gap:2.5rem;} }
+    @media(max-width:768px){
+      nav,.header-phone{display:none;} .hamburger{display:flex;}
+      .products-grid,.loading-grid{grid-template-columns:1fr;}
+      .filters-row{flex-direction:column;}
+      .search-wrap,.filter-select{width:100%;}
+      .footer-grid{grid-template-columns:1fr;gap:2rem;}
+      .footer-bottom{flex-direction:column;gap:.5rem;text-align:center;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="site-header">
+    <a href="index.html" class="logo" id="header-logo">
+      <svg class="logo-flag" viewBox="0 0 30 30" fill="none">
+        <rect x="3" y="3" width="6" height="6" fill="#DC2627"/>
+        <rect x="9" y="3" width="6" height="6" fill="#FDFDFB" opacity=".7"/>
+        <rect x="15" y="3" width="6" height="6" fill="#DC2627"/>
+        <rect x="3" y="9" width="6" height="6" fill="#FDFDFB" opacity=".7"/>
+        <rect x="9" y="9" width="6" height="6" fill="#DC2627"/>
+        <rect x="15" y="9" width="6" height="6" fill="#FDFDFB" opacity=".7"/>
+        <rect x="3" y="15" width="6" height="6" fill="#DC2627"/>
+        <rect x="9" y="15" width="6" height="6" fill="#FDFDFB" opacity=".7"/>
+        <rect x="15" y="15" width="6" height="6" fill="#DC2627"/>
+        <line x1="3" y1="3" x2="3" y2="27" stroke="#FDFDFB" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span class="logo-txt"><span class="b">BUSCA</span><span class="r">&nbsp;RACING</span></span>
+    </a>
+    <nav>
+      <a href="produtos.html" class="active">Motos</a>
+      <a href="acessorios.html">Acessórios</a>
+      <a href="pecas.html">Peças</a>
+      <a href="venda-sua-moto.html">Venda sua Moto</a>
+      <a href="contato.html">Contato</a>
+    </nav>
+    <a href="https://wa.me/5511993507432" target="_blank" class="header-phone">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      (11) 99350-7432
+    </a>
+    <div class="hamburger" onclick="document.getElementById('mob-nav').classList.toggle('open')"><span></span><span></span><span></span></div>
+  </header>
+  <div class="mobile-nav" id="mob-nav">
+    <a href="produtos.html">Motos</a><a href="acessorios.html">Acessórios</a><a href="pecas.html">Peças</a><a href="venda-sua-moto.html">Venda sua Moto</a><a href="contato.html">Contato</a>
+  </div>
+
+  <!-- PAGE BANNER -->
+  <div class="page-banner">
+    <div class="banner-stripe"></div>
+    <div class="banner-stripe-2"></div>
+    <div class="banner-inner">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span>›</span>
+        <span style="color:rgba(255,255,255,0.7)">Estoque</span>
+      </div>
+      <h1 class="banner-title">NOSSO<br><em>ESTOQUE</em></h1>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <div class="filters-inner">
+      <div class="filters-row">
+        <div class="search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input class="search-input" type="text" id="search" placeholder="Buscar por modelo, marca..." autocomplete="off">
+        </div>
+        <select class="filter-select" id="f-categoria">
+          <option value="">Todas as categorias</option>
+          <option value="motos-rua">Motos de Rua</option>
+          <option value="offroad">Offroad</option>
+          <option value="quadriciclos">Quadriciclos</option>
+          <option value="infantil">Infantil</option>
+          <option value="outros">Outros</option>
+        </select>
+        <select class="filter-select" id="f-marca">
+          <option value="">Todas as marcas</option>
+        </select>
+        <select class="filter-select" id="f-condicao">
+          <option value="">Nova ou Usada</option>
+          <option value="nova">Nova</option>
+          <option value="usada">Usada</option>
+        </select>
+        <select class="filter-select" id="f-ordem">
+          <option value="relevancia">Relevância</option>
+          <option value="menor-preco">Menor Preço</option>
+          <option value="maior-preco">Maior Preço</option>
+          <option value="mais-novo">Mais Novo</option>
+        </select>
+      </div>
+      <div class="filters-meta">
+        <span class="results-count" id="results-count"></span>
+        <button class="clear-filters" id="clear-filters" onclick="clearFilters()">✕ Limpar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="products-section">
+    <div id="products-container">
+      <!-- Skeleton loading -->
+      <div class="loading-grid" id="skeleton">
+        ${[1,2,3,4,5,6].map(() => `
+        <div class="skel-card">
+          <div class="skel-img"></div>
+          <div class="skel-body">
+            <div class="skel-line w40"></div>
+            <div class="skel-line w80"></div>
+            <div class="skel-line w60"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="products-grid" id="grid" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <a href="index.html" class="footer-logo-a" id="footer-logo">
+          <span class="fb">BUSCA</span><span class="fr">&nbsp;RACING</span>
+        </a>
+        <p class="footer-about">A maior loja multi marcas de motos da região. Motos de rua, offroad, quadriciclos e veículos infantis.</p>
+        <div class="socials">
+          <a href="https://instagram.com/buscaracing/" target="_blank" class="soc" title="Instagram">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          </a>
+          <a href="https://facebook.com/profile.php?id=61556789052604" target="_blank" class="soc" title="Facebook">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="https://youtube.com/@BuscaRacing" target="_blank" class="soc" title="YouTube">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z" stroke="currentColor" stroke-width="2"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor"/></svg>
+          </a>
+          <a href="https://wa.me/5511993507432" target="_blank" class="soc" title="WhatsApp">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <h4 class="fcol-h">Categorias</h4>
+        <ul class="flinks">
+          <li><a href="produtos.html?categoria=motos-rua">Motos de Rua</a></li>
+          <li><a href="produtos.html?categoria=offroad">Offroad</a></li>
+          <li><a href="produtos.html?categoria=quadriciclos">Quadriciclos</a></li>
+          <li><a href="produtos.html?categoria=infantil">Infantil</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="fcol-h">Institucional</h4>
+        <ul class="flinks">
+          <li><a href="index.html">Sobre a Loja</a></li>
+          <li><a href="#">Financiamento</a></li>
+          <li><a href="#">Revisões</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="fcol-h">Contato</h4>
+        <div class="fcontact">
+          <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>
+          <div class="fcontact-txt"><strong>Endereço</strong>Rua Conceição Borreiro Peres, 64<br>Caieiras – SP</div>
+        </div>
+        <div class="fcontact">
+          <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.46 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2"/></svg>
+          <div class="fcontact-txt"><strong>Telefone / WhatsApp</strong>(11) 99350-7432</div>
+        </div>
+        <div class="fcontact">
+          <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/></svg>
+          <div class="fcontact-txt"><strong>E-mail</strong>contato@buscaracing.com</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="fcopy">© 2026 <span>Busca Racing</span>. Todos os direitos reservados.</p>
+      <p class="fcopy">Caieiras – SP · <span>(11) 99350-7432</span></p>
+    </div>
+  </footer>
+
+  <script>
+    // ── DATA ──────────────────────────────────────────────────────────────
+    let allMotos = [];
+    const CATS = {
+      'motos-rua':   'Motos de Rua',
+      'offroad':     'Offroad',
+      'quadriciclos':'Quadriciclos',
+      'infantil':    'Infantil',
+      'outros':      'Outros'
+    };
+    const WA = '5511993507432';
+
+    // ── INIT ──────────────────────────────────────────────────────────────
+    async function init() {
+      loadLogo();
+      await loadMarcas();
+      await loadMotos();
+      applyURLParams();
+      setupFilters();
+    }
+
+    async function loadLogo() {
+      try {
+        const { logo } = await fetch('/api/config/logo').then(r => r.json());
+        if (logo) {
+          document.querySelectorAll('#header-logo, #footer-logo').forEach(el => {
+            if (el.id === 'header-logo') {
+              el.innerHTML = `<img src="${logo}" alt="Busca Racing" class="logo-img">`;
+            } else {
+              el.innerHTML = `<img src="${logo}" alt="Busca Racing" class="footer-logo-img">`;
+            }
+          });
+        }
+      } catch {}
+    }
+
+    async function loadMarcas() {
+      try {
+        const marcas = await fetch('/api/marcas').then(r => r.json());
+        const sel = document.getElementById('f-marca');
+        marcas.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m; opt.textContent = m;
+          sel.appendChild(opt);
+        });
+      } catch {}
+    }
+
+    async function loadMotos() {
+      try {
+        allMotos = await fetch('/api/motos').then(r => r.json());
+        document.getElementById('skeleton').style.display = 'none';
+        document.getElementById('grid').style.display = 'grid';
+        renderGrid(allMotos);
+      } catch {
+        document.getElementById('skeleton').style.display = 'none';
+        document.getElementById('grid').style.display = 'grid';
+        renderEmpty('Erro ao carregar o estoque.');
+      }
+    }
+
+    function applyURLParams() {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('categoria')) {
+        document.getElementById('f-categoria').value = p.get('categoria');
+      }
+      if (p.get('marca')) {
+        document.getElementById('f-marca').value = p.get('marca');
+      }
+      filterAndRender();
+    }
+
+    // ── FILTERS ───────────────────────────────────────────────────────────
+    let searchTimer;
+    function setupFilters() {
+      document.getElementById('search').addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(filterAndRender, 280);
+      });
+      ['f-categoria','f-marca','f-condicao','f-ordem'].forEach(id => {
+        document.getElementById(id).addEventListener('change', filterAndRender);
+      });
+    }
+
+    function filterAndRender() {
+      const q    = document.getElementById('search').value.trim().toLowerCase();
+      const cat  = document.getElementById('f-categoria').value;
+      const marc = document.getElementById('f-marca').value;
+      const cond = document.getElementById('f-condicao').value;
+      const ord  = document.getElementById('f-ordem').value;
+      const hasFilter = q || cat || marc || cond;
+
+      document.getElementById('clear-filters').classList.toggle('visible', !!hasFilter);
+
+      let list = allMotos.filter(m => {
+        if (cat  && m.categoria !== cat)  return false;
+        if (marc && m.marca !== marc)     return false;
+        if (cond && m.condicao !== cond)  return false;
+        if (q) {
+          const txt = `${m.nome} ${m.marca} ${m.descricao}`.toLowerCase();
+          if (!txt.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (ord === 'menor-preco') list.sort((a,b) => (a.preco||0) - (b.preco||0));
+      if (ord === 'maior-preco') list.sort((a,b) => (b.preco||0) - (a.preco||0));
+      if (ord === 'mais-novo')   list.sort((a,b) => (b.ano||0) - (a.ano||0));
+
+      document.getElementById('results-count').innerHTML =
+        `<strong>${list.length}</strong> moto${list.length !== 1 ? 's' : ''} encontrada${list.length !== 1 ? 's' : ''}`;
+
+      renderGrid(list);
+    }
+
+    function clearFilters() {
+      document.getElementById('search').value = '';
+      document.getElementById('f-categoria').value = '';
+      document.getElementById('f-marca').value = '';
+      document.getElementById('f-condicao').value = '';
+      document.getElementById('f-ordem').value = 'relevancia';
+      filterAndRender();
+    }
+
+    // ── RENDER ────────────────────────────────────────────────────────────
+    function renderGrid(motos) {
+      const grid = document.getElementById('grid');
+      if (!motos.length) { renderEmpty(); return; }
+
+      grid.innerHTML = motos.map(m => {
+        const waMsg = encodeURIComponent(`Olá! Tenho interesse na ${m.nome} (${m.marca}). Poderia me dar mais informações?`);
+        const precoFmt = m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : 'Consulte';
+        const origFmt  = m.preco_original ? `R$ ${Number(m.preco_original).toLocaleString('pt-BR')}` : '';
+        const specs    = [m.ano, (m.km != null && m.km >= 0) ? `${Number(m.km).toLocaleString('pt-BR')} km` : null].filter(Boolean).join(' · ');
+        const catLabel = CATS[m.categoria] || m.categoria;
+
+        return `
+        <a class="moto-card" href="moto.html?id=${m.id}">
+          <div class="card-img">
+            ${m.imagem
+              ? `<img src="${m.imagem}" alt="${m.nome}" loading="lazy">`
+              : `<div class="card-img-placeholder">${placeholderSVG()}</div>`
+            }
+            <div class="card-badges">
+              ${m.destaque ? '<span class="badge badge-dest">⭐ Destaque</span>' : ''}
+              <span class="badge badge-${m.condicao}">${m.condicao === 'nova' ? 'Nova' : 'Usada'}</span>
+            </div>
+            <span class="card-cat">${catLabel}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-brand">${m.marca}</div>
+            <h3 class="card-name">${m.nome}</h3>
+            ${specs ? `<div class="card-specs">${specs}</div>` : ''}
+            ${m.descricao ? `<p class="card-desc">${m.descricao}</p>` : ''}
+            <div class="card-footer">
+              <div class="card-price">
+                <small>A partir de</small>
+                ${origFmt ? `<span class="original">${origFmt}</span>` : ''}
+                ${precoFmt}
+              </div>
+              <span class="card-cta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Ver detalhes
+              </span>
+            </div>
+          </div>
+        </a>`;
+      }).join('');
+    }
+
+    function renderEmpty(msg = 'Nenhuma moto encontrada com esses filtros.') {
+      document.getElementById('grid').innerHTML = `
+        <div class="empty-state">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="#27367D" stroke-width="2"/>
+            <path d="M21 21l-4.35-4.35" stroke="#27367D" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 11h6M11 8v6" stroke="#DC2627" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h3>Nenhum resultado</h3>
+          <p>${msg}</p>
+          <button class="btn-red" onclick="clearFilters()">Limpar filtros</button>
+        </div>`;
+    }
+
+    function placeholderSVG() {
+      return `<svg viewBox="0 0 280 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:65%; opacity:.35">
+        <circle cx="70" cy="120" r="36" stroke="#27367D" stroke-width="6"/>
+        <circle cx="210" cy="120" r="36" stroke="#27367D" stroke-width="6"/>
+        <path d="M106 90 C120 65, 155 50, 180 48 C200 46, 215 60, 225 85" stroke="#27367D" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M70 90 L106 90" stroke="#27367D" stroke-width="5" stroke-linecap="round"/>
+        <path d="M130 48 L140 32 L152 37" stroke="#DC2627" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </svg>`;
+    }
+
+    // ── HEADER SCROLL ─────────────────────────────────────────────────────
+    window.addEventListener('scroll', () =>
+      document.getElementById('site-header').classList.toggle('scrolled', window.scrollY > 60),
+      { passive: true }
+    );
+
+    init();
+  </script>
+</body>
+</html>

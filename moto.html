@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes | Busca Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:   #27367D;
+      --red:    #DC2627;
+      --white:  #FDFDFB;
+      --deep:   #111d45;
+      --muted:  #777;
+      --border: #e2e2df;
+      --bg:     #f5f5f2;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--blue); overflow-x: hidden; }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      height: 68px; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 2.5rem;
+      background: var(--blue); border-bottom: 2.5px solid var(--red);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-flag { width: 30px; height: 30px; flex-shrink: 0; }
+    .logo-txt { font-family: 'Bebas Neue', sans-serif; font-size: 1.85rem; line-height: 1; letter-spacing: 0.04em; }
+    .logo-txt .b { color: var(--white); }
+    .logo-txt .r { color: var(--red); }
+    nav { display: flex; align-items: center; gap: 2rem; }
+    nav a {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.88rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(253,253,251,0.7); text-decoration: none;
+      position: relative; padding-bottom: 3px; transition: color 0.2s;
+    }
+    nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--red); transition: width 0.25s; }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after { width: 100%; }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      background: var(--deep); padding: 0.75rem 2.5rem;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--red); }
+    .breadcrumb span { color: rgba(255,255,255,0.3); }
+    .breadcrumb .current { color: rgba(255,255,255,0.8); }
+
+    /* ── SKELETON ── */
+    .skeleton { background: linear-gradient(90deg, #e0e0da 25%, #ebebeb 50%, #e0e0da 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── MAIN LAYOUT ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    .detail-wrap { display: grid; grid-template-columns: 1fr 400px; gap: 3rem; padding: 3rem 0 5rem; }
+
+    /* ── GALLERY ── */
+    .gallery-section { position: sticky; top: 90px; align-self: start; }
+
+    .main-photo {
+      width: 100%; aspect-ratio: 4/3;
+      background: var(--white); overflow: hidden;
+      position: relative; cursor: zoom-in;
+      border: 1px solid var(--border);
+    }
+    .main-photo img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .main-photo:hover img { transform: scale(1.04); }
+    .main-photo .no-img {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #e8e8e5 0%, #f0f0ed 100%);
+    }
+
+    /* Badge sobre a foto principal */
+    .photo-count-badge {
+      position: absolute; bottom: 12px; right: 12px;
+      background: rgba(0,0,0,0.65); color: #fff;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+      letter-spacing: 0.08em; padding: 4px 10px;
+      pointer-events: none;
+    }
+
+    /* Thumbnails */
+    .thumbs {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+      margin-top: 8px;
+    }
+    .thumb {
+      aspect-ratio: 1; overflow: hidden; cursor: pointer;
+      border: 2px solid transparent; transition: border-color 0.2s, opacity 0.2s;
+      background: var(--white);
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb.active { border-color: var(--red); }
+    .thumb:hover { opacity: 0.85; }
+    .thumb-more {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      background: var(--deep); color: var(--white); cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+      border: 2px solid transparent; transition: border-color 0.2s;
+    }
+    .thumb-more:hover { border-color: var(--red); }
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.92);
+      display: none; align-items: center; justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-inner {
+      position: relative; max-width: 90vw; max-height: 90vh;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .lightbox-img {
+      max-width: 90vw; max-height: 80vh;
+      object-fit: contain; display: block;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.6);
+    }
+    .lightbox-close {
+      position: absolute; top: -40px; right: 0;
+      background: none; border: none; color: #fff; font-size: 2rem;
+      cursor: pointer; line-height: 1; opacity: 0.7; transition: opacity 0.2s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.1); border: none; color: #fff;
+      width: 48px; height: 48px; border-radius: 50%; font-size: 1.4rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; backdrop-filter: blur(4px);
+    }
+    .lightbox-nav:hover { background: rgba(220,38,39,0.7); }
+    .lightbox-prev { left: -64px; }
+    .lightbox-next { right: -64px; }
+    .lightbox-counter {
+      color: rgba(255,255,255,0.6); font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem; letter-spacing: 0.1em;
+    }
+
+    /* ── INFO PANEL ── */
+    .info-panel {}
+
+    .badges-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .badge {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 4px 10px;
+    }
+    .badge-dest { background: var(--deep); color: #f5c518; }
+    .badge-nova { background: #1e7e34; color: #fff; }
+    .badge-usada { background: #6c4f00; color: #fff; }
+    .badge-cat { background: var(--blue); color: #fff; }
+
+    .moto-marca {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 4px;
+    }
+    .moto-nome {
+      font-family: 'Bebas Neue', sans-serif; font-size: 3rem;
+      line-height: 0.95; color: var(--blue); margin-bottom: 1.5rem;
+    }
+
+    .price-block { margin-bottom: 2rem; }
+    .price-original {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 1rem;
+      color: var(--muted); text-decoration: line-through; margin-bottom: 2px;
+    }
+    .price-main {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem;
+      color: var(--blue); line-height: 1;
+    }
+    .price-consult {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 1.4rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Specs grid */
+    .specs-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      border: 1px solid var(--border); margin-bottom: 2rem;
+    }
+    .spec-item {
+      padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .spec-item:nth-child(odd) { border-right: 1px solid var(--border); }
+    .spec-item:nth-last-child(-n+2) { border-bottom: none; }
+    .spec-label {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .spec-val {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 1.05rem; color: var(--blue);
+    }
+
+    /* Descrição */
+    .descricao-section { margin-bottom: 2rem; }
+    .descricao-section h3 {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .descricao-section p {
+      font-size: 0.97rem; line-height: 1.7; color: #444;
+    }
+
+    /* CTA */
+    .cta-block { display: flex; flex-direction: column; gap: 12px; }
+    .btn-wa {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #25D366; color: #fff; text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 1rem 2rem; transition: background 0.2s, transform 0.15s;
+    }
+    .btn-wa:hover { background: #1ebe5a; transform: translateY(-2px); }
+    .btn-back {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--blue); color: var(--white); text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.75rem 1.5rem; transition: background 0.2s;
+    }
+    .btn-back:hover { background: var(--deep); }
+    .contact-info {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem;
+      color: var(--muted); justify-content: center;
+    }
+
+    /* ── RELATED ── */
+    .related-section { padding: 4rem 0; border-top: 1px solid var(--border); }
+    .section-head {
+      display: flex; align-items: baseline; gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .section-head h2 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--blue);
+    }
+    .section-head span {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--red);
+      font-weight: 700;
+    }
+    .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+    .rel-card {
+      background: var(--white); text-decoration: none; color: inherit;
+      border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+    .rel-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(39,54,125,0.12); }
+    .rel-img {
+      aspect-ratio: 4/3; overflow: hidden; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rel-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rel-body { padding: 0.85rem 1rem; }
+    .rel-brand {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 2px;
+    }
+    .rel-name {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 1rem; color: var(--blue); line-height: 1.2;
+    }
+    .rel-price {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.9rem; color: var(--muted); margin-top: 4px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--deep); color: rgba(255,255,255,0.55);
+      padding: 2rem 2.5rem; text-align: center;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .detail-wrap { grid-template-columns: 1fr; gap: 2rem; }
+      .gallery-section { position: static; }
+      .thumbs { grid-template-columns: repeat(5, 1fr); }
+      .related-grid { grid-template-columns: repeat(2, 1fr); }
+      .moto-nome { font-size: 2.3rem; }
+      .specs-grid { grid-template-columns: 1fr; }
+      .spec-item:nth-child(odd) { border-right: none; }
+      .spec-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+      .spec-item:last-child { border-bottom: none; }
+    }
+    @media (max-width: 860px) {
+      nav,header>a:not(.logo){display:none!important}
+      .hamburger{display:flex!important}
+    }
+    @media (max-width: 600px) {
+      .detail-wrap { padding: 1.5rem 0 3rem; }
+      .container { padding: 0 1rem; }
+      nav { display: none; }
+      header { padding: 0 1.25rem; }
+      .breadcrumb { padding: 0.5rem 1.25rem; }
+      .related-grid { grid-template-columns: 1fr 1fr; }
+      .lightbox-prev { left: -48px; }
+      .lightbox-next { right: -48px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a href="index.html" class="logo" id="header-logo">
+    <svg class="logo-flag" viewBox="0 0 30 30" fill="none">
+      <rect width="15" height="30" fill="#27367D"/>
+      <rect x="15" width="15" height="30" fill="#DC2627"/>
+      <rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB"/>
+      <rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45"/>
+      <rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45"/>
+      <rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB"/>
+    </svg>
+    <div class="logo-txt"><span class="b">BUSCA </span><span class="r">RACING</span></div>
+  </a>
+  <nav>
+    <a href="produtos.html" class="active">Motos</a>
+    <a href="acessorios.html">Acessórios</a>
+    <a href="pecas.html">Peças</a>
+    <a href="venda-sua-moto.html">Venda sua Moto</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <a href="https://wa.me/5511993507432" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.08em;color:var(--white);background:var(--red);padding:9px 18px;text-decoration:none;clip-path:polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%);transition:background .2s;flex-shrink:0;display:flex;align-items:center;gap:6px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    (11) 99350-7432
+  </a>
+  <div class="hamburger" onclick="var n=document.getElementById('mob-nav');n.style.display=n.style.display==='flex'?'none':'flex'" style="display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px"><span style="display:block;width:24px;height:2px;background:var(--white);border-radius:1px"></span><span style="display:block;width:24px;height:2px;background:var(--white);border-radius:1px"></span><span style="display:block;width:24px;height:2px;background:var(--white);border-radius:1px"></span></div>
+</header>
+<div id="mob-nav" style="position:fixed;inset:68px 0 0;background:var(--deep);flex-direction:column;padding:2rem;z-index:190;display:none">
+  <a href="produtos.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07)">Motos</a>
+  <a href="acessorios.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07)">Acessórios</a>
+  <a href="pecas.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07)">Peças</a>
+  <a href="venda-sua-moto.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07)">Venda sua Moto</a>
+  <a href="contato.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0">Contato</a>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb" id="breadcrumb">
+  <a href="index.html">Home</a>
+  <span>›</span>
+  <a href="produtos.html">Estoque</a>
+  <span>›</span>
+  <span class="current" id="bc-nome">Carregando...</span>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+  <div class="detail-wrap" id="detail-wrap">
+
+    <!-- GALLERY -->
+    <div class="gallery-section">
+      <div class="main-photo" id="main-photo" onclick="openLightbox(currentIdx)">
+        <div class="no-img skeleton" style="height:100%"></div>
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info-panel" id="info-panel">
+      <!-- skeleton -->
+      <div class="skeleton" style="height:24px;width:120px;margin-bottom:1rem"></div>
+      <div class="skeleton" style="height:52px;width:80%;margin-bottom:1.5rem"></div>
+      <div class="skeleton" style="height:48px;width:60%;margin-bottom:2rem"></div>
+      <div class="skeleton" style="height:120px;margin-bottom:2rem"></div>
+      <div class="skeleton" style="height:54px"></div>
+    </div>
+
+  </div>
+
+  <!-- RELATED -->
+  <div class="related-section" id="related-section" style="display:none">
+    <div class="section-head">
+      <h2>Também pode interessar</h2>
+      <span>Ver mais</span>
+    </div>
+    <div class="related-grid" id="related-grid"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;color:#fff;margin-bottom:.4rem">
+    BUSCA <span style="color:var(--red)">RACING</span>
+  </div>
+  © 2024 Busca Racing. Todos os direitos reservados.
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button class="lightbox-nav lightbox-prev" onclick="lbNav(-1)">‹</button>
+    <img class="lightbox-img" id="lb-img" src="" alt="">
+    <button class="lightbox-nav lightbox-next" onclick="lbNav(1)">›</button>
+    <div class="lightbox-counter" id="lb-counter"></div>
+  </div>
+</div>
+
+<script>
+const CATS = {
+  'motos-rua':   'Motos de Rua',
+  'offroad':     'Offroad',
+  'quadriciclos':'Quadriciclos',
+  'infantil':    'Infantil',
+  'outros':      'Outros'
+};
+
+let allPhotos  = [];   // [{url, ...}] — inclui imagem principal + fotos da galeria
+let currentIdx = 0;
+let motoData   = null;
+
+const motoId = new URLSearchParams(location.search).get('id');
+
+if (!motoId) {
+  location.href = 'produtos.html';
+}
+
+async function init() {
+  // Logo dinâmico
+  fetch('/api/config/logo').then(r => r.json()).then(d => {
+    if (!d.logo) return;
+    const el = document.getElementById('header-logo');
+    if (el) {
+      const img = new Image();
+      img.src = d.logo; img.alt = 'Busca Racing';
+      img.style.cssText = 'height:42px;object-fit:contain;';
+      el.innerHTML = '';
+      el.appendChild(img);
+    }
+  }).catch(() => {});
+
+  try {
+    const [moto, fotosResp] = await Promise.all([
+      fetch(`/api/motos/${motoId}`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/motos/${motoId}/fotos`).then(r => r.json()).catch(() => [])
+    ]);
+
+    if (!moto) { location.href = 'produtos.html'; return; }
+    motoData = moto;
+
+    document.title = `${moto.nome} | Busca Racing`;
+    document.getElementById('bc-nome').textContent = moto.nome;
+
+    // Monta array de todas as fotos: principal + galeria
+    allPhotos = [];
+    if (moto.imagem) allPhotos.push({ url: moto.imagem, principal: true });
+    fotosResp.forEach(f => allPhotos.push({ url: f.url, id: f.id }));
+
+    renderGallery();
+    renderInfo(moto);
+    loadRelated(moto);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// ── GALLERY ──────────────────────────────────────────────────────────────
+function renderGallery() {
+  renderMainPhoto(0);
+  renderThumbs();
+}
+
+function renderMainPhoto(idx) {
+  currentIdx = idx;
+  const mainEl = document.getElementById('main-photo');
+  if (allPhotos.length === 0) {
+    mainEl.innerHTML = `<div class="no-img">${placeholderSVG()}</div>`;
+    return;
+  }
+  const photo = allPhotos[idx];
+  mainEl.innerHTML = `
+    <img src="${photo.url}" alt="${motoData?.nome || ''}">
+    ${allPhotos.length > 1 ? `<span class="photo-count-badge">${idx + 1} / ${allPhotos.length}</span>` : ''}
+  `;
+  // Atualiza thumb ativo
+  document.querySelectorAll('.thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+}
+
+function renderThumbs() {
+  const container = document.getElementById('thumbs');
+  if (allPhotos.length <= 1) { container.style.display = 'none'; return; }
+
+  const MAX_VISIBLE = 5;
+  const visible = allPhotos.slice(0, MAX_VISIBLE);
+  const extra   = allPhotos.length - MAX_VISIBLE;
+
+  container.innerHTML = visible.map((p, i) => `
+    <div class="thumb ${i === 0 ? 'active' : ''}" onclick="renderMainPhoto(${i})">
+      <img src="${p.url}" alt="Foto ${i + 1}">
+    </div>
+  `).join('') + (extra > 0 ? `
+    <div class="thumb-more" onclick="openLightbox(${MAX_VISIBLE})">+${extra}</div>
+  ` : '');
+}
+
+// ── INFO PANEL ────────────────────────────────────────────────────────────
+function renderInfo(m) {
+  const precoFmt   = m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : null;
+  const origFmt    = m.preco_original ? `R$ ${Number(m.preco_original).toLocaleString('pt-BR')}` : null;
+  const catLabel   = CATS[m.categoria] || m.categoria;
+  const kmFmt      = (m.km != null && m.km >= 0) ? `${Number(m.km).toLocaleString('pt-BR')} km` : null;
+  const waMsg      = encodeURIComponent(`Olá! Tenho interesse na ${m.nome} (${m.marca}). Poderia me dar mais informações?`);
+
+  const specs = [
+    m.marca   ? { l: 'Marca',     v: m.marca }    : null,
+    catLabel  ? { l: 'Categoria', v: catLabel }   : null,
+    m.ano     ? { l: 'Ano',       v: m.ano }       : null,
+    kmFmt     ? { l: 'Quilômetros', v: kmFmt }     : null,
+  ].filter(Boolean);
+
+  document.getElementById('info-panel').innerHTML = `
+    <div class="badges-row">
+      ${m.destaque ? '<span class="badge badge-dest">⭐ Destaque</span>' : ''}
+      <span class="badge badge-${m.condicao}">${m.condicao === 'nova' ? 'Nova' : 'Usada'}</span>
+      <span class="badge badge-cat">${catLabel}</span>
+    </div>
+
+    <div class="moto-marca">${m.marca}</div>
+    <h1 class="moto-nome">${m.nome}</h1>
+
+    <div class="price-block">
+      ${origFmt ? `<div class="price-original">${origFmt}</div>` : ''}
+      ${precoFmt
+        ? `<div class="price-main">${precoFmt}</div>`
+        : `<div class="price-consult">Consulte o preço</div>`
+      }
+    </div>
+
+    ${specs.length > 0 ? `
+    <div class="specs-grid">
+      ${specs.map(s => `
+        <div class="spec-item">
+          <span class="spec-label">${s.l}</span>
+          <span class="spec-val">${s.v}</span>
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    ${m.descricao ? `
+    <div class="descricao-section">
+      <h3>Descrição</h3>
+      <p>${m.descricao}</p>
+    </div>` : ''}
+
+    <div class="cta-block">
+      <a href="https://wa.me/5511993507432?text=${waMsg}" target="_blank" class="btn-wa">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Consultar via WhatsApp
+      </a>
+      <a href="produtos.html" class="btn-back">
+        ← Voltar ao estoque
+      </a>
+      <div class="contact-info">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.4 10.6 19.79 19.79 0 01.34 1.96 2 2 0 012.33 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z" stroke="currentColor" stroke-width="2"/></svg>
+        (11) 99350-7432 · Caieiras – SP
+      </div>
+    </div>
+  `;
+}
+
+// ── RELATED ───────────────────────────────────────────────────────────────
+async function loadRelated(moto) {
+  try {
+    const rows = await fetch(`/api/motos?categoria=${moto.categoria}`).then(r => r.json());
+    const related = rows.filter(r => r.id !== moto.id).slice(0, 4);
+    if (related.length === 0) return;
+
+    const section = document.getElementById('related-section');
+    const grid    = document.getElementById('related-grid');
+    section.style.display = 'block';
+
+    grid.innerHTML = related.map(m => {
+      const precoFmt = m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : 'Consulte';
+      return `
+        <a href="moto.html?id=${m.id}" class="rel-card">
+          <div class="rel-img">
+            ${m.imagem
+              ? `<img src="${m.imagem}" alt="${m.nome}" loading="lazy">`
+              : `<div style="width:80%;opacity:.3">${placeholderSVG(120, 70)}</div>`
+            }
+          </div>
+          <div class="rel-body">
+            <div class="rel-brand">${m.marca}</div>
+            <div class="rel-name">${m.nome}</div>
+            <div class="rel-price">${precoFmt}</div>
+          </div>
+        </a>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────
+function openLightbox(idx) {
+  if (allPhotos.length === 0) return;
+  currentIdx = Math.max(0, Math.min(idx, allPhotos.length - 1));
+  updateLightbox();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== document.getElementById('lightbox')) return;
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function lbNav(dir) {
+  currentIdx = (currentIdx + dir + allPhotos.length) % allPhotos.length;
+  updateLightbox();
+  renderMainPhoto(currentIdx);
+}
+
+function updateLightbox() {
+  document.getElementById('lb-img').src = allPhotos[currentIdx].url;
+  document.getElementById('lb-counter').textContent = `${currentIdx + 1} / ${allPhotos.length}`;
+}
+
+// Teclado
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowRight') lbNav(1);
+  if (e.key === 'ArrowLeft')  lbNav(-1);
+  if (e.key === 'Escape')     { document.getElementById('lightbox').classList.remove('open'); document.body.style.overflow = ''; }
+});
+
+// ── SVG PLACEHOLDER ───────────────────────────────────────────────────────
+function placeholderSVG(w=280, h=160) {
+  return `<svg viewBox="0 0 ${w} ${h}" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+    <circle cx="${w*.25}" cy="${h*.75}" r="${h*.22}" stroke="#27367D" stroke-width="${h*.04}"/>
+    <circle cx="${w*.75}" cy="${h*.75}" r="${h*.22}" stroke="#27367D" stroke-width="${h*.04}"/>
+    <path d="M${w*.38} ${h*.57} C${w*.43} ${h*.41}, ${w*.55} ${h*.31}, ${w*.64} ${h*.3} C${w*.71} ${h*.29}, ${w*.77} ${h*.38}, ${w*.8} ${h*.53}" stroke="#27367D" stroke-width="${h*.03}" fill="none" stroke-linecap="round"/>
+    <path d="M${w*.25} ${h*.75} L${w*.38} ${h*.57} L${w*.5} ${h*.5} L${w*.64} ${h*.3}" stroke="#27367D" stroke-width="${h*.03}" fill="none" stroke-linecap="round"/>
+    <path d="M${w*.45} ${h*.43} L${w*.5} ${h*.3} L${w*.55} ${h*.35}" stroke="#DC2627" stroke-width="${h*.025}" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+init();
+</script>
+</body>
+</html>

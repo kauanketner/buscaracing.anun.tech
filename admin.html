@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Busca Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:   #27367D;
+      --red:    #DC2627;
+      --white:  #FDFDFB;
+      --deep:   #111d45;
+      --sidebar:#0d1638;
+      --bg:     #f2f2ef;
+      --card:   #ffffff;
+      --border: #e4e4e0;
+      --muted:  #777;
+      --green:  #27a745;
+      --orange: #e67e22;
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); color: #333; overflow-x: hidden; }
+
+    /* ══════════ LOGIN SCREEN ══════════ */
+    #login-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--deep);
+      position: relative; overflow: hidden;
+    }
+    #login-screen::before {
+      content: 'ADMIN';
+      position: absolute; font-family: 'Bebas Neue', sans-serif;
+      font-size: 40vw; color: rgba(255,255,255,0.02);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    .login-card {
+      background: var(--card); padding: 3rem 2.5rem;
+      width: 100%; max-width: 400px;
+      position: relative; z-index: 1;
+      border-top: 4px solid var(--red);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    }
+    .login-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem;
+      text-align: center; margin-bottom: 0.5rem;
+    }
+    .login-logo .b { color: var(--blue); }
+    .login-logo .r { color: var(--red); }
+    .login-logo-img { height: 52px; object-fit: contain; display: block; margin: 0 auto 0.5rem; }
+    .login-subtitle {
+      text-align: center;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.78rem;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: #999; margin-bottom: 2rem;
+    }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block; font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.75rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border); background: #fafaf8;
+      font-family: 'Barlow', sans-serif; font-size: 0.95rem; color: #333;
+      outline: none; transition: border-color 0.2s, background 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--blue); background: var(--white);
+    }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .login-error {
+      color: var(--red); font-size: 0.88rem; text-align: center;
+      margin-bottom: 1rem; display: none;
+    }
+    .btn-full {
+      width: 100%; padding: 13px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--white); background: var(--blue); border: none;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-full:hover { background: var(--red); }
+
+    /* ══════════ ADMIN LAYOUT ══════════ */
+    #admin-app { display: none; min-height: 100vh; }
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: var(--sidebar);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 1.5rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar-logo-link {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem;
+      text-decoration: none; display: block;
+    }
+    .sidebar-logo-link .b { color: var(--white); }
+    .sidebar-logo-link .r { color: var(--red); }
+    .sidebar-logo-img { height: 38px; object-fit: contain; }
+    .sidebar-tag {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); margin-top: 4px;
+    }
+
+    nav.sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 1.25rem; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.9rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); transition: all 0.2s;
+      border-left: 3px solid transparent; user-select: none;
+    }
+    .nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-item.active { color: var(--white); border-left-color: var(--red); background: rgba(220,38,39,0.08); }
+    .nav-item svg { flex-shrink: 0; }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .btn-logout {
+      width: 100%; padding: 10px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); background: transparent;
+      border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+      transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* Main */
+    .admin-main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; }
+    .admin-header {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .admin-header-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+      color: var(--blue); letter-spacing: 0.03em;
+    }
+    .admin-header-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
+      border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary { background: var(--blue); color: var(--white); clip-path: polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); }
+    .btn-primary:hover { background: var(--red); }
+    .btn-danger  { background: #dc3545; color: var(--white); }
+    .btn-danger:hover  { background: #b02a37; }
+    .btn-ghost   { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-sm { padding: 6px 13px; font-size: 0.78rem; }
+    .btn-icon { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 2px; }
+
+    /* Content */
+    .admin-content { flex: 1; padding: 2rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── DASHBOARD ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--card); padding: 1.5rem;
+      border-top: 3px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    .stat-card:hover { border-top-color: var(--red); }
+    .stat-card-label {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .stat-card-value {
+      font-family: 'Bebas Neue', sans-serif; font-size: 3rem;
+      line-height: 1; color: var(--blue);
+    }
+    .stat-card-value span { color: var(--red); }
+    .stat-card-sub { font-size: 0.82rem; color: #aaa; margin-top: 4px; }
+
+    .cats-breakdown { background: var(--card); padding: 1.5rem; }
+    .cats-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      color: var(--blue); margin-bottom: 1.25rem;
+    }
+    .cat-bar-item { margin-bottom: 0.85rem; }
+    .cat-bar-head { display: flex; justify-content: space-between; margin-bottom: 4px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; color: #555; }
+    .cat-bar-track { height: 8px; background: var(--border); overflow: hidden; }
+    .cat-bar-fill { height: 100%; background: var(--blue); transition: width 0.8s ease; }
+
+    /* ── MOTOS TABLE ── */
+    .motos-toolbar {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+      padding: 1rem 1.25rem; background: var(--card); border-bottom: 1px solid var(--border);
+    }
+    .toolbar-search {
+      position: relative; flex: 1; min-width: 200px;
+    }
+    .toolbar-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
+    .toolbar-search input {
+      width: 100%; padding: 8px 10px 8px 34px;
+      border: 1.5px solid var(--border); background: #fafaf8;
+      font-family: 'Barlow', sans-serif; font-size: 0.88rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .toolbar-search input:focus { border-color: var(--blue); }
+    .toolbar-select {
+      padding: 8px 28px 8px 10px;
+      border: 1.5px solid var(--border); background: #fafaf8
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23777' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.83rem; color: #555; outline: none; appearance: none; cursor: pointer;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    thead tr { border-bottom: 2px solid var(--border); }
+    thead th {
+      padding: 12px 14px; text-align: left;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: #f8f8f5; }
+    tbody td { padding: 10px 14px; font-size: 0.9rem; vertical-align: middle; }
+
+    .td-img { width: 52px; height: 40px; object-fit: cover; background: #eee; display: block; }
+    .td-img-placeholder { width: 52px; height: 40px; background: #eee; display: flex; align-items: center; justify-content: center; }
+    .td-name { font-weight: 600; color: var(--blue); }
+    .td-brand { color: var(--muted); font-size: 0.85rem; }
+    .badge-table {
+      display: inline-block; padding: 2px 8px;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .bg-green  { background: #d4f5dc; color: #1a7430; }
+    .bg-orange { background: #fde8cc; color: #9a4e10; }
+    .bg-blue   { background: #dce4f8; color: var(--blue); }
+    .bg-gray   { background: #ebebeb; color: #666; }
+    .bg-red    { background: #fde0e0; color: #a01010; }
+
+    .dest-star { color: #f59e0b; font-size: 1.1rem; }
+    .dest-no   { color: #ddd; font-size: 1.1rem; }
+
+    .actions-cell { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white); width: 100%; max-width: 680px;
+      max-height: 92vh; display: flex; flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .modal-header {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-header h3 { font-family: 'Bebas Neue',sans-serif; font-size: 1.4rem; color: var(--blue); }
+    .modal-close { background: none; border: none; cursor: pointer; color: #aaa; transition: color 0.2s; padding: 4px; }
+    .modal-close:hover { color: var(--red); }
+    .modal-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .modal-footer {
+      padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+      display: flex; gap: 0.75rem; justify-content: flex-end; flex-shrink: 0;
+    }
+
+    /* Image upload */
+    .img-upload-area {
+      border: 2px dashed var(--border); background: #fafaf8;
+      height: 160px; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; margin-bottom: 1.25rem;
+      position: relative; overflow: hidden;
+    }
+    .img-upload-area:hover { border-color: var(--blue); background: #f4f4f2; }
+    .img-upload-area.has-img { border-style: solid; }
+    .img-upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .img-upload-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      gap: 6px; opacity: 0; transition: opacity 0.2s; color: white;
+    }
+    .img-upload-area.has-img:hover .img-upload-overlay { opacity: 1; }
+    .img-upload-txt {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    #field-imagem { display: none; }
+
+    /* Fotos galeria no modal */
+    .foto-thumb {
+      aspect-ratio: 1; position: relative; overflow: hidden;
+      background: var(--bg); border: 1px solid var(--border);
+    }
+    .foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .foto-thumb-del {
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(220,38,39,0.85); border: none; color: #fff;
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; opacity: 0; transition: opacity 0.2s;
+    }
+    .foto-thumb:hover .foto-thumb-del { opacity: 1; }
+    .foto-uploading {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      background: var(--bg); border: 1.5px dashed var(--border);
+      font-size: .7rem; color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: .05em; text-transform: uppercase; flex-direction: column; gap: 6px;
+    }
+    .foto-spin {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-top-color: var(--blue); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .check-row { display: flex; gap: 1.5rem; margin-top: 0.5rem; }
+    .check-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); }
+    .check-item span { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: #555; }
+
+    /* ── CONFIGURAÇÕES ── */
+    .config-section { background: var(--card); padding: 2rem; margin-bottom: 1.5rem; }
+    .config-section-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--blue); margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border); padding-bottom: 0.75rem;
+    }
+    .logo-preview-area {
+      width: 200px; height: 80px; border: 2px dashed var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem; overflow: hidden; background: #fafaf8;
+    }
+    .logo-preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .logo-preview-area .no-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: #ccc; }
+    .img-upload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
+    .img-upload-item { display: flex; flex-direction: column; gap: 0.6rem; }
+    .img-upload-item label.item-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: #555; }
+    .img-preview-box { width: 100%; aspect-ratio: 16/9; border: 2px dashed var(--border); background: #fafaf8; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .img-preview-box .no-img { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; color: #ccc; text-align: center; padding: 0.5rem; }
+    .img-preview-box .img-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .img-preview-box:hover .img-overlay { opacity: 1; }
+    .img-upload-btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); background: var(--bg); border: 1.5px solid var(--border); padding: 7px 12px; transition: border-color 0.2s; width: fit-content; }
+    .img-upload-btn:hover { border-color: var(--blue); }
+    .img-upload-btn input[type=file] { display: none; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+      padding: 12px 20px; color: white; font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.88rem; letter-spacing: 0.08em;
+      border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: translateY(100px); opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
+
+    /* Pagination */
+    .pagination { display: flex; gap: 6px; align-items: center; padding: 1rem 1.25rem; background: var(--card); border-top: 1px solid var(--border); }
+    .page-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--border); background: var(--white); color: var(--blue); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; }
+    .page-btn:hover,.page-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+    .page-info { font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+
+    /* Responsive */
+    @media(max-width:900px){ .stats-grid{grid-template-columns:repeat(2,1fr);} }
+    @media(max-width:640px){ .form-row{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+  <!-- ══════ LOGIN SCREEN ══════ -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo" id="login-logo">
+        <span class="b">BUSCA</span><span class="r">&nbsp;RACING</span>
+      </div>
+      <div class="login-subtitle">Área Administrativa</div>
+      <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
+      <div class="form-group">
+        <label>Senha de acesso</label>
+        <input type="password" id="login-senha" placeholder="••••••••••"
+               onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <button class="btn-full" onclick="doLogin()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- ══════ ADMIN APP ══════ -->
+  <div id="admin-app">
+    <div class="admin-layout">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <a href="index.html" class="sidebar-logo-link" id="sidebar-logo">
+            <span class="b">BUSCA</span><span class="r">&nbsp;RACING</span>
+          </a>
+          <div class="sidebar-tag">Painel Admin</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-item active" onclick="showPanel('dashboard')" id="nav-dashboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            Dashboard
+          </div>
+          <div class="nav-item" onclick="showPanel('motos')" id="nav-motos">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="7" cy="17" r="3" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="17" r="3" stroke="currentColor" stroke-width="2"/><path d="M10 17h4M3 14 L7 8 L13 9 L17 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 9 L16 5 L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Motos
+          </div>
+          <div class="nav-item" onclick="showPanel('config')" id="nav-config">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Configurações
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <a href="produtos.html" target="_blank" style="display:flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.35); text-decoration:none; margin-bottom:10px; transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Ver Site
+          </a>
+          <button class="btn-logout" onclick="doLogout()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="admin-main">
+        <div class="admin-header">
+          <h1 class="admin-header-title" id="page-title">Dashboard</h1>
+          <div class="admin-header-actions" id="header-actions"></div>
+        </div>
+
+        <div class="admin-content">
+
+          <!-- ── DASHBOARD ── -->
+          <div class="panel active" id="panel-dashboard">
+            <div class="stats-grid" id="stats-grid">
+              <div class="stat-card"><div class="stat-card-label">Total de Motos</div><div class="stat-card-value" id="s-total">—</div></div>
+              <div class="stat-card"><div class="stat-card-label">Motos Ativas</div><div class="stat-card-value" id="s-ativas">—</div></div>
+              <div class="stat-card"><div class="stat-card-label">Em Destaque</div><div class="stat-card-value" id="s-destaque">—</div></div>
+              <div class="stat-card"><div class="stat-card-label">Categorias</div><div class="stat-card-value" id="s-cats">—</div></div>
+            </div>
+            <div class="cats-breakdown">
+              <div class="cats-title">Por Categoria</div>
+              <div id="cats-chart"></div>
+            </div>
+          </div>
+
+          <!-- ── MOTOS ── -->
+          <div class="panel" id="panel-motos">
+            <div style="background:var(--card); overflow:hidden;">
+              <div class="motos-toolbar">
+                <div class="toolbar-search">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <input type="text" id="admin-search" placeholder="Buscar..." oninput="filterTable()">
+                </div>
+                <select class="toolbar-select" id="admin-f-cat" onchange="filterTable()">
+                  <option value="">Todas as categorias</option>
+                  <option value="motos-rua">Motos de Rua</option>
+                  <option value="offroad">Offroad</option>
+                  <option value="quadriciclos">Quadriciclos</option>
+                  <option value="infantil">Infantil</option>
+                  <option value="outros">Outros</option>
+                </select>
+                <select class="toolbar-select" id="admin-f-cond" onchange="filterTable()">
+                  <option value="">Nova / Usada</option>
+                  <option value="nova">Nova</option>
+                  <option value="usada">Usada</option>
+                </select>
+                <select class="toolbar-select" id="admin-f-ativo" onchange="filterTable()">
+                  <option value="">Todos status</option>
+                  <option value="1">Ativo</option>
+                  <option value="0">Inativo</option>
+                </select>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Foto</th>
+                      <th>Nome</th>
+                      <th>Marca</th>
+                      <th>Categoria</th>
+                      <th>Condição</th>
+                      <th>Preço</th>
+                      <th>⭐</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="motos-tbody"></tbody>
+                </table>
+              </div>
+              <div class="pagination" id="pagination"></div>
+            </div>
+          </div>
+
+          <!-- ── CONFIGURAÇÕES ── -->
+          <div class="panel" id="panel-config">
+
+            <div class="config-section">
+              <div class="config-section-title">Logo do Site</div>
+              <div class="logo-preview-area" id="logo-preview-area">
+                <span class="no-logo">Nenhum logo</span>
+              </div>
+              <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+                <label class="btn btn-primary" style="cursor:pointer;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  Fazer Upload do Logo
+                  <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+                </label>
+                <span style="font-size:0.82rem; color:var(--muted);">PNG, SVG, JPG — recomendado fundo transparente</span>
+              </div>
+            </div>
+
+            <div class="config-section">
+              <div class="config-section-title">Imagens do Site</div>
+              <div class="img-upload-grid">
+
+                <!-- Hero -->
+                <div class="img-upload-item">
+                  <label class="item-label">Banner Hero (página inicial)</label>
+                  <div class="img-preview-box" id="prev-hero_img">
+                    <span class="no-img">Sem imagem<br>usa SVG padrão</span>
+                    <div class="img-overlay">
+                      <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.1em">CLIQUE PARA TROCAR</span>
+                    </div>
+                  </div>
+                  <label class="img-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Enviar imagem
+                    <input type="file" accept="image/*" onchange="uploadConfigImg(this,'hero_img')">
+                  </label>
+                </div>
+
+                <!-- Categoria Motos de Rua -->
+                <div class="img-upload-item">
+                  <label class="item-label">Categoria: Motos de Rua</label>
+                  <div class="img-preview-box" id="prev-cat_rua_img">
+                    <span class="no-img">Sem imagem<br>usa gradiente padrão</span>
+                    <div class="img-overlay">
+                      <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.1em">CLIQUE PARA TROCAR</span>
+                    </div>
+                  </div>
+                  <label class="img-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Enviar imagem
+                    <input type="file" accept="image/*" onchange="uploadConfigImg(this,'cat_rua_img')">
+                  </label>
+                </div>
+
+                <!-- Categoria Offroad -->
+                <div class="img-upload-item">
+                  <label class="item-label">Categoria: Offroad</label>
+                  <div class="img-preview-box" id="prev-cat_offroad_img">
+                    <span class="no-img">Sem imagem<br>usa gradiente padrão</span>
+                    <div class="img-overlay">
+                      <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.1em">CLIQUE PARA TROCAR</span>
+                    </div>
+                  </div>
+                  <label class="img-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Enviar imagem
+                    <input type="file" accept="image/*" onchange="uploadConfigImg(this,'cat_offroad_img')">
+                  </label>
+                </div>
+
+                <!-- Categoria Quadriciclos -->
+                <div class="img-upload-item">
+                  <label class="item-label">Categoria: Quadriciclos</label>
+                  <div class="img-preview-box" id="prev-cat_quad_img">
+                    <span class="no-img">Sem imagem<br>usa gradiente padrão</span>
+                    <div class="img-overlay">
+                      <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.1em">CLIQUE PARA TROCAR</span>
+                    </div>
+                  </div>
+                  <label class="img-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Enviar imagem
+                    <input type="file" accept="image/*" onchange="uploadConfigImg(this,'cat_quad_img')">
+                  </label>
+                </div>
+
+                <!-- Categoria Infantil -->
+                <div class="img-upload-item">
+                  <label class="item-label">Categoria: Infantil</label>
+                  <div class="img-preview-box" id="prev-cat_infantil_img">
+                    <span class="no-img">Sem imagem<br>usa gradiente padrão</span>
+                    <div class="img-overlay">
+                      <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.1em">CLIQUE PARA TROCAR</span>
+                    </div>
+                  </div>
+                  <label class="img-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Enviar imagem
+                    <input type="file" accept="image/*" onchange="uploadConfigImg(this,'cat_infantil_img')">
+                  </label>
+                </div>
+
+              </div>
+              <p style="font-size:.82rem;color:var(--muted);margin-top:1rem">As imagens substituem os SVGs/gradientes padrão. Recomendado: mínimo 800×500px, formato JPG ou PNG.</p>
+            </div>
+
+            <div class="config-section">
+              <div class="config-section-title">Informações de Contato</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Telefone</label>
+                  <input type="text" id="cfg-telefone" placeholder="(11) 99350-7432">
+                </div>
+                <div class="form-group">
+                  <label>WhatsApp (só números)</label>
+                  <input type="text" id="cfg-whatsapp" placeholder="5511993507432">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="cfg-email" placeholder="contato@buscaracing.com">
+              </div>
+              <div class="form-group">
+                <label>Endereço</label>
+                <input type="text" id="cfg-endereco" placeholder="Rua Conceição Borreiro Peres, 64, Caieiras - SP">
+              </div>
+              <button class="btn btn-primary" onclick="saveConfig()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/><polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2"/><polyline points="7 3 7 8 15 8" stroke="currentColor" stroke-width="2"/></svg>
+                Salvar Configurações
+              </button>
+            </div>
+
+          </div><!-- /panel-config -->
+        </div><!-- /admin-content -->
+      </main>
+    </div>
+  </div>
+
+  <!-- ══════ MOTO MODAL ══════ -->
+  <div class="modal-overlay" id="moto-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Nova Moto</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Image upload -->
+        <div class="img-upload-area" id="img-upload-area" onclick="document.getElementById('field-imagem').click()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="color:#ccc"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="img-upload-txt">Clique para adicionar foto</span>
+          <div class="img-upload-overlay">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            <span class="img-upload-txt" style="color:white">Trocar foto</span>
+          </div>
+        </div>
+        <input type="file" id="field-imagem" accept="image/*" onchange="previewModalImg(this)">
+        <input type="hidden" id="field-imagem-atual">
+
+        <!-- Form fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da Moto *</label>
+            <input type="text" id="field-nome" placeholder="Ex: CB 650R Neo Sports">
+          </div>
+          <div class="form-group">
+            <label>Marca *</label>
+            <input type="text" id="field-marca" placeholder="Ex: Honda" list="marcas-list">
+            <datalist id="marcas-list">
+              <option value="Honda"><option value="Yamaha"><option value="Kawasaki">
+              <option value="Suzuki"><option value="KTM"><option value="BMW Motorrad">
+              <option value="MXF"><option value="Ducati"><option value="Triumph">
+              <option value="CF Moto"><option value="Royal Enfield"><option value="Dafra">
+              <option value="Haojue"><option value="Shineray"><option value="Husqvarna">
+            </datalist>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria *</label>
+            <select id="field-categoria">
+              <option value="">Selecione...</option>
+              <option value="motos-rua">Motos de Rua</option>
+              <option value="offroad">Offroad</option>
+              <option value="quadriciclos">Quadriciclos</option>
+              <option value="infantil">Infantil</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Condição *</label>
+            <select id="field-condicao">
+              <option value="nova">Nova</option>
+              <option value="usada">Usada</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Preço (R$)</label>
+            <input type="number" id="field-preco" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Preço Original (R$) <small style="font-weight:400;text-transform:none;">(opcional)</small></label>
+            <input type="number" id="field-preco-original" placeholder="Para mostrar desconto" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ano</label>
+            <input type="number" id="field-ano" placeholder="2024" min="1990" max="2030">
+          </div>
+          <div class="form-group">
+            <label>KM (0 para nova)</label>
+            <input type="number" id="field-km" placeholder="0" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="field-descricao" placeholder="Descreva os principais atributos desta moto..."></textarea>
+        </div>
+        <div class="check-row">
+          <label class="check-item">
+            <input type="checkbox" id="field-destaque">
+            <span>⭐ Destaque</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="field-ativo" checked>
+            <span>✓ Ativo (visível no site)</span>
+          </label>
+        </div>
+
+        <!-- Galeria de fotos (só aparece ao editar) -->
+        <div id="fotos-section" style="display:none; margin-top:1.5rem; border-top:1.5px solid var(--border); padding-top:1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+            <label style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);">
+              Galeria de Fotos
+            </label>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Adicionar fotos
+              <input type="file" id="field-fotos" accept="image/*" multiple onchange="uploadFotos(this)" style="display:none">
+            </label>
+          </div>
+          <div id="fotos-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-height:60px;">
+            <div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;" id="fotos-empty">
+              Nenhuma foto na galeria
+            </div>
+          </div>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:.5rem;">
+            Você pode adicionar várias fotos de uma vez. Elas ficam salvas na pasta <code>fotos/</code>.
+          </p>
+        </div>
+
+      </div><!-- /modal-body -->
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveMoto()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/><polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2"/><polyline points="7 3 7 8 15 8" stroke="currentColor" stroke-width="2"/></svg>
+          Salvar Moto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM -->
+  <div class="modal-overlay" id="del-modal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <h3>Confirmar exclusão</h3>
+        <button class="modal-close" onclick="document.getElementById('del-modal').classList.remove('open')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:2rem;">
+        <div style="font-size:2.5rem; margin-bottom:1rem;">🗑️</div>
+        <p style="color:var(--muted); margin-bottom:0.5rem;">Tem certeza que deseja excluir</p>
+        <strong id="del-nome" style="color:var(--blue); font-size:1.1rem;"></strong>
+        <p style="color:#aaa; font-size:0.85rem; margin-top:0.5rem;">Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="document.getElementById('del-modal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-danger" id="del-confirm-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── STATE ──────────────────────────────────────────────────────────────
+    const CATS = {
+      'motos-rua':'Motos de Rua','offroad':'Offroad',
+      'quadriciclos':'Quadriciclos','infantil':'Infantil','outros':'Outros'
+    };
+    let allMotos = [], filteredMotos = [], editingId = null;
+    let currentPage = 1;
+    const PAGE_SIZE = 12;
+
+    // ── INIT ───────────────────────────────────────────────────────────────
+    async function init() {
+      loadSiteLogo();
+      const { isAdmin } = await fetch('/api/auth/check').then(r => r.json());
+      if (isAdmin) { showAdmin(); }
+      else { showLogin(); }
+    }
+
+    async function loadSiteLogo() {
+      try {
+        const { logo } = await fetch('/api/config/logo').then(r => r.json());
+        if (logo) applyLogo(logo);
+      } catch {}
+    }
+
+    function applyLogo(src) {
+      const loginLogo = document.getElementById('login-logo');
+      loginLogo.innerHTML = `<img src="${src}" alt="Busca Racing" class="login-logo-img">`;
+      const sidebarLogo = document.getElementById('sidebar-logo');
+      sidebarLogo.innerHTML = `<img src="${src}" alt="Busca Racing" class="sidebar-logo-img">`;
+      const preview = document.getElementById('logo-preview-area');
+      if (preview) preview.innerHTML = `<img src="${src}" alt="Logo">`;
+    }
+
+    function showLogin() { document.getElementById('login-screen').style.display = 'flex'; }
+    function showAdmin() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-app').style.display = 'block';
+      loadDashboard();
+    }
+
+    // ── AUTH ───────────────────────────────────────────────────────────────
+    async function doLogin() {
+      const senha = document.getElementById('login-senha').value;
+      const err   = document.getElementById('login-error');
+      err.style.display = 'none';
+      try {
+        const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ senha }) });
+        if (r.ok) { showAdmin(); }
+        else { err.style.display = 'block'; }
+      } catch { err.style.display = 'block'; }
+    }
+
+    async function doLogout() {
+      await fetch('/api/logout', { method:'POST' });
+      location.reload();
+    }
+
+    // ── NAVIGATION ─────────────────────────────────────────────────────────
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`panel-${name}`).classList.add('active');
+      document.getElementById(`nav-${name}`).classList.add('active');
+
+      const titles = { dashboard:'Dashboard', motos:'Gestão de Motos', config:'Configurações' };
+      document.getElementById('page-title').textContent = titles[name];
+
+      const actions = document.getElementById('header-actions');
+      actions.innerHTML = name === 'motos'
+        ? `<button class="btn btn-primary" onclick="openModal(null)">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+             Nova Moto
+           </button>`
+        : '';
+
+      if (name === 'dashboard') loadDashboard();
+      if (name === 'motos')     loadAdminMotos();
+      if (name === 'config')    loadConfig();
+    }
+
+    // ── DASHBOARD ──────────────────────────────────────────────────────────
+    async function loadDashboard() {
+      try {
+        const s = await fetch('/api/stats').then(r => r.json());
+        document.getElementById('s-total').innerHTML    = s.total;
+        document.getElementById('s-ativas').innerHTML   = s.ativas;
+        document.getElementById('s-destaque').innerHTML = s.destaque;
+        document.getElementById('s-cats').innerHTML     = s.por_categoria.length;
+
+        const max = Math.max(...s.por_categoria.map(c => c.n), 1);
+        document.getElementById('cats-chart').innerHTML = s.por_categoria.map(c => `
+          <div class="cat-bar-item">
+            <div class="cat-bar-head">
+              <span>${CATS[c.categoria] || c.categoria}</span>
+              <span><strong>${c.n}</strong></span>
+            </div>
+            <div class="cat-bar-track">
+              <div class="cat-bar-fill" style="width:${(c.n/max*100).toFixed(0)}%"></div>
+            </div>
+          </div>
+        `).join('');
+      } catch {}
+    }
+
+    // ── MOTOS TABLE ────────────────────────────────────────────────────────
+    async function loadAdminMotos() {
+      try {
+        allMotos = await fetch('/api/admin/motos').then(r => r.json());
+        filteredMotos = allMotos;
+        currentPage = 1;
+        renderTable();
+      } catch { showToast('Erro ao carregar motos', 'error'); }
+    }
+
+    function filterTable() {
+      const q    = document.getElementById('admin-search').value.toLowerCase();
+      const cat  = document.getElementById('admin-f-cat').value;
+      const cond = document.getElementById('admin-f-cond').value;
+      const ativo= document.getElementById('admin-f-ativo').value;
+
+      filteredMotos = allMotos.filter(m => {
+        if (cat  && m.categoria !== cat)  return false;
+        if (cond && m.condicao !== cond)  return false;
+        if (ativo !== '' && String(m.ativo) !== ativo) return false;
+        if (q) {
+          const t = `${m.nome} ${m.marca} ${m.categoria}`.toLowerCase();
+          if (!t.includes(q)) return false;
+        }
+        return true;
+      });
+      currentPage = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page  = filteredMotos.slice(start, start + PAGE_SIZE);
+
+      document.getElementById('motos-tbody').innerHTML = page.map(m => `
+        <tr>
+          <td>
+            ${m.imagem
+              ? `<img src="${m.imagem}" class="td-img" alt="${m.nome}">`
+              : `<div class="td-img-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#ccc" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="#ccc"/><polyline points="21 15 16 10 5 21" stroke="#ccc" stroke-width="2" stroke-linecap="round"/></svg></div>`
+            }
+          </td>
+          <td>
+            <div class="td-name">${m.nome}</div>
+            <div class="td-brand">${m.marca}</div>
+          </td>
+          <td>${m.marca}</td>
+          <td><span class="badge-table bg-blue">${CATS[m.categoria]||m.categoria}</span></td>
+          <td><span class="badge-table ${m.condicao==='nova'?'bg-green':'bg-orange'}">${m.condicao}</span></td>
+          <td style="font-weight:600; color:var(--blue);">${m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : '—'}</td>
+          <td style="text-align:center"><span class="${m.destaque?'dest-star':'dest-no'}">★</span></td>
+          <td><span class="badge-table ${m.ativo?'bg-green':'bg-gray'}">${m.ativo?'Ativo':'Inativo'}</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn btn-ghost btn-sm btn-icon" onclick="openModal(${m.id})" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete(${m.id}, '${m.nome.replace(/'/g,"\\'")} – ${m.marca}')" title="Excluir">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const total = filteredMotos.length;
+      const pages = Math.ceil(total / PAGE_SIZE);
+      const pg    = document.getElementById('pagination');
+
+      if (pages <= 1) { pg.innerHTML = `<span class="page-info">${total} moto${total!==1?'s':''} no total</span>`; return; }
+
+      let html = '';
+      for (let i = 1; i <= pages; i++) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      html += `<span class="page-info">${total} moto${total!==1?'s':''}</span>`;
+      pg.innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; renderTable(); }
+
+    // ── MODAL ADD/EDIT ─────────────────────────────────────────────────────
+    async function openModal(id) {
+      editingId = id;
+      document.getElementById('modal-title').textContent = id ? 'Editar Moto' : 'Nova Moto';
+
+      // Reset form
+      ['nome','marca','preco','preco-original','ano','km','descricao'].forEach(f => {
+        document.getElementById(`field-${f}`).value = '';
+      });
+      document.getElementById('field-categoria').value = '';
+      document.getElementById('field-condicao').value  = 'nova';
+      document.getElementById('field-destaque').checked = false;
+      document.getElementById('field-ativo').checked   = true;
+      document.getElementById('field-imagem').value    = '';
+      document.getElementById('field-imagem-atual').value = '';
+
+      const area = document.getElementById('img-upload-area');
+      area.className = 'img-upload-area';
+      area.innerHTML = `
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="color:#ccc"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="img-upload-txt">Clique para adicionar foto</span>
+        <div class="img-upload-overlay">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="img-upload-txt" style="color:white">Trocar foto</span>
+        </div>`;
+
+      const fotosSection = document.getElementById('fotos-section');
+      fotosSection.style.display = 'none';
+
+      if (id) {
+        try {
+          const m = await fetch(`/api/motos/${id}`).then(r => r.json());
+          document.getElementById('field-nome').value      = m.nome || '';
+          document.getElementById('field-marca').value     = m.marca || '';
+          document.getElementById('field-categoria').value = m.categoria || '';
+          document.getElementById('field-condicao').value  = m.condicao || 'nova';
+          document.getElementById('field-preco').value     = m.preco || '';
+          document.getElementById('field-preco-original').value = m.preco_original || '';
+          document.getElementById('field-ano').value       = m.ano || '';
+          document.getElementById('field-km').value        = m.km !== null ? m.km : '';
+          document.getElementById('field-descricao').value = m.descricao || '';
+          document.getElementById('field-destaque').checked = !!m.destaque;
+          document.getElementById('field-ativo').checked   = !!m.ativo;
+          if (m.imagem) {
+            document.getElementById('field-imagem-atual').value = m.imagem;
+            area.className = 'img-upload-area has-img';
+            area.innerHTML = `<img src="${m.imagem}" alt=""><div class="img-upload-overlay"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="img-upload-txt" style="color:white">Trocar foto</span></div>`;
+          }
+          // Mostra e carrega galeria de fotos
+          fotosSection.style.display = 'block';
+          loadFotos(id);
+        } catch { showToast('Erro ao carregar moto', 'error'); return; }
+      }
+
+      document.getElementById('moto-modal').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('moto-modal').classList.remove('open'); }
+
+    function previewModalImg(input) {
+      if (!input.files[0]) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const area = document.getElementById('img-upload-area');
+        area.className = 'img-upload-area has-img';
+        area.innerHTML = `<img src="${e.target.result}" alt=""><div class="img-upload-overlay"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="img-upload-txt" style="color:white">Trocar foto</span></div>`;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    // ── FOTOS DA GALERIA ───────────────────────────────────────────────────
+    async function loadFotos(motoId) {
+      const grid  = document.getElementById('fotos-grid');
+      const empty = document.getElementById('fotos-empty');
+      try {
+        const fotos = await fetch(`/api/motos/${motoId}/fotos`).then(r => r.json());
+        if (fotos.length === 0) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;" id="fotos-empty">Nenhuma foto na galeria</div>`;
+          return;
+        }
+        grid.innerHTML = fotos.map(f => `
+          <div class="foto-thumb">
+            <img src="${f.url}" alt="Foto ${f.id}" loading="lazy">
+            <button class="foto-thumb-del" onclick="deleteFoto(${f.id}, ${motoId})" title="Remover foto">✕</button>
+          </div>
+        `).join('');
+      } catch(e) {
+        grid.innerHTML = `<div style="grid-column:1/-1;color:var(--red);font-size:.85rem;">Erro ao carregar fotos</div>`;
+      }
+    }
+
+    async function uploadFotos(input) {
+      if (!editingId || !input.files.length) return;
+      const grid = document.getElementById('fotos-grid');
+
+      // Mostra spinners para cada arquivo selecionado
+      const spinners = Array.from(input.files).map((_, i) =>
+        `<div class="foto-uploading" id="spin-${i}"><div class="foto-spin"></div>Enviando...</div>`
+      ).join('');
+      // Remove mensagem vazia se existir
+      const empty = grid.querySelector('#fotos-empty');
+      if (empty) empty.remove();
+      grid.insertAdjacentHTML('beforeend', spinners);
+
+      const fd = new FormData();
+      Array.from(input.files).forEach(f => fd.append('fotos', f));
+
+      try {
+        const r = await fetch(`/api/motos/${editingId}/fotos`, { method: 'POST', body: fd });
+        if (!r.ok) throw new Error();
+        showToast(`${input.files.length} foto(s) adicionada(s)!`, 'success');
+      } catch {
+        showToast('Erro ao enviar fotos', 'error');
+      }
+
+      input.value = '';
+      // Recarrega grid após upload
+      await loadFotos(editingId);
+    }
+
+    async function deleteFoto(fotoId, motoId) {
+      try {
+        const r = await fetch(`/api/fotos/${fotoId}`, { method: 'DELETE' });
+        if (!r.ok) throw new Error();
+        showToast('Foto removida', 'success');
+        loadFotos(motoId);
+      } catch {
+        showToast('Erro ao remover foto', 'error');
+      }
+    }
+
+    async function saveMoto() {
+      const nome = document.getElementById('field-nome').value.trim();
+      const marca= document.getElementById('field-marca').value.trim();
+      const cat  = document.getElementById('field-categoria').value;
+      if (!nome || !marca || !cat) {
+        showToast('Preencha nome, marca e categoria', 'error');
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('nome',           nome);
+      fd.append('marca',          marca);
+      fd.append('categoria',      cat);
+      fd.append('condicao',       document.getElementById('field-condicao').value);
+      fd.append('preco',          document.getElementById('field-preco').value);
+      fd.append('preco_original', document.getElementById('field-preco-original').value);
+      fd.append('ano',            document.getElementById('field-ano').value);
+      fd.append('km',             document.getElementById('field-km').value);
+      fd.append('descricao',      document.getElementById('field-descricao').value);
+      fd.append('destaque',       document.getElementById('field-destaque').checked ? '1' : '0');
+      fd.append('ativo',          document.getElementById('field-ativo').checked ? '1' : '0');
+      fd.append('imagem_atual',   document.getElementById('field-imagem-atual').value);
+      const imgFile = document.getElementById('field-imagem').files[0];
+      if (imgFile) fd.append('imagem', imgFile);
+
+      try {
+        const url    = editingId ? `/api/motos/${editingId}` : '/api/motos';
+        const method = editingId ? 'PUT' : 'POST';
+        const r = await fetch(url, { method, body: fd });
+        if (!r.ok) throw new Error();
+        closeModal();
+        showToast(editingId ? 'Moto atualizada!' : 'Moto cadastrada!', 'success');
+        loadAdminMotos();
+        loadDashboard();
+      } catch { showToast('Erro ao salvar moto', 'error'); }
+    }
+
+    // ── DELETE ─────────────────────────────────────────────────────────────
+    function confirmDelete(id, nome) {
+      document.getElementById('del-nome').textContent = nome;
+      document.getElementById('del-confirm-btn').onclick = () => doDelete(id);
+      document.getElementById('del-modal').classList.add('open');
+    }
+
+    async function doDelete(id) {
+      try {
+        await fetch(`/api/motos/${id}`, { method:'DELETE' });
+        document.getElementById('del-modal').classList.remove('open');
+        showToast('Moto excluída!', 'success');
+        loadAdminMotos();
+        loadDashboard();
+      } catch { showToast('Erro ao excluir', 'error'); }
+    }
+
+    // ── CONFIG ─────────────────────────────────────────────────────────────
+    async function loadConfig() {
+      try {
+        const cfg = await fetch('/api/configuracoes').then(r => r.json());
+        document.getElementById('cfg-telefone').value = cfg.telefone || '';
+        document.getElementById('cfg-whatsapp').value = cfg.whatsapp || '';
+        document.getElementById('cfg-email').value    = cfg.email    || '';
+        document.getElementById('cfg-endereco').value = cfg.endereco || '';
+        if (cfg.logo) {
+          document.getElementById('logo-preview-area').innerHTML = `<img src="${cfg.logo}" alt="Logo">`;
+        }
+        // Carregar previews das imagens de config
+        const imgKeys = ['hero_img','cat_rua_img','cat_offroad_img','cat_quad_img','cat_infantil_img'];
+        for (const k of imgKeys) {
+          if (cfg[k]) setImgPreview(k, cfg[k]);
+        }
+      } catch {}
+    }
+
+    function setImgPreview(chave, url) {
+      const box = document.getElementById('prev-' + chave);
+      if (!box) return;
+      box.style.backgroundImage = `url(${url})`;
+      box.querySelector('.no-img').style.display = 'none';
+    }
+
+    async function uploadConfigImg(input, chave) {
+      if (!input.files[0]) return;
+      const fd = new FormData();
+      fd.append('file', input.files[0]);
+      fd.append('chave', chave);
+      try {
+        const r = await fetch('/api/config/image', { method:'POST', body: fd });
+        if (!r.ok) throw new Error();
+        const { url } = await r.json();
+        setImgPreview(chave, url);
+        showToast('Imagem atualizada!', 'success');
+      } catch { showToast('Erro ao fazer upload', 'error'); }
+    }
+
+    async function saveConfig() {
+      try {
+        await fetch('/api/configuracoes', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telefone: document.getElementById('cfg-telefone').value,
+            whatsapp: document.getElementById('cfg-whatsapp').value,
+            email:    document.getElementById('cfg-email').value,
+            endereco: document.getElementById('cfg-endereco').value,
+          })
+        });
+        showToast('Configurações salvas!', 'success');
+      } catch { showToast('Erro ao salvar', 'error'); }
+    }
+
+    async function uploadLogo(input) {
+      if (!input.files[0]) return;
+      const fd = new FormData();
+      fd.append('logo', input.files[0]);
+      try {
+        const r = await fetch('/api/config/logo', { method:'POST', body: fd });
+        if (!r.ok) throw new Error();
+        const { logo } = await r.json();
+        applyLogo(logo);
+        showToast('Logo atualizado!', 'success');
+      } catch { showToast('Erro ao fazer upload', 'error'); }
+    }
+
+    // ── TOAST ──────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className   = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    // Close modals on overlay click
+    document.getElementById('moto-modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+    document.getElementById('del-modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+    });
+
+    init();
+  </script>
+</body>
+</html>

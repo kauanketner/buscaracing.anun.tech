@@ -1,0 +1,10 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+uploads/
+fotos/
+.env
+.env.local
+.env.production
+.DS_Store

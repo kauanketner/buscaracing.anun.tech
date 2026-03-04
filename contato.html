@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contato | Busca Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--blue:#27367D;--red:#DC2627;--white:#FDFDFB;--deep:#111d45;--bg:#f5f5f2}
+    html{scroll-behavior:smooth}
+    body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--blue);overflow-x:hidden}
+    /* HEADER */
+    header{position:sticky;top:0;z-index:200;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;background:var(--blue);border-bottom:2.5px solid var(--red)}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+    .logo-flag{width:28px;height:28px;flex-shrink:0}
+    .logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;line-height:1;letter-spacing:.04em}
+    .logo-text .b{color:var(--white)}.logo-text .r{color:var(--red)}
+    nav{display:flex;align-items:center;gap:1.5rem}
+    nav a{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(253,253,251,.7);text-decoration:none;position:relative;padding-bottom:3px;transition:color .2s;white-space:nowrap}
+    nav a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--red);transition:width .25s}
+    nav a:hover{color:var(--white)}
+    nav a:hover::after,nav a.active::after{width:100%}
+    nav a.active{color:var(--white)}
+    .header-cta{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.08em;color:var(--white);background:var(--red);padding:9px 18px;text-decoration:none;clip-path:polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%);transition:background .2s;flex-shrink:0;display:flex;align-items:center;gap:6px}
+    .header-cta:hover{background:#ff2f2f}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+    .hamburger span{display:block;width:24px;height:2px;background:var(--white);border-radius:1px}
+    .mobile-nav{display:none;position:fixed;inset:68px 0 0;background:var(--deep);flex-direction:column;padding:2rem;z-index:190}
+    .mobile-nav.open{display:flex}
+    .mobile-nav a{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);text-decoration:none;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.07);transition:color .2s}
+    .mobile-nav a:hover{color:var(--red)}
+    /* ── PAGE BANNER ── */
+    .page-banner { background: var(--blue); padding: 3.5rem 3vw 3rem; position: relative; overflow: hidden; }
+    .page-banner::before { content: 'CONTATO'; position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 22vw; color: rgba(255,255,255,0.03); top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; white-space: nowrap; }
+    .banner-stripe { position: absolute; top: 0; bottom: 0; right: 30%; width: 4px; background: var(--red); transform: skewX(-7deg); }
+    .banner-stripe-2 { position: absolute; top: 0; bottom: 0; right: calc(30% + 12px); width: 1.5px; background: var(--red); opacity: 0.4; transform: skewX(-7deg); }
+    .banner-inner { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+    .breadcrumb { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px; }
+    .breadcrumb a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--red); }
+    .breadcrumb span { color: var(--red); }
+    .banner-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.9; color: var(--white); }
+    .banner-title em { color: var(--red); font-style: normal; }
+    .page-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; color: rgba(255,255,255,0.55); max-width: 500px; line-height: 1.55; margin-top: 0.75rem; position: relative; }
+    /* LAYOUT */
+    .container{max-width:1100px;margin:0 auto;padding:0 3vw}
+    .section{padding:5rem 0}
+    /* CONTACT GRID */
+    .contact-layout{display:grid;grid-template-columns:1fr 360px;gap:3rem;align-items:start}
+    /* FORM */
+    .form-card{background:var(--white);border:1px solid #e4e4e0;padding:2.5rem}
+    .form-card h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--blue);margin-bottom:.4rem}
+    .form-card p{font-size:.88rem;color:#888;margin-bottom:2rem;line-height:1.6}
+    .form-group{margin-bottom:1.25rem}
+    .form-group label{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:.45rem}
+    .form-group input,.form-group select,.form-group textarea{width:100%;border:1.5px solid #ddd;background:#fafafa;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:.9rem;color:var(--blue);outline:none;transition:border-color .2s;border-radius:0;appearance:none}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue)}
+    .form-group textarea{resize:vertical;min-height:130px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .btn-submit{width:100%;background:var(--red);color:var(--white);border:none;padding:14px 24px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:.5rem;clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%)}
+    .btn-submit:hover{background:#ff2f2f;transform:translateY(-2px)}
+    /* SIDEBAR */
+    .sidebar{display:flex;flex-direction:column;gap:1.5rem;position:sticky;top:90px}
+    /* CHANNEL CARDS */
+    .channel-card{background:var(--white);border:1px solid #e4e4e0;padding:1.75rem;display:flex;align-items:flex-start;gap:1rem;text-decoration:none;color:inherit;transition:box-shadow .25s,transform .2s}
+    .channel-card:hover{box-shadow:0 8px 28px rgba(39,54,125,.12);transform:translateY(-3px)}
+    .channel-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .channel-icon.wa{background:#25D366}
+    .channel-icon.tel{background:var(--blue)}
+    .channel-icon.ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+    .channel-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:#aaa;margin-bottom:3px}
+    .channel-value{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--blue);margin-bottom:2px}
+    .channel-hint{font-size:.82rem;color:#888;line-height:1.4}
+    /* HOURS */
+    .hours-card{background:var(--deep);padding:1.75rem;color:var(--white)}
+    .hours-card h4{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--white);margin-bottom:1.25rem}
+    .hours-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.88rem}
+    .hours-row:last-child{border-bottom:none}
+    .hours-row span:first-child{color:rgba(255,255,255,.55)}
+    .hours-row span:last-child{color:var(--white);font-family:'Barlow Condensed',sans-serif;font-weight:600}
+    .hours-row.today span:first-child{color:var(--red)}
+    .hours-row.today span:last-child{color:#4ade80}
+    /* MAP PLACEHOLDER */
+    .map-section{margin-top:3rem}
+    .map-section h3{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;color:var(--blue);margin-bottom:1.25rem}
+    .map-placeholder{background:var(--deep);height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;border:1px solid rgba(255,255,255,.05)}
+    .map-placeholder svg{opacity:.3}
+    .map-placeholder p{font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:rgba(255,255,255,.3)}
+    .map-address{background:var(--white);border:1px solid #e4e4e0;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:12px;margin-top:1px}
+    .map-address svg{flex-shrink:0;color:var(--red)}
+    .map-address p{font-size:.9rem;color:#555;line-height:1.55}
+    .map-address strong{color:var(--blue)}
+    /* ── FOOTER ── */
+    footer { background: var(--deep); padding: 4rem 3vw 2rem; position: relative; margin-top: 3rem; }
+    footer::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg,var(--blue),var(--red),var(--blue)); }
+    .footer-grid { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1.5fr; gap:4rem; padding-bottom:3rem; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .footer-logo-a { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; text-decoration:none; display:inline-block; margin-bottom:0.75rem; }
+    .footer-logo-a .fb { color:var(--white); }
+    .footer-logo-a .fr { color:var(--red); }
+    .footer-logo-img { height: 48px; object-fit: contain; margin-bottom: 0.75rem; display: block; }
+    .footer-about { font-size:.88rem; color:rgba(255,255,255,0.4); line-height:1.7; margin-bottom:1.5rem; }
+    .socials { display:flex; gap:10px; }
+    .soc { width:36px; height:36px; background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.55); cursor:pointer; transition:background 0.2s,color 0.2s; text-decoration:none; }
+    .soc:hover { background:var(--red); color:var(--white); }
+    .fcol-h { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:1.1rem; }
+    .flinks { list-style:none; display:flex; flex-direction:column; gap:8px; }
+    .flinks a { font-family:'Barlow Condensed',sans-serif; font-size:.95rem; color:rgba(255,255,255,0.5); text-decoration:none; display:flex; align-items:center; gap:8px; transition:color 0.2s; }
+    .flinks a::before { content:''; width:4px; height:4px; background:var(--red); border-radius:50%; flex-shrink:0; }
+    .flinks a:hover { color:var(--white); }
+    .fcontact { display:flex; gap:10px; margin-bottom:1rem; align-items:flex-start; }
+    .fcontact-ico { width:16px; height:16px; color:var(--red); flex-shrink:0; margin-top:3px; }
+    .fcontact-txt { font-family:'Barlow Condensed',sans-serif; font-size:.9rem; color:rgba(255,255,255,0.5); line-height:1.5; }
+    .fcontact-txt strong { color:rgba(255,255,255,0.8); display:block; }
+    .footer-bottom { max-width:1400px; margin:2rem auto 0; display:flex; align-items:center; justify-content:space-between; }
+    .fcopy { font-family:'Barlow Condensed',sans-serif; font-size:.78rem; color:rgba(255,255,255,0.25); }
+    .fcopy span { color:var(--red); }
+    @media(max-width:1100px){ .footer-grid{grid-template-columns:1fr 1fr;gap:2.5rem;} }
+    @media(max-width:860px){nav,.header-cta{display:none}.hamburger{display:flex}.contact-layout{grid-template-columns:1fr}.sidebar{position:static}}
+    @media(max-width:768px){ .footer-grid{grid-template-columns:1fr;gap:2rem;} .footer-bottom{flex-direction:column;gap:.5rem;text-align:center;} }
+    @media(max-width:520px){.form-row{grid-template-columns:1fr}header{padding:0 1.25rem}}
+  </style>
+</head>
+<body>
+<header id="site-header">
+  <a href="index.html" class="logo" id="header-logo">
+    <svg class="logo-flag" viewBox="0 0 30 30" fill="none"><rect width="15" height="30" fill="#27367D"/><rect x="15" width="15" height="30" fill="#DC2627"/><rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB"/><rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45"/><rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45"/><rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB"/></svg>
+    <div class="logo-text"><span class="b">BUSCA </span><span class="r">RACING</span></div>
+  </a>
+  <nav>
+    <a href="produtos.html">Motos</a>
+    <a href="acessorios.html">Acessórios</a>
+    <a href="pecas.html">Peças</a>
+    <a href="venda-sua-moto.html">Venda sua Moto</a>
+    <a href="contato.html" class="active">Contato</a>
+  </nav>
+  <a href="https://wa.me/5511993507432" target="_blank" class="header-cta">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    (11) 99350-7432
+  </a>
+  <div class="hamburger" onclick="document.getElementById('mob').classList.toggle('open')"><span></span><span></span><span></span></div>
+</header>
+<div class="mobile-nav" id="mob">
+  <a href="produtos.html">Motos</a><a href="acessorios.html">Acessórios</a><a href="pecas.html">Peças</a><a href="venda-sua-moto.html">Venda sua Moto</a><a href="contato.html">Contato</a>
+</div>
+
+<div class="page-banner">
+  <div class="banner-stripe"></div>
+  <div class="banner-stripe-2"></div>
+  <div class="banner-inner">
+    <div class="breadcrumb"><a href="index.html">Home</a><span>›</span><span style="color:rgba(255,255,255,0.7)">Contato</span></div>
+    <h1 class="banner-title">FALE<br><em>CONOSCO</em></h1>
+    <p class="page-sub">Estamos aqui para ajudar. Escolha o canal mais prático e entraremos em contato rapidamente.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section">
+    <div class="contact-layout">
+
+      <!-- Form -->
+      <div>
+        <div class="form-card">
+          <h2>ENVIE UMA MENSAGEM</h2>
+          <p>Preencha o formulário abaixo e nossa equipe responde em até 2 horas úteis. Para respostas mais rápidas, use o WhatsApp.</p>
+          <form id="contact-form" onsubmit="enviarContato(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nome *</label>
+                <input type="text" id="c-nome" placeholder="Seu nome" required>
+              </div>
+              <div class="form-group">
+                <label>Telefone / WhatsApp</label>
+                <input type="tel" id="c-tel" placeholder="(11) 99999-9999">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Assunto *</label>
+              <select id="c-assunto" required>
+                <option value="">Selecione o assunto...</option>
+                <option>Informações sobre motos</option>
+                <option>Acessórios e equipamentos</option>
+                <option>Peças e componentes</option>
+                <option>Quero vender minha moto</option>
+                <option>Dúvidas sobre pagamento</option>
+                <option>Reclamação ou sugestão</option>
+                <option>Outro assunto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Mensagem *</label>
+              <textarea id="c-msg" placeholder="Escreva sua mensagem aqui..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polygon points="22 2 15 22 11 13 2 9 22 2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+              Enviar via WhatsApp
+            </button>
+          </form>
+        </div>
+
+        <!-- Map section -->
+        <div class="map-section">
+          <h3>ONDE ESTAMOS</h3>
+          <div class="map-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="white" stroke-width="1.5"/><circle cx="12" cy="10" r="3" stroke="white" stroke-width="1.5"/></svg>
+            <p>Localização disponível em breve</p>
+          </div>
+          <div class="map-address">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>
+            <p><strong>Busca Racing</strong><br>São Paulo, SP · Atendemos por agendamento e pelo WhatsApp</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <a href="https://wa.me/5511993507432" target="_blank" class="channel-card">
+          <div class="channel-icon wa">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.555 4.122 1.526 5.855L0 24l6.334-1.49A11.933 11.933 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.854 0-3.601-.478-5.12-1.318L3 22l1.348-4.78A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+          </div>
+          <div>
+            <div class="channel-label">WhatsApp</div>
+            <div class="channel-value">(11) 99350-7432</div>
+            <p class="channel-hint">Resposta rápida · Seg–Sáb</p>
+          </div>
+        </a>
+
+        <a href="tel:+5511993507432" class="channel-card">
+          <div class="channel-icon tel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.21 1.21 2 2 0 012.22.03h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <div>
+            <div class="channel-label">Telefone</div>
+            <div class="channel-value">(11) 99350-7432</div>
+            <p class="channel-hint">Seg–Sex 9h às 18h</p>
+          </div>
+        </a>
+
+        <a href="https://instagram.com/buscaracing" target="_blank" class="channel-card">
+          <div class="channel-icon ig">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="white" stroke-width="1.5"/><circle cx="17.5" cy="6.5" r="1.2" fill="white"/></svg>
+          </div>
+          <div>
+            <div class="channel-label">Instagram</div>
+            <div class="channel-value">@buscaracing</div>
+            <p class="channel-hint">Acompanhe novidades</p>
+          </div>
+        </a>
+
+        <div class="hours-card">
+          <h4>HORÁRIO DE ATENDIMENTO</h4>
+          <div class="hours-row" id="row-seg"><span>Segunda-feira</span><span>9h – 18h</span></div>
+          <div class="hours-row" id="row-ter"><span>Terça-feira</span><span>9h – 18h</span></div>
+          <div class="hours-row" id="row-qua"><span>Quarta-feira</span><span>9h – 18h</span></div>
+          <div class="hours-row" id="row-qui"><span>Quinta-feira</span><span>9h – 18h</span></div>
+          <div class="hours-row" id="row-sex"><span>Sexta-feira</span><span>9h – 18h</span></div>
+          <div class="hours-row" id="row-sab"><span>Sábado</span><span>9h – 13h</span></div>
+          <div class="hours-row" id="row-dom"><span>Domingo</span><span>Fechado</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" class="footer-logo-a" id="footer-logo">
+        <span class="fb">BUSCA</span><span class="fr">&nbsp;RACING</span>
+      </a>
+      <p class="footer-about">A maior loja multi marcas de motos da região. Motos de rua, offroad, quadriciclos e veículos infantis.</p>
+      <div class="socials">
+        <a href="https://instagram.com/buscaracing/" target="_blank" class="soc" title="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+        </a>
+        <a href="https://facebook.com/profile.php?id=61556789052604" target="_blank" class="soc" title="Facebook">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://youtube.com/@BuscaRacing" target="_blank" class="soc" title="YouTube">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z" stroke="currentColor" stroke-width="2"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor"/></svg>
+        </a>
+        <a href="https://wa.me/5511993507432" target="_blank" class="soc" title="WhatsApp">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+    <div>
+      <h4 class="fcol-h">Categorias</h4>
+      <ul class="flinks">
+        <li><a href="produtos.html?categoria=motos-rua">Motos de Rua</a></li>
+        <li><a href="produtos.html?categoria=offroad">Offroad</a></li>
+        <li><a href="produtos.html?categoria=quadriciclos">Quadriciclos</a></li>
+        <li><a href="produtos.html?categoria=infantil">Infantil</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="fcol-h">Institucional</h4>
+      <ul class="flinks">
+        <li><a href="index.html">Sobre a Loja</a></li>
+        <li><a href="#">Financiamento</a></li>
+        <li><a href="#">Revisões</a></li>
+        <li><a href="contato.html">Contato</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="fcol-h">Contato</h4>
+      <div class="fcontact">
+        <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>
+        <div class="fcontact-txt"><strong>Endereço</strong>Rua Conceição Borreiro Peres, 64<br>Caieiras – SP</div>
+      </div>
+      <div class="fcontact">
+        <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.46 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2"/></svg>
+        <div class="fcontact-txt"><strong>Telefone / WhatsApp</strong>(11) 99350-7432</div>
+      </div>
+      <div class="fcontact">
+        <svg class="fcontact-ico" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/></svg>
+        <div class="fcontact-txt"><strong>E-mail</strong>contato@buscaracing.com</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="fcopy">© 2026 <span>Busca Racing</span>. Todos os direitos reservados.</p>
+    <p class="fcopy">Caieiras – SP · <span>(11) 99350-7432</span></p>
+  </div>
+</footer>
+
+<script>
+  // Highlight today
+  const days = ['row-dom','row-seg','row-ter','row-qua','row-qui','row-sex','row-sab'];
+  const today = new Date().getDay();
+  const el = document.getElementById(days[today]);
+  if(el) el.classList.add('today');
+
+  function enviarContato(e) {
+    e.preventDefault();
+    const nome = document.getElementById('c-nome').value.trim();
+    const tel = document.getElementById('c-tel').value.trim();
+    const assunto = document.getElementById('c-assunto').value;
+    const msg = document.getElementById('c-msg').value.trim();
+
+    let texto = `Olá! Entro em contato pelo site.\n\n`;
+    texto += `*Nome:* ${nome}\n`;
+    if(tel) texto += `*Telefone:* ${tel}\n`;
+    texto += `*Assunto:* ${assunto}\n\n`;
+    texto += `*Mensagem:* ${msg}`;
+
+    window.open(`https://wa.me/5511993507432?text=${encodeURIComponent(texto)}`, '_blank');
+  }
+
+  // Dynamic logo
+  fetch('/api/config/logo').then(r=>r.json()).then(d=>{
+    if(!d.logo) return;
+    ['header-logo','footer-logo'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      const img=document.createElement('img');
+      img.src=d.logo;img.alt='Busca Racing';
+      img.style.cssText=id==='header-logo'?'height:42px;object-fit:contain':'height:48px;object-fit:contain;display:block;margin-bottom:.75rem';
+      el.innerHTML='';el.appendChild(img);
+    });
+  }).catch(()=>{});
+</script>
+</body>
+</html>

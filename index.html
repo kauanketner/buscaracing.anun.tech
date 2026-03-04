@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Busca Racing — Loja de Motos Multi Marcas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:  #27367D;
+      --red:   #DC2627;
+      --white: #FDFDFB;
+      --deep:  #111d45;
+      --mid:   #1e2d6b;
+      --rh:    #ff2f2f;
+      --muted: rgba(253,253,251,.5);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Barlow', sans-serif; background: var(--white); color: var(--blue); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--deep); }
+    ::-webkit-scrollbar-thumb { background: var(--red); }
+
+    /* HEADER */
+    header {
+      position: fixed; inset: 0 0 auto; z-index: 200; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; background: var(--blue);
+      border-bottom: 2.5px solid var(--red); transition: background .3s;
+    }
+    header.scrolled { background: rgba(17,29,69,.96); backdrop-filter: blur(14px); }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-flag { width: 30px; height: 30px; flex-shrink: 0; }
+    .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 1.85rem; line-height: 1; letter-spacing: .04em; }
+    .logo-text .b { color: var(--white); }
+    .logo-text .r { color: var(--red); }
+    nav { display: flex; align-items: center; gap: 1.5rem; }
+    nav a {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: .85rem;
+      letter-spacing: .12em; text-transform: uppercase; color: rgba(253,253,251,.7);
+      text-decoration: none; position: relative; padding-bottom: 3px; transition: color .2s; white-space: nowrap;
+    }
+    nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--red); transition: width .25s; }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after { width: 100%; }
+    .header-cta {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .85rem;
+      letter-spacing: .08em; color: var(--white); background: var(--red); padding: 9px 20px;
+      text-decoration: none; clip-path: polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%);
+      transition: background .2s; flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+    }
+    .header-cta:hover { background: var(--rh); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 1px; transition: all .3s; }
+    .mobile-nav {
+      display: none; position: fixed; inset: 68px 0 0; background: var(--deep);
+      flex-direction: column; padding: 2rem; z-index: 190; overflow-y: auto;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.5rem;
+      letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.75);
+      text-decoration: none; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,.07); transition: color .2s;
+    }
+    .mobile-nav a:hover { color: var(--red); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; background: var(--blue);
+      position: relative; display: flex; align-items: center;
+      overflow: hidden; padding-top: 68px;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--deep) 0%, var(--blue) 55%, #1a2d7a 100%); z-index: 0;
+    }
+    .hero-lines { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .s-line {
+      position: absolute; height: 1px; left: -300px;
+      background: linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+      animation: speedLine var(--dur,3s) var(--delay,0s) linear infinite;
+    }
+    @keyframes speedLine {
+      0% { transform: translateX(0); opacity: 0; }
+      10% { opacity: 1; } 90% { opacity: 1; }
+      100% { transform: translateX(110vw); opacity: 0; }
+    }
+    .hero-stripe-a { position: absolute; top: 0; bottom: 0; right: 38%; width: 5px; background: var(--red); transform: skewX(-7deg); z-index: 3; }
+    .hero-stripe-b { position: absolute; top: 0; bottom: 0; right: calc(38% + 14px); width: 2px; background: var(--red); opacity: .4; transform: skewX(-7deg); z-index: 3; }
+    /* Foto do hero (carregada dinamicamente) */
+    .hero-photo-bg { position: absolute; right: 0; top: 0; bottom: 0; width: 55%; z-index: 1; overflow: hidden; opacity: 0; transition: opacity .6s ease; }
+    .hero-photo-bg.loaded { opacity: 1; }
+    .hero-photo-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+    .hero-photo-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, var(--deep) 0%, rgba(17,29,69,.55) 20%, rgba(17,29,69,.15) 50%, transparent 75%); }
+    .hero-glow { position: absolute; top: 10%; right: 22%; width: 700px; height: 700px; background: radial-gradient(circle,rgba(220,38,39,.1) 0%,transparent 65%); pointer-events: none; z-index: 0; }
+    .hero-content { position: relative; z-index: 2; padding: 0 5vw; max-width: 660px; }
+    .hero-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: .78rem;
+      letter-spacing: .3em; text-transform: uppercase; color: var(--red);
+      display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem;
+      opacity: 0; animation: fadeUp .7s .1s ease forwards;
+    }
+    .hero-eyebrow::before { content: ''; display: inline-block; width: 28px; height: 2px; background: var(--red); }
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: clamp(4rem,9vw,9.5rem); line-height: .88;
+      color: var(--white); margin-bottom: 1.75rem; opacity: 0; animation: fadeUp .7s .22s ease forwards;
+    }
+    .hero-title .accent { color: var(--red); display: block; }
+    .hero-sub {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem;
+      color: rgba(253,253,251,.65); line-height: 1.55; max-width: 400px;
+      margin-bottom: 2.5rem; opacity: 0; animation: fadeUp .7s .34s ease forwards;
+    }
+    .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; opacity: 0; animation: fadeUp .7s .46s ease forwards; }
+    .hero-visual {
+      position: absolute; right: 0; bottom: 0; width: 56%; height: 88%;
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 1; pointer-events: none; opacity: 0;
+      animation: bikeReveal 1s .4s ease forwards;
+    }
+    @keyframes bikeReveal { from { transform: translateX(70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .hero-stats {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,.35); backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(220,38,39,.25);
+      display: flex; z-index: 3; opacity: 0; animation: fadeIn .7s .7s ease forwards;
+    }
+    .stat-item { flex: 1; padding: 1.4rem 1rem; text-align: center; border-right: 1px solid rgba(255,255,255,.07); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--white); line-height: 1; display: block; }
+    .stat-num em { color: var(--red); font-style: normal; }
+    .stat-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.45); display: block; margin-top: 2px; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* BUTTONS */
+    .btn { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .95rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; display: inline-block; padding: 13px 30px; transition: all .2s; cursor: pointer; border: none; }
+    .btn-red { color: var(--white); background: var(--red); clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%); }
+    .btn-red:hover { background: var(--rh); transform: translateX(3px); }
+    .btn-ghost { color: var(--white); background: transparent; border: 2px solid rgba(253,253,251,.35); }
+    .btn-ghost:hover { border-color: var(--white); }
+    .btn-blue { color: var(--white); background: var(--blue); clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%); }
+    .btn-blue:hover { background: var(--mid); transform: translateX(3px); }
+
+    /* SECTION UTILS */
+    .section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: .78rem; letter-spacing: .32em; text-transform: uppercase; color: var(--red); display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: .75rem; }
+    .section-label::before, .section-label::after { content: ''; display: block; width: 22px; height: 1px; background: var(--red); }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem,5.5vw,5rem); line-height: .9; color: var(--blue); text-align: center; }
+    .section-title.on-dark { color: var(--white); }
+    .section-head { text-align: center; margin-bottom: 3.5rem; }
+
+    /* CATEGORIES */
+    .categories { padding: 6rem 3vw; background: var(--white); }
+    .cats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; max-width: 1400px; margin: 0 auto; }
+    .cat-card { position: relative; overflow: hidden; aspect-ratio: 3/4; text-decoration: none; display: block; cursor: pointer; }
+    .cat-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform .6s ease; }
+    .cat-card:hover .cat-bg { transform: scale(1.06); }
+    .cat-overlay { position: absolute; inset: 0; background: linear-gradient(175deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.55) 50%,rgba(0,0,0,.87) 100%); transition: opacity .3s; }
+    .cat-card:hover .cat-overlay { opacity: .88; }
+    .cat-body { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.75rem 1.5rem; z-index: 2; }
+    .cat-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--red); margin-bottom: .5rem; display: block; }
+    .cat-name { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; line-height: .92; color: var(--white); display: block; margin-bottom: .6rem; }
+    .cat-desc { font-family: 'Barlow Condensed', sans-serif; font-size: .88rem; color: rgba(255,255,255,.6); line-height: 1.4; }
+    .cat-arrow { position: absolute; top: 1.25rem; right: 1.25rem; width: 36px; height: 36px; background: var(--red); display: flex; align-items: center; justify-content: center; color: var(--white); clip-path: polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%); opacity: 0; transform: translateY(-8px); transition: opacity .3s, transform .3s; }
+    .cat-card:hover .cat-arrow { opacity: 1; transform: translateY(0); }
+
+    /* BRANDS */
+    .brands-bar { padding: 2.5rem 0; background: var(--deep); overflow: hidden; position: relative; }
+    .brands-bar::before, .brands-bar::after { content: ''; position: absolute; top: 0; bottom: 0; width: 100px; z-index: 2; pointer-events: none; }
+    .brands-bar::before { left: 0; background: linear-gradient(90deg,var(--deep),transparent); }
+    .brands-bar::after { right: 0; background: linear-gradient(-90deg,var(--deep),transparent); }
+    .brands-label-txt { text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: .7rem; letter-spacing: .35em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 1.25rem; }
+    .brands-track { display: flex; width: max-content; animation: marquee 28s linear infinite; }
+    .brands-row { display: flex; flex-shrink: 0; }
+    .brand-pill { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: .08em; color: rgba(255,255,255,.2); padding: 0 2.8rem; position: relative; white-space: nowrap; cursor: default; transition: color .25s; }
+    .brand-pill:hover { color: rgba(255,255,255,.85); }
+    .brand-pill::after { content: '×'; position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(50%); color: var(--red); font-size: .85rem; opacity: .6; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* FEATURED */
+    .featured { padding: 6rem 3vw; background: #f5f5f2; }
+    .featured-inner { max-width: 1400px; margin: 0 auto; }
+    .featured-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; }
+    .f-card { background: var(--white); text-decoration: none; color: inherit; display: flex; flex-direction: column; border: 1px solid #e8e8e5; transition: transform .25s, box-shadow .25s; }
+    .f-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(39,54,125,.14); }
+    .f-img { aspect-ratio: 4/3; overflow: hidden; background: #eeeeed; display: flex; align-items: center; justify-content: center; position: relative; }
+    .f-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+    .f-card:hover .f-img img { transform: scale(1.05); }
+    .f-badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+    .f-badge { font-family: 'Barlow Condensed', sans-serif; font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; }
+    .f-badge-dest { background: var(--deep); color: #f5c518; }
+    .f-badge-nova { background: #1e7e34; color: #fff; }
+    .f-badge-usada { background: #6c4f00; color: #fff; }
+    .f-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+    .f-brand { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: 2px; }
+    .f-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; line-height: .95; color: var(--blue); margin-bottom: auto; }
+    .f-specs { font-family: 'Barlow Condensed', sans-serif; font-size: .82rem; color: #888; margin-top: .5rem; }
+    .f-foot { display: flex; align-items: center; justify-content: space-between; margin-top: .85rem; padding-top: .85rem; border-top: 1px solid #eee; }
+    .f-price { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--blue); }
+    .f-price small { font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; font-weight: 600; color: #aaa; display: block; line-height: 1; }
+    .f-arrow { width: 36px; height: 36px; background: var(--blue); display: flex; align-items: center; justify-content: center; color: var(--white); clip-path: polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%); flex-shrink: 0; transition: background .2s; }
+    .f-card:hover .f-arrow { background: var(--red); }
+    .skeleton { background: linear-gradient(90deg,#e0e0da 25%,#ebebeb 50%,#e0e0da 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* WHY US */
+    .why { padding: 6rem 3vw; background: var(--white); }
+    .why-inner { max-width: 1200px; margin: 0 auto; }
+    .why-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; margin-top: 3.5rem; }
+    .why-card { text-align: center; padding: 2rem 1rem; }
+    .why-icon { width: 56px; height: 56px; background: var(--blue); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+    .why-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--blue); margin-bottom: .5rem; }
+    .why-desc { font-size: .88rem; color: #666; line-height: 1.65; }
+
+    /* CTA BAND */
+    .cta-band { padding: 5rem 3vw; background: var(--red); position: relative; overflow: hidden; text-align: center; }
+    .cta-band::before { content: 'RACING'; font-family: 'Bebas Neue', sans-serif; font-size: 40vw; color: rgba(0,0,0,.07); position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; white-space: nowrap; line-height: 1; }
+    .cta-band h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem,5vw,4.5rem); color: var(--white); line-height: .95; margin-bottom: 1rem; position: relative; }
+    .cta-band p { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; color: rgba(255,255,255,.75); margin-bottom: 2rem; position: relative; }
+    .btn-white { background: var(--white); color: var(--red); clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: .1em; text-transform: uppercase; padding: 14px 36px; text-decoration: none; display: inline-block; transition: transform .2s, opacity .2s; position: relative; }
+    .btn-white:hover { transform: translateX(4px); opacity: .92; }
+
+    /* FOOTER */
+    footer { background: var(--deep); color: rgba(255,255,255,.5); }
+    .footer-top { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 3rem; padding: 4rem 3vw; max-width: 1400px; margin: 0 auto; }
+    .footer-logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 1rem; }
+    .footer-tagline { font-size: .88rem; line-height: 1.65; color: rgba(255,255,255,.45); margin-bottom: 1.5rem; }
+    .footer-social { display: flex; gap: 10px; }
+    .soc { width: 34px; height: 34px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.5); text-decoration: none; transition: background .2s, color .2s; }
+    .soc:hover { background: var(--red); color: var(--white); border-color: var(--red); }
+    .footer-col h4 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .72rem; letter-spacing: .25em; text-transform: uppercase; color: var(--white); margin-bottom: 1.25rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+    .footer-col ul li a { font-size: .88rem; color: rgba(255,255,255,.45); text-decoration: none; transition: color .2s; }
+    .footer-col ul li a:hover { color: var(--red); }
+    .footer-ci { display: flex; gap: 10px; margin-bottom: .85rem; font-size: .88rem; line-height: 1.5; }
+    .footer-ci-icon { flex-shrink: 0; color: var(--red); margin-top: 2px; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 1.25rem 3vw; display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; font-size: .8rem; }
+
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+      .featured-grid { grid-template-columns: repeat(2,1fr); }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 860px) {
+      nav, .header-cta { display: none; }
+      .hamburger { display: flex; }
+      .cats-grid { grid-template-columns: 1fr 1fr; }
+      .why-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      header { padding: 0 1.25rem; }
+      .hero-visual { display: none; }
+      .hero-stripe-a, .hero-stripe-b { display: none; }
+      .cats-grid { gap: 8px; }
+      .featured-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+      .why-grid { gap: 1rem; }
+      .footer-top { grid-template-columns: 1fr; gap: 2rem; }
+      .footer-bottom { flex-direction: column; gap: .5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a href="index.html" class="logo" id="header-logo">
+    <svg class="logo-flag" viewBox="0 0 30 30" fill="none">
+      <rect width="15" height="30" fill="#27367D"/>
+      <rect x="15" width="15" height="30" fill="#DC2627"/>
+      <rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB"/>
+      <rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45"/>
+      <rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45"/>
+      <rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB"/>
+    </svg>
+    <div class="logo-text"><span class="b">BUSCA </span><span class="r">RACING</span></div>
+  </a>
+  <nav>
+    <a href="produtos.html">Motos</a>
+    <a href="acessorios.html">Acessórios</a>
+    <a href="pecas.html">Peças</a>
+    <a href="venda-sua-moto.html">Venda sua Moto</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <a href="https://wa.me/5511993507432" target="_blank" class="header-cta">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    (11) 99350-7432
+  </a>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobile-nav">
+  <a href="produtos.html">Motos</a>
+  <a href="acessorios.html">Acessórios</a>
+  <a href="pecas.html">Peças</a>
+  <a href="venda-sua-moto.html">Venda sua Moto</a>
+  <a href="contato.html">Contato</a>
+  <a href="https://wa.me/5511993507432" target="_blank" style="color:var(--red);margin-top:.5rem">(11) 99350-7432</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-lines" id="hero-lines"></div>
+  <div class="hero-photo-bg" id="hero-photo-bg"></div>
+  <div class="hero-stripe-a"></div>
+  <div class="hero-stripe-b"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">Multi Marcas · Desde 2010</div>
+    <h1 class="hero-title">VELOCIDADE<span class="accent">SEM LIMITES</span></h1>
+    <p class="hero-sub">Motos de rua, offroad, quadriciclos e bikes infantis. As melhores marcas em um único lugar em Caieiras – SP.</p>
+    <div class="hero-ctas">
+      <a href="produtos.html" class="btn btn-red">Ver Estoque</a>
+      <a href="https://wa.me/5511993507432" target="_blank" class="btn btn-ghost">Falar com Vendedor</a>
+    </div>
+  </div>
+
+  <!-- Sportbike SVG detalhado -->
+  <div class="hero-visual">
+    <svg viewBox="0 0 900 500" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:88%">
+      <!-- Roda traseira -->
+      <circle cx="690" cy="370" r="108" stroke="rgba(255,255,255,0.18)" stroke-width="11"/>
+      <circle cx="690" cy="370" r="90" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+      <circle cx="690" cy="370" r="24" fill="rgba(220,38,39,0.75)" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+      <line x1="690" y1="262" x2="690" y2="346" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="690" y1="394" x2="690" y2="478" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="582" y1="370" x2="666" y2="370" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="714" y1="370" x2="798" y2="370" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="613" y1="293" x2="660" y2="354" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="720" y1="386" x2="767" y2="447" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="613" y1="447" x2="660" y2="386" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="720" y1="354" x2="767" y2="293" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <!-- Freio traseiro -->
+      <circle cx="690" cy="370" r="60" stroke="rgba(220,38,39,0.3)" stroke-width="3" stroke-dasharray="12 8"/>
+      <!-- Roda dianteira -->
+      <circle cx="195" cy="370" r="108" stroke="rgba(255,255,255,0.18)" stroke-width="11"/>
+      <circle cx="195" cy="370" r="90" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+      <circle cx="195" cy="370" r="24" fill="rgba(220,38,39,0.75)" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+      <line x1="195" y1="262" x2="195" y2="346" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="195" y1="394" x2="195" y2="478" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="87" y1="370" x2="171" y2="370" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="219" y1="370" x2="303" y2="370" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <line x1="118" y1="293" x2="165" y2="354" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="225" y1="386" x2="272" y2="447" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="118" y1="447" x2="165" y2="386" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <line x1="225" y1="354" x2="272" y2="293" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <circle cx="195" cy="370" r="60" stroke="rgba(220,38,39,0.3)" stroke-width="3" stroke-dasharray="12 8"/>
+      <!-- Forcella dianteira (garfo) -->
+      <path d="M238 262 L303 368" stroke="rgba(255,255,255,0.4)" stroke-width="9" stroke-linecap="round"/>
+      <path d="M226 258 L291 366" stroke="rgba(255,255,255,0.22)" stroke-width="5" stroke-linecap="round"/>
+      <!-- Guidon / manubrio -->
+      <path d="M305 245 Q322 233 345 235 Q368 237 375 250" stroke="rgba(255,255,255,0.55)" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+      <path d="M345 235 L342 215 Q354 204 372 208 L385 214" stroke="rgba(255,255,255,0.4)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- Carenagem dianteira / farol -->
+      <path d="M265 200 Q285 160 318 150 Q350 141 372 155 Q390 167 386 190 Q374 218 350 232 Q320 245 292 244 Q268 238 263 218 Z" fill="rgba(220,38,39,0.8)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+      <path d="M278 192 Q295 165 322 157 Q348 152 366 165" stroke="rgba(255,255,255,0.55)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="310" cy="188" rx="18" ry="12" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+      <!-- Tanque -->
+      <path d="M372 155 Q435 116 520 112 Q582 108 618 128 Q640 140 636 168 Q624 196 584 208 Q534 220 472 217 Q408 214 376 194 Q360 180 372 155 Z" fill="rgba(30,45,107,0.95)" stroke="rgba(255,255,255,0.28)" stroke-width="2.5"/>
+      <path d="M388 148 Q448 120 525 115 Q578 112 612 132" stroke="rgba(220,38,39,0.65)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M395 170 Q450 155 520 152 Q568 150 600 162" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- Assento -->
+      <path d="M575 180 Q618 168 668 162 Q700 158 716 167 Q730 176 726 192 Q716 206 686 210 Q644 215 604 208 Q578 202 575 188 Z" fill="rgba(10,14,40,0.98)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <!-- Rabeta esportiva -->
+      <path d="M716 167 Q758 155 790 146 Q818 140 828 150 Q833 161 822 172 Q800 188 762 193 Q730 196 717 186 Z" fill="rgba(220,38,39,0.85)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <path d="M816 142 Q832 138 840 148 Q842 160 835 170 Q828 175 822 172" stroke="rgba(255,100,100,0.9)" stroke-width="2" fill="rgba(255,80,80,0.5)"/>
+      <!-- Quadro principal -->
+      <path d="M372 190 L392 300 L472 320 L572 305 L614 228 L584 208" stroke="rgba(255,255,255,0.25)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M472 320 L500 370" stroke="rgba(255,255,255,0.2)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M472 320 L435 370" stroke="rgba(255,255,255,0.15)" stroke-width="5" stroke-linecap="round"/>
+      <!-- Bloco motor -->
+      <rect x="408" y="278" width="170" height="96" rx="10" fill="rgba(15,22,55,0.9)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+      <rect x="422" y="290" width="54" height="38" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+      <rect x="484" y="290" width="54" height="38" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+      <line x1="408" y1="318" x2="578" y2="318" stroke="rgba(220,38,39,0.35)" stroke-width="1.5"/>
+      <rect x="422" y="336" width="138" height="28" rx="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <!-- Escapamento -->
+      <path d="M498 368 Q546 374 596 368 Q644 360 678 368" stroke="rgba(255,160,30,0.55)" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M498 368 Q546 376 596 370 Q644 362 678 370" stroke="rgba(255,255,255,0.12)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <ellipse cx="684" cy="369" rx="13" ry="9" fill="rgba(255,140,20,0.45)" stroke="rgba(255,190,60,0.6)" stroke-width="2"/>
+      <!-- Suspensão traseira -->
+      <path d="M593 305 L636 368" stroke="rgba(255,255,255,0.28)" stroke-width="5.5" stroke-linecap="round"/>
+      <!-- Corrente -->
+      <path d="M500 370 Q590 385 680 370" stroke="rgba(255,255,255,0.1)" stroke-width="3" fill="none" stroke-dasharray="7 4"/>
+      <!-- Farol traseiro detalhes -->
+      <path d="M790 144 Q820 140 832 148 L840 158" stroke="rgba(255,180,180,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Sombra chão -->
+      <ellipse cx="440" cy="480" rx="295" ry="13" fill="rgba(0,0,0,0.28)"/>
+    </svg>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">500<em>+</em></span>
+      <span class="stat-lbl">Modelos em Estoque</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">15<em>+</em></span>
+      <span class="stat-lbl">Marcas Parceiras</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">14<em>+</em></span>
+      <span class="stat-lbl">Anos de Experiência</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">98<em>%</em></span>
+      <span class="stat-lbl">Clientes Satisfeitos</span>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories reveal">
+  <div class="section-head">
+    <div class="section-label">Encontre o que procura</div>
+    <h2 class="section-title">NOSSA LINHA COMPLETA</h2>
+  </div>
+  <div class="cats-grid">
+
+    <a href="produtos.html?categoria=motos-rua" class="cat-card" id="cat-rua">
+      <div class="cat-bg" style="background:linear-gradient(145deg,#060c1f 0%,#111d4a 40%,#1e2e6e 70%,#0e1840 100%);">
+        <svg viewBox="0 0 500 340" fill="none" style="position:absolute;inset:0;width:100%;height:100%;padding:24px 30px;opacity:.4">
+          <circle cx="118" cy="258" r="72" stroke="white" stroke-width="7"/>
+          <circle cx="382" cy="258" r="72" stroke="white" stroke-width="7"/>
+          <circle cx="118" cy="258" r="20" fill="rgba(220,38,39,.7)"/>
+          <circle cx="382" cy="258" r="20" fill="rgba(220,38,39,.7)"/>
+          <line x1="118" y1="186" x2="118" y2="238" stroke="white" stroke-width="2.5"/>
+          <line x1="118" y1="278" x2="118" y2="330" stroke="white" stroke-width="2.5"/>
+          <line x1="46"  y1="258" x2="98"  y2="258" stroke="white" stroke-width="2.5"/>
+          <line x1="138" y1="258" x2="190" y2="258" stroke="white" stroke-width="2.5"/>
+          <line x1="310" y1="186" x2="310" y2="238" stroke="white" stroke-width="2.5"/>
+          <line x1="382" y1="186" x2="382" y2="238" stroke="white" stroke-width="2.5"/>
+          <line x1="382" y1="278" x2="382" y2="330" stroke="white" stroke-width="2.5"/>
+          <line x1="310" y1="258" x2="362" y2="258" stroke="white" stroke-width="2.5"/>
+          <line x1="402" y1="258" x2="454" y2="258" stroke="white" stroke-width="2.5"/>
+          <!-- forcella -->
+          <path d="M192 178 L189 200 L186 258" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <!-- guidon -->
+          <path d="M192 178 Q210 165 232 168 Q250 170 256 183" stroke="white" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <!-- carenagem -->
+          <path d="M170 142 Q190 112 220 106 Q248 101 264 118 Q275 132 270 152 Q260 172 242 181 Q220 190 200 187 Q178 182 170 162 Z" fill="rgba(220,38,39,.7)" stroke="white" stroke-width="1.5"/>
+          <!-- tanque -->
+          <path d="M256 118 Q308 88 358 84 Q394 82 410 98 Q420 110 416 128 Q406 148 376 155 Q340 163 300 160 Q266 157 252 140 Z" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/>
+          <!-- assento -->
+          <path d="M376 118 Q410 108 444 104 Q462 102 468 112 Q470 122 460 130 Q438 140 408 142 Q385 143 378 130 Z" fill="rgba(220,38,39,.55)" stroke="white" stroke-width="1.5"/>
+          <!-- quadro -->
+          <path d="M256 138 L268 220 L320 232 L376 222 L404 160 L380 150" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- motor -->
+          <rect x="272" y="202" width="112" height="60" rx="7" fill="rgba(255,255,255,.08)" stroke="white" stroke-width="1.5"/>
+          <!-- escapamento -->
+          <path d="M338 258 Q368 264 400 258" stroke="rgba(255,180,50,.65)" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="cat-overlay"></div>
+      <div class="cat-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="cat-body">
+        <span class="cat-label">Categoria</span>
+        <span class="cat-name">MOTOS<br>DE RUA</span>
+        <span class="cat-desc">Naked, esportivas, touring e custom para o dia a dia</span>
+      </div>
+    </a>
+
+    <a href="produtos.html?categoria=offroad" class="cat-card" id="cat-offroad">
+      <div class="cat-bg" style="background:linear-gradient(145deg,#120800 0%,#2e1200 40%,#522200 70%,#3a1700 100%);">
+        <svg viewBox="0 0 500 340" fill="none" style="position:absolute;inset:0;width:100%;height:100%;padding:24px 30px;opacity:.4">
+          <!-- Rodas offroad com knobby -->
+          <circle cx="118" cy="265" r="76" stroke="white" stroke-width="7"/>
+          <circle cx="382" cy="265" r="76" stroke="white" stroke-width="7"/>
+          <circle cx="118" cy="265" r="18" fill="rgba(220,38,39,.7)"/>
+          <circle cx="382" cy="265" r="18" fill="rgba(220,38,39,.7)"/>
+          <line x1="118" y1="189" x2="118" y2="247" stroke="white" stroke-width="2.5"/>
+          <line x1="118" y1="283" x2="118" y2="341" stroke="white" stroke-width="2.5"/>
+          <line x1="42" y1="265" x2="100" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="136" y1="265" x2="194" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="382" y1="189" x2="382" y2="247" stroke="white" stroke-width="2.5"/>
+          <line x1="382" y1="283" x2="382" y2="341" stroke="white" stroke-width="2.5"/>
+          <line x1="306" y1="265" x2="364" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="400" y1="265" x2="458" y2="265" stroke="white" stroke-width="2.5"/>
+          <!-- forcella longa -->
+          <path d="M194 155 L190 210 L186 265" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path d="M188 152 L184 208 L180 265" stroke="rgba(255,255,255,.4)" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <!-- guidon alto -->
+          <path d="M194 155 L194 120 Q200 108 220 108 Q240 108 248 118" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M164 120 L220 120" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <!-- carenagem -->
+          <path d="M178 148 Q190 120 212 112 Q232 106 248 118 Q258 128 254 148" stroke="white" stroke-width="2" fill="rgba(220,38,39,.3)" stroke-linecap="round"/>
+          <!-- tanque alto -->
+          <path d="M248 118 Q298 90 350 86 Q384 84 400 100 Q412 112 408 130 Q398 150 370 158 Q338 165 300 162 Q264 159 250 140 Z" fill="rgba(255,255,255,.12)" stroke="white" stroke-width="1.5"/>
+          <!-- assento comprido -->
+          <path d="M370 126 Q412 114 448 108 Q466 106 470 116 Q472 126 462 134 Q442 144 410 148 Q385 150 374 138 Z" fill="rgba(220,38,39,.5)" stroke="white" stroke-width="1.5"/>
+          <!-- quadro -->
+          <path d="M248 138 L260 218 L316 230 L378 220 L406 158 L380 148" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- motor 2T/4T -->
+          <rect x="266" y="210" width="108" height="62" rx="6" fill="rgba(255,255,255,.08)" stroke="white" stroke-width="1.5"/>
+          <!-- escapamento alto offroad -->
+          <path d="M320 210 Q340 180 368 166 Q392 154 408 156" stroke="rgba(255,180,50,.7)" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <!-- terra / ondas -->
+          <path d="M50 318 Q150 308 250 318 Q350 328 450 312" stroke="rgba(255,255,255,.25)" stroke-width="2.5" fill="none" stroke-dasharray="8 6"/>
+        </svg>
+      </div>
+      <div class="cat-overlay"></div>
+      <div class="cat-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="cat-body">
+        <span class="cat-label">Categoria</span>
+        <span class="cat-name">OFF<br>ROAD</span>
+        <span class="cat-desc">Enduro, motocross e trilha para todo terreno</span>
+      </div>
+    </a>
+
+    <a href="produtos.html?categoria=quadriciclos" class="cat-card" id="cat-quad">
+      <div class="cat-bg" style="background:linear-gradient(145deg,#001208 0%,#002918 40%,#004526 70%,#003018 100%);">
+        <svg viewBox="0 0 500 340" fill="none" style="position:absolute;inset:0;width:100%;height:100%;padding:30px 40px;opacity:.4">
+          <!-- 4 rodas ATV -->
+          <circle cx="108" cy="268" r="56" stroke="white" stroke-width="6"/>
+          <circle cx="392" cy="268" r="56" stroke="white" stroke-width="6"/>
+          <circle cx="108" cy="268" r="16" fill="rgba(220,38,39,.7)"/>
+          <circle cx="392" cy="268" r="16" fill="rgba(220,38,39,.7)"/>
+          <!-- eixos -->
+          <line x1="108" y1="268" x2="392" y2="268" stroke="rgba(255,255,255,.3)" stroke-width="3"/>
+          <!-- chassi -->
+          <rect x="128" y="172" width="244" height="106" rx="12" stroke="white" stroke-width="4" fill="rgba(255,255,255,.06)"/>
+          <!-- capô / carenagem superior -->
+          <path d="M152 172 L148 138 Q156 116 250 112 Q344 116 352 138 L348 172 Z" fill="rgba(255,255,255,.1)" stroke="white" stroke-width="2.5"/>
+          <!-- guidon ATV largo -->
+          <path d="M192 138 L140 132" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <path d="M308 138 L360 132" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <line x1="140" y1="132" x2="360" y2="132" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <line x1="250" y1="132" x2="250" y2="112" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <!-- proteção dianteira -->
+          <path d="M128 200 Q108 210 100 228 Q96 244 108 250" stroke="rgba(220,38,39,.6)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M372 200 Q392 210 400 228 Q404 244 392 250" stroke="rgba(220,38,39,.6)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- rack dianteiro -->
+          <path d="M160 172 L140 156 L360 156 L340 172" stroke="rgba(255,255,255,.5)" stroke-width="2" fill="none"/>
+          <!-- assento -->
+          <rect x="188" y="148" width="124" height="38" rx="8" fill="rgba(30,30,60,.8)" stroke="white" stroke-width="1.5"/>
+          <!-- motor -->
+          <rect x="196" y="214" width="108" height="54" rx="7" fill="rgba(255,255,255,.08)" stroke="white" stroke-width="1.5"/>
+          <!-- escapamento -->
+          <path d="M300 240 Q340 234 370 240 Q390 244 400 252" stroke="rgba(255,180,50,.65)" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="cat-overlay"></div>
+      <div class="cat-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="cat-body">
+        <span class="cat-label">Categoria</span>
+        <span class="cat-name">QUADRI<br>CICLOS</span>
+        <span class="cat-desc">ATVs e UTVs para trabalho e lazer off-road</span>
+      </div>
+    </a>
+
+    <a href="produtos.html?categoria=infantil" class="cat-card" id="cat-infantil">
+      <div class="cat-bg" style="background:linear-gradient(145deg,#100018 0%,#240038 40%,#3e0060 70%,#2c0048 100%);">
+        <svg viewBox="0 0 500 340" fill="none" style="position:absolute;inset:0;width:100%;height:100%;padding:30px 40px;opacity:.4">
+          <!-- Moto pequena infantil -->
+          <circle cx="128" cy="265" r="62" stroke="white" stroke-width="6"/>
+          <circle cx="372" cy="265" r="62" stroke="white" stroke-width="6"/>
+          <circle cx="128" cy="265" r="18" fill="rgba(220,38,39,.7)"/>
+          <circle cx="372" cy="265" r="18" fill="rgba(220,38,39,.7)"/>
+          <line x1="128" y1="203" x2="128" y2="247" stroke="white" stroke-width="2.5"/>
+          <line x1="128" y1="283" x2="128" y2="327" stroke="white" stroke-width="2.5"/>
+          <line x1="66" y1="265" x2="110" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="146" y1="265" x2="190" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="372" y1="203" x2="372" y2="247" stroke="white" stroke-width="2.5"/>
+          <line x1="372" y1="283" x2="372" y2="327" stroke="white" stroke-width="2.5"/>
+          <line x1="310" y1="265" x2="354" y2="265" stroke="white" stroke-width="2.5"/>
+          <line x1="390" y1="265" x2="434" y2="265" stroke="white" stroke-width="2.5"/>
+          <!-- forcella curta -->
+          <path d="M194 178 L190 220 L186 265" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <!-- guidon pequeno -->
+          <path d="M194 178 Q206 166 224 168 Q240 170 246 180" stroke="white" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <!-- carenagem pequena colorida -->
+          <path d="M175 155 Q188 128 214 121 Q236 116 250 128 Q260 140 256 158 Q248 174 232 180 Q214 186 198 182 Q180 176 175 163 Z" fill="rgba(220,38,39,.75)" stroke="white" stroke-width="2"/>
+          <!-- tanque pequeno -->
+          <path d="M250 128 Q296 102 338 98 Q364 96 376 110 Q384 120 380 136 Q372 152 348 158 Q318 164 284 161 Q258 158 250 143 Z" fill="rgba(255,255,255,.14)" stroke="white" stroke-width="2"/>
+          <!-- assento -->
+          <path d="M355 118 Q388 108 414 106 Q428 105 430 114 Q432 122 424 128 Q408 136 386 138 Q366 139 358 128 Z" fill="rgba(220,38,39,.55)" stroke="white" stroke-width="1.5"/>
+          <!-- quadro -->
+          <path d="M250 142 L262 216 L314 228 L360 218 L380 156 L356 148" stroke="white" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- motor pequeno -->
+          <rect x="268" y="210" width="90" height="50" rx="6" fill="rgba(255,255,255,.08)" stroke="white" stroke-width="1.5"/>
+          <!-- escapamento pequeno -->
+          <path d="M340 255 Q360 260 372 258" stroke="rgba(255,180,50,.65)" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <!-- estrelinhas decorativas -->
+          <path d="M60 100 L64 90 L68 100 L58 94 L70 94 Z" fill="rgba(255,200,50,.5)"/>
+          <path d="M450 80 L453 72 L456 80 L448 75 L458 75 Z" fill="rgba(255,200,50,.5)"/>
+          <path d="M80 200 L82 194 L84 200 L78 196 L86 196 Z" fill="rgba(255,200,50,.4)"/>
+        </svg>
+      </div>
+      <div class="cat-overlay"></div>
+      <div class="cat-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="cat-body">
+        <span class="cat-label">Categoria</span>
+        <span class="cat-name">INFANTIL</span>
+        <span class="cat-desc">Motos, quads e veículos para crianças com segurança e diversão</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- BRANDS MARQUEE -->
+<div class="brands-bar">
+  <div class="brands-label-txt">Marcas Parceiras</div>
+  <div class="brands-track" id="brands-track">
+    <div class="brands-row" id="brands-row-a"></div>
+    <div class="brands-row" id="brands-row-b"></div>
+  </div>
+</div>
+
+<!-- FEATURED MOTOS (dinâmico) -->
+<section class="featured reveal">
+  <div class="featured-inner">
+    <div class="section-head">
+      <div class="section-label">Destaques do Mês</div>
+      <h2 class="section-title">MOTOS EM DESTAQUE</h2>
+    </div>
+    <div class="featured-grid" id="featured-grid">
+      <div class="f-card"><div class="f-img skeleton"></div><div class="f-body"><div class="skeleton" style="height:11px;width:55%;margin-bottom:8px;border-radius:3px"></div><div class="skeleton" style="height:26px;width:78%;margin-bottom:auto;border-radius:3px"></div><div class="f-foot"><div class="skeleton" style="height:28px;width:90px;border-radius:3px"></div></div></div></div>
+      <div class="f-card"><div class="f-img skeleton"></div><div class="f-body"><div class="skeleton" style="height:11px;width:55%;margin-bottom:8px;border-radius:3px"></div><div class="skeleton" style="height:26px;width:78%;margin-bottom:auto;border-radius:3px"></div><div class="f-foot"><div class="skeleton" style="height:28px;width:90px;border-radius:3px"></div></div></div></div>
+      <div class="f-card"><div class="f-img skeleton"></div><div class="f-body"><div class="skeleton" style="height:11px;width:55%;margin-bottom:8px;border-radius:3px"></div><div class="skeleton" style="height:26px;width:78%;margin-bottom:auto;border-radius:3px"></div><div class="f-foot"><div class="skeleton" style="height:28px;width:90px;border-radius:3px"></div></div></div></div>
+      <div class="f-card"><div class="f-img skeleton"></div><div class="f-body"><div class="skeleton" style="height:11px;width:55%;margin-bottom:8px;border-radius:3px"></div><div class="skeleton" style="height:26px;width:78%;margin-bottom:auto;border-radius:3px"></div><div class="f-foot"><div class="skeleton" style="height:28px;width:90px;border-radius:3px"></div></div></div></div>
+    </div>
+    <div style="text-align:center;margin-top:2.5rem">
+      <a href="produtos.html" class="btn btn-blue">Ver Todo o Estoque</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why reveal">
+  <div class="why-inner">
+    <div class="section-head">
+      <div class="section-label">Por que escolher a Busca Racing</div>
+      <h2 class="section-title">NOSSA VANTAGEM</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="why-title">Qualidade Garantida</h3>
+        <p class="why-desc">Todas as motos passam por rigorosa inspeção técnica antes de qualquer venda.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="why-title">Multi Marcas</h3>
+        <p class="why-desc">Honda, Yamaha, Kawasaki, KTM, MXF e muito mais em um só lugar.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3 class="why-title">Atendimento Especializado</h3>
+        <p class="why-desc">Equipe apaixonada por motos que entende exatamente o que você precisa.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke="currentColor" stroke-width="2"/><line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2"/></svg></div>
+        <h3 class="why-title">Facilidade no Financiamento</h3>
+        <p class="why-desc">Parcelas que cabem no seu bolso com as melhores condições do mercado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band">
+  <h2>PRONTO PARA ACELERAR?</h2>
+  <p>Visite nossa loja ou fale com um especialista agora pelo WhatsApp</p>
+  <a href="https://wa.me/5511993507432?text=Olá! Gostaria de conhecer as motos da Busca Racing." target="_blank" class="btn-white">Falar no WhatsApp Agora</a>
+</section>
+
+<!-- FOOTER -->
+<footer id="contato">
+  <div class="footer-top">
+    <div>
+      <a href="index.html" class="footer-logo-link" id="footer-logo">
+        <svg width="28" height="28" viewBox="0 0 30 30" fill="none">
+          <rect width="15" height="30" fill="#27367D"/>
+          <rect x="15" width="15" height="30" fill="#DC2627"/>
+          <rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB"/>
+          <rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45"/>
+          <rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45"/>
+          <rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB"/>
+        </svg>
+        <div class="logo-text"><span class="b">BUSCA </span><span class="r">RACING</span></div>
+      </a>
+      <p class="footer-tagline">Sua loja de motos multi marcas em Caieiras – SP. Motos de rua, offroad, quadriciclos e bikes infantis desde 2010.</p>
+      <div class="footer-social">
+        <a href="https://instagram.com/buscaracing" target="_blank" class="soc" title="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="2"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" stroke="currentColor" stroke-width="2"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+        <a href="https://facebook.com/buscaracing" target="_blank" class="soc" title="Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a href="https://wa.me/5511993507432" target="_blank" class="soc" title="WhatsApp"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Navegação</h4>
+      <ul>
+        <li><a href="produtos.html">Motos</a></li>
+        <li><a href="acessorios.html">Acessórios</a></li>
+        <li><a href="pecas.html">Peças</a></li>
+        <li><a href="venda-sua-moto.html">Venda sua Moto</a></li>
+        <li><a href="contato.html">Contato</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Categorias</h4>
+      <ul>
+        <li><a href="produtos.html?categoria=motos-rua">Motos de Rua</a></li>
+        <li><a href="produtos.html?categoria=offroad">Offroad</a></li>
+        <li><a href="produtos.html?categoria=quadriciclos">Quadriciclos</a></li>
+        <li><a href="produtos.html?categoria=infantil">Infantil</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contato</h4>
+      <div class="footer-ci"><svg class="footer-ci-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.4 10.6 19.79 19.79 0 01.34 1.96 2 2 0 012.33 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z" stroke="currentColor" stroke-width="2"/></svg><span>(11) 99350-7432</span></div>
+      <div class="footer-ci"><svg class="footer-ci-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/></svg><span>contato@buscaracing.com</span></div>
+      <div class="footer-ci"><svg class="footer-ci-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg><span>Rua Conceição Borreiro Peres, 64<br>Caieiras – SP</span></div>
+      <div class="footer-ci"><svg class="footer-ci-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Seg–Sex: 8h–18h · Sáb: 8h–13h</span></div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 Busca Racing. Todos os direitos reservados.</span>
+    <span>Caieiras – SP</span>
+  </div>
+</footer>
+
+<script>
+// Logo dinâmico
+fetch('/api/config/logo').then(r => r.json()).then(d => {
+  if (!d.logo) return;
+  ['header-logo','footer-logo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const img = new Image();
+    img.src = d.logo; img.alt = 'Busca Racing';
+    img.style.cssText = 'height:44px;object-fit:contain;';
+    el.innerHTML = ''; el.appendChild(img);
+  });
+}).catch(() => {});
+
+// Imagens dinâmicas: hero e categorias
+fetch('/api/config/images').then(r => r.json()).then(d => {
+  // Hero
+  if (d.hero_img) {
+    const photoBg = document.getElementById('hero-photo-bg');
+    if (photoBg) {
+      const img = document.createElement('img');
+      img.alt = 'Hero';
+      img.onload = () => photoBg.classList.add('loaded');
+      img.src = d.hero_img;
+      photoBg.appendChild(img);
+    }
+    // Ocultar o SVG padrão da moto
+    const vis = document.querySelector('.hero-visual');
+    if (vis) vis.style.animation = 'none', vis.style.opacity = '0';
+  }
+  // Categorias
+  const catMap = { hero_img: null, cat_rua_img: 'cat-rua', cat_offroad_img: 'cat-offroad', cat_quad_img: 'cat-quad', cat_infantil_img: 'cat-infantil' };
+  for (const [key, cardId] of Object.entries(catMap)) {
+    if (!cardId || !d[key]) continue;
+    const card = document.getElementById(cardId);
+    if (!card) continue;
+    const bg = card.querySelector('.cat-bg');
+    if (bg) {
+      bg.style.backgroundImage = `url(${d[key]})`;
+      bg.style.backgroundSize = 'cover';
+      bg.style.backgroundPosition = 'center';
+    }
+    // Remover os SVGs internos para a foto aparecer limpa
+    card.querySelectorAll('.cat-bg svg').forEach(s => s.remove());
+  }
+}).catch(() => {});
+
+// Speed lines
+(function(){
+  const c = document.getElementById('hero-lines');
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    el.className = 's-line';
+    el.style.cssText = `top:${Math.random()*100}%;width:${100+Math.random()*280}px;--dur:${(2.5+Math.random()*3.5).toFixed(1)}s;--delay:${(Math.random()*5).toFixed(1)}s;height:${Math.random()>.7?2:1}px;opacity:${(.04+Math.random()*.08).toFixed(2)}`;
+    c.appendChild(el);
+  }
+})();
+
+// Brands
+(function(){
+  const brands = ['Honda','Yamaha','Kawasaki','Suzuki','KTM','BMW Motorrad','MXF','Dafra','Triumph','Ducati','Husqvarna','CF Moto','Royal Enfield','Haojue','Shineray','Beta'];
+  const html = brands.map(b => `<span class="brand-pill">${b}</span>`).join('');
+  document.getElementById('brands-row-a').innerHTML = html;
+  document.getElementById('brands-row-b').innerHTML = html;
+})();
+
+// Featured motos
+const CATS = {'motos-rua':'Motos de Rua','offroad':'Offroad','quadriciclos':'Quadriciclos','infantil':'Infantil','outros':'Outros'};
+function motoPlaceholder(){
+  return `<svg viewBox="0 0 280 160" fill="none" style="width:58%;opacity:.28">
+    <circle cx="68" cy="118" r="34" stroke="#27367D" stroke-width="5"/>
+    <circle cx="208" cy="118" r="34" stroke="#27367D" stroke-width="5"/>
+    <path d="M102 88 C116 65,150 50,174 48 C194 46,210 58,220 82" stroke="#27367D" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M68 118 L100 88 L152 78 L208 118" stroke="#27367D" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M142 78 L145 54 L158 57" stroke="#DC2627" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="108" y="93" width="62" height="28" rx="4" fill="rgba(39,54,125,0.12)" stroke="#27367D" stroke-width="1.5"/>
+  </svg>`;
+}
+fetch('/api/motos?destaque=1').then(r => r.json()).then(motos => {
+  const grid = document.getElementById('featured-grid');
+  if (!motos.length) { grid.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:3rem">Nenhuma moto em destaque no momento.</p>'; return; }
+  grid.innerHTML = motos.slice(0,4).map(m => {
+    const preco = m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : 'Consulte';
+    const specs = [m.ano, m.km > 0 ? `${Number(m.km).toLocaleString('pt-BR')} km` : null].filter(Boolean).join(' · ');
+    return `<a href="moto.html?id=${m.id}" class="f-card">
+      <div class="f-img">
+        ${m.imagem ? `<img src="${m.imagem}" alt="${m.nome}" loading="lazy">` : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">${motoPlaceholder()}</div>`}
+        <div class="f-badges">
+          ${m.destaque?'<span class="f-badge f-badge-dest">⭐ Destaque</span>':''}
+          <span class="f-badge f-badge-${m.condicao}">${m.condicao==='nova'?'Nova':'Usada'}</span>
+        </div>
+      </div>
+      <div class="f-body">
+        <div class="f-brand">${m.marca}</div>
+        <div class="f-name">${m.nome}</div>
+        <div class="f-specs">${[specs, CATS[m.categoria]||m.categoria].filter(Boolean).join(' · ')}</div>
+        <div class="f-foot">
+          <div class="f-price"><small>A partir de</small>${preco}</div>
+          <div class="f-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}).catch(() => { document.getElementById('featured-grid').innerHTML = ''; });
+
+// Header scroll
+window.addEventListener('scroll', () => document.getElementById('site-header').classList.toggle('scrolled', window.scrollY > 60), {passive:true});
+
+// Mobile menu
+function toggleMenu() { document.getElementById('mobile-nav').classList.toggle('open'); }
+
+// Scroll reveal
+const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-visible'); obs.unobserve(e.target); } }), {threshold:.1});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
