@@ -517,6 +517,7 @@
                       <th>Preço</th>
                       <th>⭐</th>
                       <th>Status</th>
+                      <th>Dias em estoque</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -961,7 +962,12 @@
       const start = (currentPage - 1) * PAGE_SIZE;
       const page  = filteredMotos.slice(start, start + PAGE_SIZE);
 
-      document.getElementById('motos-tbody').innerHTML = page.map(m => `
+      document.getElementById('motos-tbody').innerHTML = page.map(m => {
+        const diasEstoque = m.created_at
+          ? Math.floor((Date.now() - new Date(m.created_at.replace(' ', 'T')).getTime()) / 86400000)
+          : 0;
+        const diasAlerta = diasEstoque > 30;
+        return `
         <tr>
           <td>
             ${m.imagem
@@ -979,6 +985,7 @@
           <td style="font-weight:600; color:var(--blue);">${m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : '—'}</td>
           <td style="text-align:center"><span class="${m.destaque?'dest-star':'dest-no'}">★</span></td>
           <td><span class="badge-table ${m.ativo?'bg-green':'bg-gray'}">${m.ativo?'Ativo':'Inativo'}</span></td>
+          <td><span class="badge-table ${diasAlerta?'bg-red':'bg-gray'}">${diasEstoque} ${diasEstoque===1?'dia':'dias'}</span></td>
           <td>
             <div class="actions-cell">
               <button class="btn btn-ghost btn-sm btn-icon" onclick="openModal(${m.id})" title="Editar">
@@ -990,7 +997,8 @@
             </div>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
 
       renderPagination();
     }
