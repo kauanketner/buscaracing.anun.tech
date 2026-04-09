@@ -511,7 +511,6 @@
                     <tr>
                       <th>Foto</th>
                       <th>Nome</th>
-                      <th>Marca</th>
                       <th>Categoria</th>
                       <th>Condição</th>
                       <th>Preço</th>
@@ -979,7 +978,6 @@
             <div class="td-name">${m.nome}</div>
             <div class="td-brand">${m.marca}</div>
           </td>
-          <td>${m.marca}</td>
           <td><span class="badge-table bg-blue">${CATS[m.categoria]||m.categoria}</span></td>
           <td><span class="badge-table ${m.condicao==='nova'?'bg-green':'bg-orange'}">${m.condicao}</span></td>
           <td style="font-weight:600; color:var(--blue);">${m.preco ? `R$ ${Number(m.preco).toLocaleString('pt-BR')}` : '—'}</td>
