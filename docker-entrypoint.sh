@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
 
-# Garante que as pastas de upload existam no volume montado
-mkdir -p /app/uploads /app/fotos
+# Garante que as pastas de upload existam no volume persistente (/data)
+DATA_DIR="${DATA_DIR:-/data}"
+mkdir -p "$DATA_DIR/uploads" "$DATA_DIR/fotos"
 
 # Se DB_PATH for definido, cria um symlink para que o server.js encontre o banco
 if [ -n "$DB_PATH" ]; then

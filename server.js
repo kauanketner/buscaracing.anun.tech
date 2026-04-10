@@ -8,9 +8,10 @@ const fs       = require('fs');
 const app  = express();
 const PORT = process.env.PORT || 4200;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Anuntech@10';
-const ROOT    = __dirname;
-const UPLOADS = path.join(ROOT, 'uploads');
-const FOTOS   = path.join(ROOT, 'fotos');   // pasta exclusiva para galeria de fotos das motos
+const ROOT     = __dirname;
+const DATA_DIR = process.env.DATA_DIR || ROOT;
+const UPLOADS  = path.join(DATA_DIR, 'uploads');
+const FOTOS    = path.join(DATA_DIR, 'fotos');   // pasta exclusiva para galeria de fotos das motos
 
 if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 if (!fs.existsSync(FOTOS))   fs.mkdirSync(FOTOS,   { recursive: true });
