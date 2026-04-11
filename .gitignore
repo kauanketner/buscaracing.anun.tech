@@ -8,3 +8,5 @@ fotos/
 .env.local
 .env.production
 .DS_Store
+.next/
+_backup/
