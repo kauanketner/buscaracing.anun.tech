@@ -2,8 +2,8 @@ node_modules/
 *.db
 *.db-shm
 *.db-wal
-uploads/
-fotos/
+/uploads/
+/fotos/
 .env
 .env.local
 .env.production
