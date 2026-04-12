@@ -1,0 +1,206 @@
+/* ── MOTO CARD ── */
+.card {
+  background: var(--white);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(39, 54, 125, 0.12);
+}
+
+.card:hover::after {
+  transform: scaleX(1);
+}
+
+/* Image */
+.cardImg {
+  width: 100%;
+  height: 210px;
+  overflow: hidden;
+  background: #f0f0ee;
+  position: relative;
+}
+
+.img {
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .img {
+  transform: scale(1.04);
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Badges */
+.badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  display: inline-block;
+}
+
+.badgeNova {
+  background: #27a745;
+  color: #fff;
+}
+
+.badgeUsada {
+  background: #e67e22;
+  color: #fff;
+}
+
+.badgeDest {
+  background: var(--red);
+  color: #fff;
+  clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+}
+
+.cardCat {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: rgba(39, 54, 125, 0.85);
+  padding: 3px 8px;
+}
+
+/* Body */
+.cardBody {
+  padding: 1.4rem 1.4rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.65rem;
+  line-height: 1;
+  color: var(--blue);
+}
+
+.specs {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.83rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+.desc {
+  font-size: 0.85rem;
+  color: #888;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+/* Footer */
+.cardFooter {
+  margin-top: auto;
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+}
+
+.price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.65rem;
+  color: var(--blue);
+}
+
+.price small {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  color: #aaa;
+  display: block;
+  line-height: 1.2;
+}
+
+.original {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  color: #bbb;
+  text-decoration: line-through;
+  display: block;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--blue);
+  padding: 9px 16px;
+  text-decoration: none;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  transition: background 0.2s;
+}
+
+.card:hover .cta {
+  background: var(--red);
+}

@@ -1,0 +1,99 @@
+/* ── RESET & VARIABLES ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:   #27367D;
+  --red:    #DC2627;
+  --white:  #FDFDFB;
+  --deep:   #111d45;
+  --mid:    #1e2d6b;
+  --rh:     #ff2f2f;
+  --muted:  #777;
+  --border: #e2e2df;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Barlow', var(--font-barlow), sans-serif;
+  background: var(--white);
+  color: #222;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--deep); }
+::-webkit-scrollbar-thumb { background: var(--red); }
+
+/* Main content min-height */
+main { min-height: calc(100vh - 68px); }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: .95rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  padding: 13px 30px;
+  transition: all .2s;
+  cursor: pointer;
+  border: none;
+}
+.btn-red {
+  color: var(--white);
+  background: var(--red);
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+.btn-red:hover { background: var(--rh); transform: translateX(3px); }
+.btn-ghost {
+  color: var(--white);
+  background: transparent;
+  border: 2px solid rgba(253,253,251,.35);
+}
+.btn-ghost:hover { border-color: var(--white); }
+.btn-blue {
+  color: var(--white);
+  background: var(--blue);
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+.btn-blue:hover { background: var(--mid); transform: translateX(3px); }
+
+/* ── SECTION UTILS ── */
+.section-label {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 600;
+  font-size: .78rem;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: .75rem;
+}
+.section-label::before, .section-label::after {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--red);
+}
+
+/* ── REVEAL ── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+/* ── KEYFRAMES ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
