@@ -85,7 +85,12 @@ export default async function MotoDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <JsonLd data={productSchema(moto)} />
+      <JsonLd data={productSchema({
+        ...moto,
+        preco: moto.preco ?? undefined,
+        preco_original: moto.preco_original ?? undefined,
+        imagem: moto.imagem ?? undefined,
+      })} />
 
       {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
