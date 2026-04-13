@@ -1,0 +1,282 @@
+/* ── PAGE BANNER ── */
+.pageBanner {
+  background: var(--blue);
+  padding: 3.5rem 3vw 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageBanner::before {
+  content: 'ESTOQUE';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22vw;
+  color: rgba(255, 255, 255, 0.03);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bannerStripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 30%;
+  width: 4px;
+  background: var(--red);
+  transform: skewX(-7deg);
+}
+
+.bannerStripe2 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(30% + 12px);
+  width: 1.5px;
+  background: var(--red);
+  opacity: 0.4;
+  transform: skewX(-7deg);
+}
+
+.bannerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumb {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.breadcrumbSep {
+  color: var(--red);
+}
+
+.bannerTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.9;
+  color: var(--white);
+}
+
+.bannerTitleEm {
+  color: var(--red);
+}
+
+/* ── FILTERS ── */
+.filtersBar {
+  position: sticky;
+  top: 68px;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 3vw;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.filtersInner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.filtersRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchWrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 38px;
+  border: 1.5px solid var(--border);
+  background: #f8f8f6;
+  font-family: 'Barlow', var(--font-barlow), sans-serif;
+  font-size: 0.9rem;
+  color: var(--blue);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  border-color: var(--blue);
+  background: var(--white);
+}
+
+.filterSelect {
+  padding: 9px 32px 9px 12px;
+  border: 1.5px solid var(--border);
+  background: #f8f8f6
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23777' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filterSelect:focus {
+  border-color: var(--blue);
+  background-color: var(--white);
+}
+
+.filtersMeta {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.resultsCount strong {
+  color: var(--blue);
+}
+
+.clearFilters {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--red);
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── PRODUCTS SECTION ── */
+.productsSection {
+  padding: 3rem 3vw 5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.9rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.emptyIcon {
+  color: var(--border);
+  margin-bottom: 1rem;
+}
+
+.emptyTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--blue);
+  margin-bottom: 0.5rem;
+}
+
+.emptyText {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .productsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .productsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filtersRow {
+    flex-direction: column;
+  }
+
+  .searchWrap {
+    width: 100%;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
+}
