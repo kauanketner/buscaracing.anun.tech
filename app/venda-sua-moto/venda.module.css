@@ -1,0 +1,379 @@
+/* ── PAGE BANNER ── */
+.pageBanner {
+  background: var(--blue);
+  padding: 3.5rem 3vw 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageBanner::before {
+  content: 'VENDA';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22vw;
+  color: rgba(255, 255, 255, 0.03);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bannerStripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 30%;
+  width: 4px;
+  background: var(--red);
+  transform: skewX(-7deg);
+}
+
+.bannerStripe2 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(30% + 12px);
+  width: 1.5px;
+  background: var(--red);
+  opacity: 0.4;
+  transform: skewX(-7deg);
+}
+
+.bannerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumb {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.breadcrumbSep {
+  color: var(--red);
+}
+
+.bannerTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.9;
+  color: var(--white);
+}
+
+.bannerTitleEm {
+  color: var(--red);
+}
+
+.pageSub {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 500px;
+  line-height: 1.55;
+  margin-top: 0.75rem;
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 3vw;
+}
+
+.section {
+  padding: 5rem 0;
+}
+
+/* ── STEPS ── */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.step {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  position: relative;
+}
+
+.stepNum {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--red);
+  opacity: 0.15;
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+}
+
+.stepIcon {
+  width: 56px;
+  height: 56px;
+  background: var(--deep);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+.stepTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: var(--blue);
+  margin-bottom: 0.5rem;
+}
+
+.stepDesc {
+  font-size: 0.88rem;
+  color: #666;
+  line-height: 1.65;
+}
+
+/* ── FORM + SIDEBAR ── */
+.vendaLayout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 3rem;
+  align-items: start;
+}
+
+.formCard {
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  padding: 2.5rem;
+}
+
+.formCard h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--blue);
+  margin-bottom: 0.4rem;
+}
+
+.formCard p {
+  font-size: 0.88rem;
+  color: #888;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+  display: block;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 0.45rem;
+}
+
+.formGroup input,
+.formGroup textarea {
+  width: 100%;
+  border: 1.5px solid #ddd;
+  background: #fafafa;
+  padding: 11px 14px;
+  font-family: 'Barlow', var(--font-barlow), sans-serif;
+  font-size: 0.9rem;
+  color: var(--blue);
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 0;
+  appearance: none;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  border-color: var(--blue);
+}
+
+.formGroup textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.btnSubmit {
+  width: 100%;
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  padding: 14px 24px;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0.5rem;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+}
+
+.btnSubmit:hover {
+  background: #ff2f2f;
+  transform: translateY(-2px);
+}
+
+/* ── CONTACT SIDEBAR ── */
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 90px;
+}
+
+.contactCard {
+  background: var(--deep);
+  padding: 2rem;
+  color: var(--white);
+}
+
+.contactCard h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+  color: var(--white);
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.contactItemIcon {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contactItemLabel {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 2px;
+}
+
+.contactItem a,
+.contactItem span {
+  font-size: 0.9rem;
+  color: var(--white);
+  text-decoration: none;
+  line-height: 1.5;
+  display: block;
+}
+
+.contactItem a:hover {
+  color: var(--red);
+}
+
+/* ── VANTAGENS ── */
+.vantagens {
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  padding: 1.75rem;
+}
+
+.vantagens h4 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: var(--blue);
+  margin-bottom: 1rem;
+}
+
+.vantList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vantList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.vantList li::before {
+  content: '\2713';
+  color: var(--red);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .vendaLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .contactInfo {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}

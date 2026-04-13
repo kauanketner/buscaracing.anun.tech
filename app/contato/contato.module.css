@@ -1,0 +1,359 @@
+/* ── PAGE BANNER ── */
+.pageBanner {
+  background: var(--blue);
+  padding: 3.5rem 3vw 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageBanner::before {
+  content: 'CONTATO';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22vw;
+  color: rgba(255, 255, 255, 0.03);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bannerStripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 30%;
+  width: 4px;
+  background: var(--red);
+  transform: skewX(-7deg);
+}
+
+.bannerStripe2 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(30% + 12px);
+  width: 1.5px;
+  background: var(--red);
+  opacity: 0.4;
+  transform: skewX(-7deg);
+}
+
+.bannerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumb {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.breadcrumbSep {
+  color: var(--red);
+}
+
+.bannerTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.9;
+  color: var(--white);
+}
+
+.bannerTitleEm {
+  color: var(--red);
+}
+
+.pageSub {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 500px;
+  line-height: 1.55;
+  margin-top: 0.75rem;
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 3vw;
+}
+
+.section {
+  padding: 5rem 0;
+}
+
+.contactLayout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* ── FORM ── */
+.formCard {
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  padding: 2.5rem;
+}
+
+.formCard h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--blue);
+  margin-bottom: 0.4rem;
+}
+
+.formCard p {
+  font-size: 0.88rem;
+  color: #888;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+  display: block;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 0.45rem;
+}
+
+.formGroup input,
+.formGroup textarea {
+  width: 100%;
+  border: 1.5px solid #ddd;
+  background: #fafafa;
+  padding: 11px 14px;
+  font-family: 'Barlow', var(--font-barlow), sans-serif;
+  font-size: 0.9rem;
+  color: var(--blue);
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 0;
+  appearance: none;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  border-color: var(--blue);
+}
+
+.formGroup textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+
+.btnSubmit {
+  width: 100%;
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  padding: 14px 24px;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0.5rem;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+}
+
+.btnSubmit:hover {
+  background: #ff2f2f;
+  transform: translateY(-2px);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 90px;
+}
+
+/* ── CHANNEL CARDS ── */
+.channelCard {
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  padding: 1.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+
+.channelCard:hover {
+  box-shadow: 0 8px 28px rgba(39, 54, 125, 0.12);
+  transform: translateY(-3px);
+}
+
+.channelIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.channelIconWa {
+  background: #25d366;
+}
+
+.channelIconTel {
+  background: var(--blue);
+}
+
+.channelLabel {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 3px;
+}
+
+.channelValue {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+
+.channelHint {
+  font-size: 0.82rem;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* ── HOURS ── */
+.hoursCard {
+  background: var(--deep);
+  padding: 1.75rem;
+  color: var(--white);
+}
+
+.hoursCard h4 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: var(--white);
+  margin-bottom: 1.25rem;
+}
+
+.hoursRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.88rem;
+}
+
+.hoursRow:last-child {
+  border-bottom: none;
+}
+
+.hoursRow span:first-child {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.hoursRow span:last-child {
+  color: var(--white);
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 600;
+}
+
+/* ── MAP ── */
+.mapSection {
+  margin-top: 3rem;
+}
+
+.mapSection h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.75rem;
+  color: var(--blue);
+  margin-bottom: 1.25rem;
+}
+
+.mapSection iframe {
+  width: 100%;
+  background: var(--deep);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mapAddress {
+  background: var(--white);
+  border: 1px solid #e4e4e0;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 1px;
+}
+
+.mapAddress svg {
+  flex-shrink: 0;
+  color: var(--red);
+}
+
+.mapAddress p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.55;
+}
+
+.mapAddress strong {
+  color: var(--blue);
+  display: block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .contactLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}
