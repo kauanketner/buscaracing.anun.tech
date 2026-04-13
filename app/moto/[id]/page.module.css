@@ -1,0 +1,469 @@
+/* ── BREADCRUMB ── */
+.breadcrumb {
+  background: var(--deep);
+  padding: 0.75rem 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.breadcrumbSep {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.breadcrumbCurrent {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── MAIN LAYOUT ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.detailWrap {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 3rem;
+  padding: 3rem 0 5rem;
+}
+
+/* ── GALLERY ── */
+.gallerySection {
+  position: sticky;
+  top: 90px;
+  align-self: start;
+}
+
+.mainPhoto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--white);
+  overflow: hidden;
+  position: relative;
+  cursor: zoom-in;
+  border: 1px solid var(--border);
+}
+
+.mainPhoto img {
+  transition: transform 0.4s ease;
+}
+
+.mainPhoto:hover img {
+  transform: scale(1.04);
+}
+
+.noImg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e8e8e5 0%, #f0f0ed 100%);
+  color: var(--muted);
+}
+
+.photoCountBadge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.thumb {
+  aspect-ratio: 1;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, opacity 0.2s;
+  background: var(--white);
+  position: relative;
+}
+
+.thumb img {
+  display: block;
+}
+
+.thumbActive {
+  border-color: var(--red);
+}
+
+.thumb:hover {
+  opacity: 0.85;
+}
+
+/* ── INFO PANEL ── */
+.badgesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+}
+
+.badgeDest {
+  background: var(--deep);
+  color: #f5c518;
+}
+
+.badgeNova {
+  background: #1e7e34;
+  color: #fff;
+}
+
+.badgeUsada {
+  background: #6c4f00;
+  color: #fff;
+}
+
+.badgeCat {
+  background: var(--blue);
+  color: #fff;
+}
+
+.motoMarca {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+
+.motoNome {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  line-height: 0.95;
+  color: var(--blue);
+  margin-bottom: 1.5rem;
+}
+
+/* ── PRICE ── */
+.priceBlock {
+  margin-bottom: 2rem;
+}
+
+.priceOriginal {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 1rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  margin-bottom: 2px;
+}
+
+.priceMain {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.priceConsult {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── SPECS GRID ── */
+.specsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.specItem {
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.specItem:nth-child(odd) {
+  border-right: 1px solid var(--border);
+}
+
+.specItem:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+
+.specLabel {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.specVal {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--blue);
+}
+
+/* ── DESCRIPTION ── */
+.descricaoSection {
+  margin-bottom: 2rem;
+}
+
+.descricaoSection h3 {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.descricaoSection p {
+  font-size: 0.97rem;
+  line-height: 1.7;
+  color: #444;
+}
+
+/* ── CTA ── */
+.ctaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btnWa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #25d366;
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btnWa:hover {
+  background: #1ebe5a;
+  transform: translateY(-2px);
+}
+
+.btnBack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--blue);
+  color: var(--white);
+  text-decoration: none;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.5rem;
+  transition: background 0.2s;
+}
+
+.btnBack:hover {
+  background: var(--deep);
+}
+
+.contactInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.85rem;
+  color: var(--muted);
+  justify-content: center;
+}
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightboxInner {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.lightboxImg {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.6);
+}
+
+.lightboxClose {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.lightboxClose:hover {
+  opacity: 1;
+}
+
+.lightboxNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.lightboxNav:hover {
+  background: rgba(220, 38, 39, 0.7);
+}
+
+.lightboxPrev {
+  left: -64px;
+}
+
+.lightboxNext {
+  right: -64px;
+}
+
+.lightboxCounter {
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .detailWrap {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem 0 3rem;
+  }
+
+  .gallerySection {
+    position: static;
+  }
+
+  .motoNome {
+    font-size: 2.2rem;
+  }
+
+  .lightboxPrev {
+    left: 10px;
+  }
+
+  .lightboxNext {
+    right: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .breadcrumb {
+    padding: 0.75rem 1rem;
+  }
+
+  .thumbs {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .specsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .specItem:nth-child(odd) {
+    border-right: none;
+  }
+
+  .specItem {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .specItem:last-child {
+    border-bottom: none;
+  }
+}
