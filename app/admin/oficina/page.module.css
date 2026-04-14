@@ -163,6 +163,8 @@
 .btnPrimary:hover { background: #DC2627; }
 .btnDanger  { background: #dc3545; color: #FDFDFB; }
 .btnDanger:hover { background: #b02a37; }
+.btnSuccess { background: #16a34a; color: #FDFDFB; }
+.btnSuccess:hover { background: #15803d; }
 .btnGhost {
   background: transparent;
   color: #777;

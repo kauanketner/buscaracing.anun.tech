@@ -80,11 +80,22 @@ function initSchema(db: Database.Database): void {
       created_at TEXT    DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS mecanicos (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome       TEXT    NOT NULL,
+      telefone   TEXT    DEFAULT '',
+      email      TEXT    DEFAULT '',
+      especialidade TEXT DEFAULT '',
+      ativo      INTEGER DEFAULT 1,
+      created_at TEXT    DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS oficina_ordens (
       id                 INTEGER PRIMARY KEY AUTOINCREMENT,
       cliente_nome       TEXT    NOT NULL,
       cliente_telefone   TEXT    DEFAULT '',
       cliente_email      TEXT    DEFAULT '',
+      moto_id            INTEGER REFERENCES motos(id) ON DELETE SET NULL,
       moto_marca         TEXT    DEFAULT '',
       moto_modelo        TEXT    DEFAULT '',
       moto_ano           INTEGER,
@@ -105,7 +116,22 @@ function initSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_oficina_status ON oficina_ordens(status);
     CREATE INDEX IF NOT EXISTS idx_oficina_data_entrada ON oficina_ordens(data_entrada);
+    CREATE INDEX IF NOT EXISTS idx_oficina_moto_id ON oficina_ordens(moto_id);
   `);
+
+  // ----- Migrations: additional columns on oficina_ordens -----
+  const existingOfCols = new Set(
+    (db.prepare('PRAGMA table_info(oficina_ordens)').all() as { name: string }[]).map((c) => c.name),
+  );
+  const addOfCol = (name: string, definition: string): void => {
+    if (!existingOfCols.has(name)) {
+      db.exec(`ALTER TABLE oficina_ordens ADD COLUMN ${name} ${definition}`);
+      existingOfCols.add(name);
+    }
+  };
+  // Vínculo opcional com moto do estoque
+  addOfCol('moto_id', 'INTEGER');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_moto_id ON oficina_ordens(moto_id)');
 
   // ----- Migrations: additional admin-only columns on motos -----
   const existingCols = new Set(

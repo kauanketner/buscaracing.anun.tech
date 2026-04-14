@@ -4,6 +4,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import OrdemModal from './OrdemModal';
+import FecharModal from './FecharModal';
 import styles from './page.module.css';
 
 const PAGE_SIZE = 12;
@@ -75,6 +76,9 @@ export default function OficinaPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [fecharTarget, setFecharTarget] = useState<
+    { id: number; label: string; defaultValor: number | null } | null
+  >(null);
 
   const reload = async () => {
     setLoading(true);
@@ -233,6 +237,32 @@ export default function OficinaPage() {
                   </td>
                   <td>
                     <div className={styles.actionsCell}>
+                      {o.status !== 'concluida' &&
+                        o.status !== 'entregue' &&
+                        o.status !== 'cancelada' && (
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                            onClick={() =>
+                              setFecharTarget({
+                                id: o.id,
+                                label: `#${o.id} – ${o.cliente_nome}`,
+                                defaultValor: o.valor_final ?? o.valor_estimado ?? null,
+                              })
+                            }
+                            title="Fechar OS"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                              <polyline
+                                points="20 6 9 17 4 12"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Fechar OS
+                          </button>
+                        )}
                       <button
                         className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
                         onClick={() => openEdit(o.id)}
@@ -314,6 +344,20 @@ export default function OficinaPage() {
             setEditingId(null);
           }}
           onSaved={onSaved}
+          onToast={showToast}
+        />
+      )}
+
+      {fecharTarget && (
+        <FecharModal
+          ordemId={fecharTarget.id}
+          label={fecharTarget.label}
+          defaultValor={fecharTarget.defaultValor}
+          onClose={() => setFecharTarget(null)}
+          onClosed={async () => {
+            setFecharTarget(null);
+            await reload();
+          }}
           onToast={showToast}
         />
       )}

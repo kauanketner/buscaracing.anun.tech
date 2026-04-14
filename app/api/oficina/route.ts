@@ -33,7 +33,12 @@ export async function GET(request: NextRequest) {
   try {
     const db = getDb();
     const rows = db
-      .prepare('SELECT * FROM oficina_ordens ORDER BY id DESC')
+      .prepare(
+        `SELECT o.*, m.nome AS moto_nome
+         FROM oficina_ordens o
+         LEFT JOIN motos m ON m.id = o.moto_id
+         ORDER BY o.id DESC`,
+      )
       .all();
     return NextResponse.json(rows);
   } catch (e: unknown) {
@@ -61,16 +66,17 @@ export async function POST(request: NextRequest) {
     const stmt = db.prepare(
       `INSERT INTO oficina_ordens (
          cliente_nome, cliente_telefone, cliente_email,
-         moto_marca, moto_modelo, moto_ano, moto_placa, moto_km,
+         moto_id, moto_marca, moto_modelo, moto_ano, moto_placa, moto_km,
          servico_descricao, observacoes, mecanico,
          valor_estimado, valor_final,
          status, data_entrada, data_prevista, data_conclusao
-       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     );
     const result = stmt.run(
       cliente_nome,
       toStr(body.cliente_telefone),
       toStr(body.cliente_email),
+      toNullableNumber(body.moto_id),
       toStr(body.moto_marca),
       toStr(body.moto_modelo),
       toNullableNumber(body.moto_ano),

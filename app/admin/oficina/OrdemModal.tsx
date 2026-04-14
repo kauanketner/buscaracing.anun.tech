@@ -11,6 +11,7 @@ type Props = {
 };
 
 type FormState = {
+  moto_id: string;
   cliente_nome: string;
   cliente_telefone: string;
   cliente_email: string;
@@ -30,6 +31,23 @@ type FormState = {
   data_conclusao: string;
 };
 
+type MotoOption = {
+  id: number;
+  nome: string;
+  marca: string;
+  modelo: string | null;
+  placa: string | null;
+  ano: number | null;
+  ano_fabricacao: number | null;
+  km: number | null;
+};
+
+type MecanicoOption = {
+  id: number;
+  nome: string;
+  ativo: number;
+};
+
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'aberta', label: 'Aberta' },
   { value: 'em_andamento', label: 'Em andamento' },
@@ -40,6 +58,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const EMPTY: FormState = {
+  moto_id: '',
   cliente_nome: '',
   cliente_telefone: '',
   cliente_email: '',
@@ -76,6 +95,33 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [motosSelector, setMotosSelector] = useState<MotoOption[]>([]);
+  const [mecanicos, setMecanicos] = useState<MecanicoOption[]>([]);
+
+  const isEditing = editingId !== null;
+
+  // Load selector options once
+  useEffect(() => {
+    (async () => {
+      try {
+        const [mr, kr] = await Promise.all([
+          fetch('/api/motos/selector'),
+          fetch('/api/config/mecanicos'),
+        ]);
+        if (mr.ok) {
+          const md = await mr.json();
+          setMotosSelector(Array.isArray(md) ? md : []);
+        }
+        if (kr.ok) {
+          const kd = await kr.json();
+          setMecanicos(Array.isArray(kd) ? kd : []);
+        }
+      } catch {
+        // silent — selectors are optional
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (!editingId) {
       setForm(EMPTY);
@@ -88,6 +134,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
         if (!r.ok) throw new Error('fail');
         const d = await r.json();
         setForm({
+          moto_id: normNum(d.moto_id),
           cliente_nome: normStr(d.cliente_nome),
           cliente_telefone: normStr(d.cliente_telefone),
           cliente_email: normStr(d.cliente_email),
@@ -121,6 +168,32 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const onSelectMoto = (id: string) => {
+    if (!id) {
+      setForm((prev) => ({ ...prev, moto_id: '' }));
+      return;
+    }
+    const moto = motosSelector.find((m) => String(m.id) === id);
+    if (!moto) {
+      setForm((prev) => ({ ...prev, moto_id: id }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      moto_id: id,
+      moto_marca: moto.marca || prev.moto_marca,
+      moto_modelo: moto.modelo || moto.nome || prev.moto_modelo,
+      moto_placa: moto.placa || prev.moto_placa,
+      moto_ano: moto.ano != null ? String(moto.ano) : (moto.ano_fabricacao != null ? String(moto.ano_fabricacao) : prev.moto_ano),
+    }));
+  };
+
+  const clearMoto = () => {
+    setForm((prev) => ({ ...prev, moto_id: '' }));
+  };
+
+  const isLinked = !!form.moto_id;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.cliente_nome.trim()) {
@@ -129,7 +202,8 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
     }
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
+        moto_id: form.moto_id || null,
         cliente_nome: form.cliente_nome.trim(),
         cliente_telefone: form.cliente_telefone.trim(),
         cliente_email: form.cliente_email.trim(),
@@ -141,15 +215,19 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
         servico_descricao: form.servico_descricao.trim(),
         observacoes: form.observacoes.trim(),
         mecanico: form.mecanico.trim(),
-        valor_estimado: form.valor_estimado.trim(),
-        valor_final: form.valor_final.trim(),
         status: form.status,
         data_entrada: form.data_entrada || null,
         data_prevista: form.data_prevista || null,
-        data_conclusao: form.data_conclusao || null,
       };
-      const url = editingId ? `/api/oficina/${editingId}` : '/api/oficina';
-      const method = editingId ? 'PUT' : 'POST';
+      // Fields that only exist/are relevant in edit mode
+      if (isEditing) {
+        payload.valor_estimado = form.valor_estimado.trim();
+        payload.valor_final = form.valor_final.trim();
+        payload.data_conclusao = form.data_conclusao || null;
+      }
+
+      const url = isEditing ? `/api/oficina/${editingId}` : '/api/oficina';
+      const method = isEditing ? 'PUT' : 'POST';
       const r = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -159,7 +237,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
         const err = await r.json().catch(() => ({}));
         throw new Error(err?.error || 'fail');
       }
-      onToast(editingId ? 'Ordem atualizada!' : 'Ordem criada!', 'success');
+      onToast(isEditing ? 'Ordem atualizada!' : 'Ordem criada!', 'success');
       onSaved();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao salvar';
@@ -168,6 +246,8 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
       setSaving(false);
     }
   };
+
+  const mecanicosAtivos = mecanicos.filter((m) => m.ativo || m.nome === form.mecanico);
 
   return (
     <div
@@ -179,7 +259,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
       <div className={styles.modal}>
         <form onSubmit={handleSubmit} className={styles.modalForm}>
           <div className={styles.modalHeader}>
-            <h3>{editingId ? 'Editar Ordem' : 'Nova Ordem'}</h3>
+            <h3>{isEditing ? 'Editar Ordem' : 'Nova Ordem'}</h3>
             <button
               type="button"
               className={styles.modalClose}
@@ -191,6 +271,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
               </svg>
             </button>
           </div>
+
           <div className={styles.modalBody}>
             {loading ? (
               <div className={styles.empty}>Carregando...</div>
@@ -227,6 +308,43 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                   </div>
                 </div>
 
+                {/* Vínculo com anúncio (opcional) */}
+                <div className={styles.formSection}>
+                  <div className={styles.formSectionTitle}>Moto do estoque (opcional)</div>
+                  <div className={styles.formGroup}>
+                    <label>Vincular a um anúncio</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <select
+                        style={{ flex: 1 }}
+                        value={form.moto_id}
+                        onChange={(e) => onSelectMoto(e.target.value)}
+                      >
+                        <option value="">— Não vinculado —</option>
+                        {motosSelector.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            #{m.id} {m.nome}
+                            {m.placa ? ` — ${m.placa}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {isLinked && (
+                        <button
+                          type="button"
+                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                          onClick={clearMoto}
+                        >
+                          Desvincular
+                        </button>
+                      )}
+                    </div>
+                    {isLinked && (
+                      <p style={{ fontSize: '0.75rem', color: '#777', marginTop: 6 }}>
+                        O custo desta ordem será somado aos custos da moto e reduzirá o lucro do anúncio.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className={styles.formSection}>
                   <div className={styles.formSectionTitle}>Moto</div>
                   <div className={styles.formRow}>
@@ -236,6 +354,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                         type="text"
                         value={form.moto_marca}
                         onChange={(e) => setField('moto_marca', e.target.value)}
+                        readOnly={isLinked}
                       />
                     </div>
                     <div className={styles.formGroup}>
@@ -244,6 +363,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                         type="text"
                         value={form.moto_modelo}
                         onChange={(e) => setField('moto_modelo', e.target.value)}
+                        readOnly={isLinked}
                       />
                     </div>
                   </div>
@@ -254,6 +374,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                         type="number"
                         value={form.moto_ano}
                         onChange={(e) => setField('moto_ano', e.target.value)}
+                        readOnly={isLinked}
                       />
                     </div>
                     <div className={styles.formGroup}>
@@ -263,6 +384,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                         value={form.moto_placa}
                         onChange={(e) => setField('moto_placa', e.target.value.toUpperCase())}
                         style={{ textTransform: 'uppercase' }}
+                        readOnly={isLinked}
                       />
                     </div>
                     <div className={styles.formGroup}>
@@ -296,36 +418,52 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                   </div>
                   <div className={styles.formGroup}>
                     <label>Mecânico responsável</label>
-                    <input
-                      type="text"
+                    <select
                       value={form.mecanico}
                       onChange={(e) => setField('mecanico', e.target.value)}
-                    />
+                    >
+                      <option value="">— Selecione —</option>
+                      {mecanicosAtivos.map((m) => (
+                        <option key={m.id} value={m.nome}>
+                          {m.nome}
+                          {!m.ativo ? ' (inativo)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {mecanicos.length === 0 && (
+                      <p style={{ fontSize: '0.75rem', color: '#777', marginTop: 6 }}>
+                        Nenhum mecânico cadastrado. Cadastre em Configurações → Mecânicos.
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className={styles.formSection}>
-                  <div className={styles.formSectionTitle}>Valores e Status</div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Valor estimado (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={form.valor_estimado}
-                        onChange={(e) => setField('valor_estimado', e.target.value)}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Valor final (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={form.valor_final}
-                        onChange={(e) => setField('valor_final', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  <div className={styles.formSectionTitle}>Status e Prazos</div>
+                  {isEditing && (
+                    <>
+                      <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                          <label>Valor estimado (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={form.valor_estimado}
+                            onChange={(e) => setField('valor_estimado', e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Valor final (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={form.valor_final}
+                            onChange={(e) => setField('valor_final', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <div className={styles.formGroup}>
                     <label>Status</label>
                     <select
@@ -339,7 +477,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                       ))}
                     </select>
                   </div>
-                  <div className={styles.formRow3}>
+                  <div className={isEditing ? styles.formRow : styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Data de entrada</label>
                       <input
@@ -356,14 +494,16 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                         onChange={(e) => setField('data_prevista', e.target.value)}
                       />
                     </div>
-                    <div className={styles.formGroup}>
-                      <label>Conclusão</label>
-                      <input
-                        type="date"
-                        value={form.data_conclusao}
-                        onChange={(e) => setField('data_conclusao', e.target.value)}
-                      />
-                    </div>
+                    {isEditing && (
+                      <div className={styles.formGroup}>
+                        <label>Conclusão</label>
+                        <input
+                          type="date"
+                          value={form.data_conclusao}
+                          onChange={(e) => setField('data_conclusao', e.target.value)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
@@ -384,7 +524,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
               className={`${styles.btn} ${styles.btnPrimary}`}
               disabled={saving || loading}
             >
-              {saving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar ordem'}
+              {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar ordem'}
             </button>
           </div>
         </form>

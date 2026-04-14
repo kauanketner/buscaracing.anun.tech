@@ -28,6 +28,7 @@ const EDITABLE_STRING_COLS = [
 ] as const;
 
 const EDITABLE_NUMBER_COLS = [
+  'moto_id',
   'moto_ano',
   'moto_km',
   'valor_estimado',

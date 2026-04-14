@@ -51,7 +51,11 @@ export type Moto = {
   valor_compra?: number | null;
   nome_cliente?: string | null;
   responsavel_compra?: string | null;
+  valor_venda_final?: number | null;
   created_at?: string | null;
+  // Agregados anexados pelo GET /api/motos/[id] (admin)
+  oficina_total?: number;
+  oficina_count?: number;
 };
 
 type Foto = { id: number; url: string };
@@ -105,6 +109,11 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [responsavelCompra, setResponsavelCompra] = useState('');
   const [dataCadastro, setDataCadastro] = useState('');
 
+  // Agregados de oficina (somente modo edição)
+  const [oficinaTotal, setOficinaTotal] = useState(0);
+  const [oficinaCount, setOficinaCount] = useState(0);
+  const [valorVendaFinal, setValorVendaFinal] = useState<number | null>(null);
+
   // Imagem capa (URL pública da capa atual salva no banco)
   const [imagemAtual, setImagemAtual] = useState('');
 
@@ -154,6 +163,11 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         setNomeCliente(m.nome_cliente || '');
         setResponsavelCompra(m.responsavel_compra || '');
         setDataCadastro(m.created_at || '');
+        setOficinaTotal(typeof m.oficina_total === 'number' ? m.oficina_total : 0);
+        setOficinaCount(typeof m.oficina_count === 'number' ? m.oficina_count : 0);
+        setValorVendaFinal(
+          typeof m.valor_venda_final === 'number' ? m.valor_venda_final : null,
+        );
         if (m.imagem) {
           setImagemAtual(m.imagem);
         }
@@ -662,6 +676,86 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
                 <input type="text" value={dataCadastro} disabled readOnly />
               </div>
             )}
+
+            {isEditing && (() => {
+              const compraNum = Number(valorCompra) || 0;
+              const precoNum = Number(preco) || 0;
+              const venda = valorVendaFinal != null ? valorVendaFinal : precoNum;
+              const hasVenda = venda > 0;
+              const hasCompra = compraNum > 0;
+              const lucro = hasVenda && hasCompra ? venda - compraNum - oficinaTotal : null;
+              const fmt = (n: number) =>
+                n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+              return (
+                <div
+                  style={{
+                    marginTop: '0.75rem',
+                    padding: '0.85rem 1rem',
+                    background: '#fafaf8',
+                    border: '1px solid #e4e4e0',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.75rem',
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#777',
+                        fontWeight: 700,
+                        marginBottom: 2,
+                      }}
+                    >
+                      Custo de oficina
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#8b4a00' }}>
+                      {fmt(oficinaTotal)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#777', marginTop: 2 }}>
+                      {oficinaCount === 0
+                        ? 'nenhuma ordem vinculada'
+                        : `${oficinaCount} ordem${oficinaCount !== 1 ? 's' : ''} vinculada${oficinaCount !== 1 ? 's' : ''}`}
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#777',
+                        fontWeight: 700,
+                        marginBottom: 2,
+                      }}
+                    >
+                      Lucro líquido estimado
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color:
+                          lucro == null
+                            ? '#777'
+                            : lucro >= 0
+                            ? '#1a7430'
+                            : '#8b1820',
+                      }}
+                    >
+                      {lucro == null ? '—' : fmt(lucro)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#777', marginTop: 2 }}>
+                      {lucro == null
+                        ? 'informe valor de compra e venda'
+                        : `venda ${fmt(venda)} − compra ${fmt(compraNum)} − oficina ${fmt(oficinaTotal)}`}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div className={styles.fotosSection}>

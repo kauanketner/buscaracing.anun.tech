@@ -21,8 +21,24 @@ export async function GET(request: NextRequest, context: RouteContext) {
     if (!moto) {
       return NextResponse.json({ error: 'Não encontrada' }, { status: 404 });
     }
-    // Admin autenticado recebe tudo; público recebe apenas colunas não-sensíveis.
-    const payload = isAuthenticated(request) ? moto : stripAdminFields(moto);
+    const isAdmin = isAuthenticated(request);
+    if (!isAdmin) {
+      return NextResponse.json(stripAdminFields(moto));
+    }
+    // Admin: anexa total/quantidade de ordens de oficina vinculadas para cálculo de lucro
+    const oficina = db
+      .prepare(
+        `SELECT
+           COALESCE(SUM(COALESCE(valor_final, valor_estimado, 0)), 0) AS total,
+           COUNT(*) AS count
+         FROM oficina_ordens WHERE moto_id = ?`,
+      )
+      .get(Number(id)) as { total: number; count: number } | undefined;
+    const payload = {
+      ...moto,
+      oficina_total: oficina?.total ?? 0,
+      oficina_count: oficina?.count ?? 0,
+    };
     return NextResponse.json(payload);
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
