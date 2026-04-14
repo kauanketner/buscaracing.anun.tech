@@ -18,10 +18,11 @@ interface MotoGalleryProps {
 
 export default function MotoGallery({ mainImage, fotos, nome }: MotoGalleryProps) {
   // Build images array: main image first, then fotos
+  // Fotos da galeria são salvas em /data/fotos/ e servidas em /fotos/<filename>
   const images: string[] = [];
   if (mainImage) images.push(mainImage);
   for (const f of fotos) {
-    const src = f.filename.startsWith('/') ? f.filename : `/uploads/${f.filename}`;
+    const src = f.filename.startsWith('/') ? f.filename : `/fotos/${f.filename}`;
     if (src !== mainImage) images.push(src);
   }
 
