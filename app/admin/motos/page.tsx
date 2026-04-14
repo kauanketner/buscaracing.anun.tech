@@ -189,8 +189,8 @@ export default function MotosPage() {
           </select>
           <select className={styles.toolbarSelect} value={fAtivo} onChange={(e) => setFAtivo(e.target.value)}>
             <option value="">Todos status</option>
-            <option value="1">Ativo</option>
-            <option value="0">Inativo</option>
+            <option value="1">Anunciada</option>
+            <option value="0">Pausada</option>
           </select>
         </div>
 
@@ -256,7 +256,7 @@ export default function MotosPage() {
                         <span className={`${styles.badge} ${styles.bgBlue}`}>Vendida</span>
                       ) : (
                         <span className={`${styles.badge} ${m.ativo ? styles.bgGreen : styles.bgGray}`}>
-                          {m.ativo ? 'Ativo' : 'Inativo'}
+                          {m.ativo ? 'Anunciada' : 'Pausada'}
                         </span>
                       )}
                     </td>

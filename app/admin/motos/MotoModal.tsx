@@ -553,7 +553,7 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             </label>
             <label className={styles.checkItem}>
               <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
-              <span>✓ Ativo (visível no site)</span>
+              <span>✓ Anunciada (visível no site)</span>
             </label>
           </div>
 

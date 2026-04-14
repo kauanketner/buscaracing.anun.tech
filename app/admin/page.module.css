@@ -1,8 +1,72 @@
+/* Period filter bar */
+.periodBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #ffffff;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.periodPresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.periodBtn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.9rem;
+  background: #f1f1ee;
+  color: #555;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.periodBtn:hover {
+  background: #e4e4e0;
+}
+.periodBtnActive {
+  background: #27367D;
+  color: #fff;
+}
+.periodBtnActive:hover {
+  background: #27367D;
+}
+.periodDates {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.periodDates label {
+  display: inline-flex;
+  flex-direction: column;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #777;
+  gap: 2px;
+}
+.periodDates input[type='date'] {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #e4e4e0;
+  background: #fff;
+  color: #222;
+}
+
+/* Stat cards */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .statCard {
@@ -14,6 +78,9 @@
 .statCard:hover {
   border-top-color: #DC2627;
 }
+.statCardAccent {
+  border-top-color: #27367D;
+}
 .statCardLabel {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
@@ -22,15 +89,38 @@
   text-transform: uppercase;
   color: #777;
   margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.statCardPeriod {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: #aaa;
+  font-weight: 500;
 }
 .statCardValue {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 3rem;
+  font-size: 2.6rem;
   line-height: 1;
   color: #27367D;
 }
 .statCardValue span {
   color: #DC2627;
+}
+.statCardSub {
+  margin-top: 0.45rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  color: #888;
+  letter-spacing: 0.03em;
+}
+
+/* Two-column dashboard grid */
+.dashGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 }
 
 .catsBreakdown {
@@ -42,6 +132,7 @@
   font-size: 1.3rem;
   color: #27367D;
   margin-bottom: 1.25rem;
+  letter-spacing: 0.03em;
 }
 .catBarItem {
   margin-bottom: 0.85rem;
@@ -64,9 +155,64 @@
   background: #27367D;
   transition: width 0.8s ease;
 }
+.bgBlue { background: #27367D; }
+.bgRed { background: #DC2627; }
+.bgGreen { background: #16a34a; }
+.bgOrange { background: #ea8a1a; }
+
+.emptyMsg {
+  color: #777;
+  font-size: 0.85rem;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+/* Vendor table */
+.vendTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.vendTable thead th {
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #888;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e4e4e0;
+  font-weight: 700;
+}
+.vendTable tbody td {
+  padding: 0.55rem 0.5rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #f1f1ee;
+  color: #333;
+}
+.vendTable tbody tr:last-child td {
+  border-bottom: none;
+}
+.vendRank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: #27367D;
+  width: 2rem;
+}
+.tRight {
+  text-align: right;
+}
 
 @media (max-width: 900px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .dashGrid {
+    grid-template-columns: 1fr;
+  }
+  .periodBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .periodDates {
+    justify-content: space-between;
   }
 }
