@@ -79,6 +79,32 @@ function initSchema(db: Database.Database): void {
       ativo      INTEGER DEFAULT 1,
       created_at TEXT    DEFAULT (datetime('now','localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS oficina_ordens (
+      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_nome       TEXT    NOT NULL,
+      cliente_telefone   TEXT    DEFAULT '',
+      cliente_email      TEXT    DEFAULT '',
+      moto_marca         TEXT    DEFAULT '',
+      moto_modelo        TEXT    DEFAULT '',
+      moto_ano           INTEGER,
+      moto_placa         TEXT    DEFAULT '',
+      moto_km            INTEGER,
+      servico_descricao  TEXT    DEFAULT '',
+      observacoes        TEXT    DEFAULT '',
+      mecanico           TEXT    DEFAULT '',
+      valor_estimado     REAL,
+      valor_final        REAL,
+      status             TEXT    NOT NULL DEFAULT 'aberta',
+      data_entrada       TEXT    DEFAULT (date('now','localtime')),
+      data_prevista      TEXT,
+      data_conclusao     TEXT,
+      created_at         TEXT    DEFAULT (datetime('now','localtime')),
+      updated_at         TEXT    DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_oficina_status ON oficina_ordens(status);
+    CREATE INDEX IF NOT EXISTS idx_oficina_data_entrada ON oficina_ordens(data_entrada);
   `);
 
   // ----- Migrations: additional admin-only columns on motos -----

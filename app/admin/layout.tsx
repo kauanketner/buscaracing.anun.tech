@@ -9,7 +9,8 @@ import styles from './layout.module.css';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin': { title: 'Dashboard', subtitle: 'Visão geral da loja' },
-  '/admin/motos': { title: 'Gestão de Motos', subtitle: 'Cadastre, edite e organize o estoque' },
+  '/admin/motos': { title: 'Anúncios', subtitle: 'Cadastre, edite e organize os anúncios de motos' },
+  '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
   '/admin/blog/novo': { title: 'Novo Post', subtitle: 'Crie um novo post para o blog' },
   '/admin/config': { title: 'Configurações', subtitle: 'Logo, imagens e dados do site' },
@@ -21,7 +22,10 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
     return { title: 'Editar Post', subtitle: 'Atualize o conteúdo do post' };
   }
   if (pathname.startsWith('/admin/motos')) {
-    return { title: 'Gestão de Motos', subtitle: 'Cadastre, edite e organize o estoque' };
+    return { title: 'Anúncios', subtitle: 'Cadastre, edite e organize os anúncios de motos' };
+  }
+  if (pathname.startsWith('/admin/oficina')) {
+    return { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' };
   }
   if (pathname.startsWith('/admin/blog')) {
     return { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' };
@@ -32,7 +36,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -50,6 +54,18 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'blog' | 'config' }) 
         <circle cx="17" cy="17" r="3" stroke="currentColor" strokeWidth="2" />
         <path d="M10 17h4M3 14 L7 8 L13 9 L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M13 9 L16 5 L19 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (name === 'oficina') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M14.7 6.3a5 5 0 11-7 7L3 18a1.5 1.5 0 002 2l4.4-4.4a5 5 0 017-7l-2.6 2.6-2.4-.4-.4-2.4 2.7-2.1z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }
@@ -74,13 +90,14 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'blog' | 'config' }) 
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'oficina' | 'blog' | 'config';
   exact?: boolean;
 };
 
 const NAV_LINKS: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
-  { href: '/admin/motos', label: 'Motos', icon: 'motos' },
+  { href: '/admin/motos', label: 'Anúncios', icon: 'motos' },
+  { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/blog', label: 'Blog', icon: 'blog' },
   { href: '/admin/config', label: 'Configurações', icon: 'config' },
 ];
