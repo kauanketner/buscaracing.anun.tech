@@ -35,6 +35,23 @@ export type Moto = {
   ativo?: number;
   ano?: number | null;
   km?: number | null;
+  // Fichamento técnico
+  modelo?: string | null;
+  ano_fabricacao?: number | null;
+  versao?: string | null;
+  cor?: string | null;
+  combustivel?: string | null;
+  transmissao?: string | null;
+  // Controle interno
+  tipo_entrada?: string | null;
+  placa?: string | null;
+  chassi?: string | null;
+  renavam?: string | null;
+  numero_motor?: string | null;
+  valor_compra?: number | null;
+  nome_cliente?: string | null;
+  responsavel_compra?: string | null;
+  created_at?: string | null;
 };
 
 type Foto = { id: number; url: string };
@@ -50,20 +67,49 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Identificação
   const [nome, setNome] = useState('');
   const [marca, setMarca] = useState('');
+  const [modelo, setModelo] = useState('');
+  const [versao, setVersao] = useState('');
+
+  // Categorização
   const [categoria, setCategoria] = useState('');
   const [condicao, setCondicao] = useState('nova');
+
+  // Especificações técnicas
+  const [anoFabricacao, setAnoFabricacao] = useState('');
+  const [ano, setAno] = useState('');
+  const [cor, setCor] = useState('');
+  const [combustivel, setCombustivel] = useState('');
+  const [transmissao, setTransmissao] = useState('');
+  const [km, setKm] = useState('');
+
+  // Preços (valor_venda = preco)
   const [preco, setPreco] = useState('');
   const [precoOriginal, setPrecoOriginal] = useState('');
-  const [ano, setAno] = useState('');
-  const [km, setKm] = useState('');
+
+  // Descrição & flags
   const [descricao, setDescricao] = useState('');
   const [destaque, setDestaque] = useState(false);
   const [ativo, setAtivo] = useState(true);
+
+  // Controle interno
+  const [tipoEntrada, setTipoEntrada] = useState('');
+  const [placa, setPlaca] = useState('');
+  const [chassi, setChassi] = useState('');
+  const [renavam, setRenavam] = useState('');
+  const [numeroMotor, setNumeroMotor] = useState('');
+  const [valorCompra, setValorCompra] = useState('');
+  const [nomeCliente, setNomeCliente] = useState('');
+  const [responsavelCompra, setResponsavelCompra] = useState('');
+  const [dataCadastro, setDataCadastro] = useState('');
+
+  // Imagem principal
   const [imagemAtual, setImagemAtual] = useState('');
   const [imgPreview, setImgPreview] = useState<string | null>(null);
 
+  // Galeria
   const [fotos, setFotos] = useState<Foto[]>([]);
   const [fotosLoading, setFotosLoading] = useState(false);
   const [uploadingCount, setUploadingCount] = useState(0);
@@ -84,15 +130,30 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         if (cancelled) return;
         setNome(m.nome || '');
         setMarca(m.marca || '');
+        setModelo(m.modelo || '');
+        setVersao(m.versao || '');
         setCategoria(m.categoria || '');
         setCondicao(m.condicao || 'nova');
+        setAnoFabricacao(m.ano_fabricacao != null ? String(m.ano_fabricacao) : '');
+        setAno(m.ano != null ? String(m.ano) : '');
+        setCor(m.cor || '');
+        setCombustivel(m.combustivel || '');
+        setTransmissao(m.transmissao || '');
+        setKm(m.km != null ? String(m.km) : '');
         setPreco(m.preco != null ? String(m.preco) : '');
         setPrecoOriginal(m.preco_original != null ? String(m.preco_original) : '');
-        setAno(m.ano != null ? String(m.ano) : '');
-        setKm(m.km != null ? String(m.km) : '');
         setDescricao(m.descricao || '');
         setDestaque(!!m.destaque);
         setAtivo(!!m.ativo);
+        setTipoEntrada(m.tipo_entrada || '');
+        setPlaca(m.placa || '');
+        setChassi(m.chassi || '');
+        setRenavam(m.renavam || '');
+        setNumeroMotor(m.numero_motor || '');
+        setValorCompra(m.valor_compra != null ? String(m.valor_compra) : '');
+        setNomeCliente(m.nome_cliente || '');
+        setResponsavelCompra(m.responsavel_compra || '');
+        setDataCadastro(m.created_at || '');
         if (m.imagem) {
           setImagemAtual(m.imagem);
           setImgPreview(m.imagem);
@@ -182,17 +243,38 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     }
     setSubmitting(true);
     const fd = new FormData();
+    // Identificação
     fd.append('nome', n);
     fd.append('marca', b);
+    fd.append('modelo', modelo.trim());
+    fd.append('versao', versao.trim());
+    // Categorização
     fd.append('categoria', categoria);
     fd.append('condicao', condicao);
+    // Técnicas
+    fd.append('ano_fabricacao', anoFabricacao);
+    fd.append('ano', ano);
+    fd.append('cor', cor.trim());
+    fd.append('combustivel', combustivel);
+    fd.append('transmissao', transmissao);
+    fd.append('km', km);
+    // Preços
     fd.append('preco', preco);
     fd.append('preco_original', precoOriginal);
-    fd.append('ano', ano);
-    fd.append('km', km);
+    // Descrição & flags
     fd.append('descricao', descricao);
     fd.append('destaque', destaque ? '1' : '0');
     fd.append('ativo', ativo ? '1' : '0');
+    // Controle interno
+    fd.append('tipo_entrada', tipoEntrada);
+    fd.append('placa', placa.trim().toUpperCase());
+    fd.append('chassi', chassi.trim().toUpperCase());
+    fd.append('renavam', renavam.trim());
+    fd.append('numero_motor', numeroMotor.trim());
+    fd.append('valor_compra', valorCompra);
+    fd.append('nome_cliente', nomeCliente.trim());
+    fd.append('responsavel_compra', responsavelCompra.trim());
+    // Imagem
     fd.append('imagem_atual', imagemAtual);
     const file = fileInputRef.current?.files?.[0];
     if (file) fd.append('imagem', file);
@@ -271,10 +353,10 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             onChange={onImageChange}
           />
 
-          {/* Fields */}
+          {/* ============== IDENTIFICAÇÃO ============== */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Nome da Moto *</label>
+              <label>Nome / Título Público *</label>
               <input
                 type="text"
                 placeholder="Ex: CB 650R Neo Sports"
@@ -301,6 +383,28 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
+              <label>Modelo</label>
+              <input
+                type="text"
+                placeholder="Ex: CB 650R"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Versão</label>
+              <input
+                type="text"
+                placeholder="Ex: Neo Sports Café"
+                value={versao}
+                onChange={(e) => setVersao(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* ============== CATEGORIZAÇÃO ============== */}
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Categoria *</label>
               <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
                 <option value="">Selecione...</option>
@@ -320,55 +424,113 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             </div>
           </div>
 
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Preço (R$)</label>
-              <input
-                type="number"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-              />
+          {/* ============== ESPECIFICAÇÕES TÉCNICAS ============== */}
+          <div className={styles.formSection}>
+            <p className={styles.formSectionTitle}>Ficha Técnica</p>
+            <p className={styles.formSectionSubtitle}>Informações exibidas publicamente no site</p>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Ano de Fabricação</label>
+                <input
+                  type="number"
+                  placeholder="Ex: 2024"
+                  min="1990"
+                  max="2030"
+                  value={anoFabricacao}
+                  onChange={(e) => setAnoFabricacao(e.target.value)}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Ano Modelo</label>
+                <input
+                  type="number"
+                  placeholder="Ex: 2025"
+                  min="1990"
+                  max="2030"
+                  value={ano}
+                  onChange={(e) => setAno(e.target.value)}
+                />
+              </div>
             </div>
-            <div className={styles.formGroup}>
-              <label>
-                Preço Original (R$){' '}
-                <small style={{ fontWeight: 400, textTransform: 'none' }}>(opcional)</small>
-              </label>
-              <input
-                type="number"
-                placeholder="Para mostrar desconto"
-                min="0"
-                step="0.01"
-                value={precoOriginal}
-                onChange={(e) => setPrecoOriginal(e.target.value)}
-              />
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Cor</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Vermelha"
+                  value={cor}
+                  onChange={(e) => setCor(e.target.value)}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Quilometragem (KM)</label>
+                <input
+                  type="number"
+                  placeholder="0 para nova"
+                  min="0"
+                  value={km}
+                  onChange={(e) => setKm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Combustível</label>
+                <select value={combustivel} onChange={(e) => setCombustivel(e.target.value)}>
+                  <option value="">Selecione...</option>
+                  <option value="Gasolina">Gasolina</option>
+                  <option value="Flex">Flex</option>
+                  <option value="Elétrica">Elétrica</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Etanol">Etanol</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Transmissão</label>
+                <select value={transmissao} onChange={(e) => setTransmissao(e.target.value)}>
+                  <option value="">Selecione...</option>
+                  <option value="Manual">Manual</option>
+                  <option value="Automática">Automática</option>
+                  <option value="Semi-automática">Semi-automática</option>
+                  <option value="CVT">CVT</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Ano</label>
-              <input
-                type="number"
-                placeholder="2024"
-                min="1990"
-                max="2030"
-                value={ano}
-                onChange={(e) => setAno(e.target.value)}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>KM (0 para nova)</label>
-              <input
-                type="number"
-                placeholder="0"
-                min="0"
-                value={km}
-                onChange={(e) => setKm(e.target.value)}
-              />
+          {/* ============== PREÇOS (público) ============== */}
+          <div className={styles.formSection}>
+            <p className={styles.formSectionTitle}>Preços</p>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Valor de Venda (R$)</label>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  value={preco}
+                  onChange={(e) => setPreco(e.target.value)}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>
+                  Preço Original (R$){' '}
+                  <small style={{ fontWeight: 400, textTransform: 'none' }}>(opcional)</small>
+                </label>
+                <input
+                  type="number"
+                  placeholder="Para mostrar desconto"
+                  min="0"
+                  step="0.01"
+                  value={precoOriginal}
+                  onChange={(e) => setPrecoOriginal(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -390,6 +552,113 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
               <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
               <span>✓ Ativo (visível no site)</span>
             </label>
+          </div>
+
+          {/* ============== CONTROLE INTERNO (admin-only) ============== */}
+          <div className={`${styles.formSection} ${styles.formSectionInternal}`}>
+            <p className={styles.formSectionTitle}>Controle Interno</p>
+            <p className={styles.formSectionSubtitle}>
+              Uso administrativo — não aparece no site público
+            </p>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Tipo de Entrada</label>
+                <select value={tipoEntrada} onChange={(e) => setTipoEntrada(e.target.value)}>
+                  <option value="">Selecione...</option>
+                  <option value="compra">Compra</option>
+                  <option value="consignada">Consignada</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Responsável pela Compra</label>
+                <input
+                  type="text"
+                  placeholder="Nome do comprador interno"
+                  value={responsavelCompra}
+                  onChange={(e) => setResponsavelCompra(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Placa</label>
+                <input
+                  type="text"
+                  placeholder="ABC-1D23"
+                  maxLength={8}
+                  value={placa}
+                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Renavam</label>
+                <input
+                  type="text"
+                  placeholder="00000000000"
+                  value={renavam}
+                  onChange={(e) => setRenavam(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Chassi</label>
+                <input
+                  type="text"
+                  placeholder="17 caracteres"
+                  maxLength={17}
+                  value={chassi}
+                  onChange={(e) => setChassi(e.target.value.toUpperCase())}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Número do Motor</label>
+                <input
+                  type="text"
+                  placeholder="Ex: ABC1234567"
+                  value={numeroMotor}
+                  onChange={(e) => setNumeroMotor(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Valor de Compra (R$)</label>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  value={valorCompra}
+                  onChange={(e) => setValorCompra(e.target.value)}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>
+                  Nome do Cliente{' '}
+                  <small style={{ fontWeight: 400, textTransform: 'none' }}>
+                    (proprietário em consignação)
+                  </small>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nome completo do cliente"
+                  value={nomeCliente}
+                  onChange={(e) => setNomeCliente(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {isEditing && dataCadastro && (
+              <div className={styles.formGroup}>
+                <label>Data de Cadastro</label>
+                <input type="text" value={dataCadastro} disabled readOnly />
+              </div>
+            )}
           </div>
 
           {isEditing && (

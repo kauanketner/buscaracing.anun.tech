@@ -39,6 +39,8 @@ function initSchema(db: Database.Database): void {
       created_at     TEXT    DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE INDEX IF NOT EXISTS idx_motos_ativo ON motos(ativo);
+
     CREATE TABLE IF NOT EXISTS configuracoes (
       chave TEXT PRIMARY KEY,
       valor TEXT NOT NULL DEFAULT ''
@@ -70,6 +72,33 @@ function initSchema(db: Database.Database): void {
     );
   `);
 
+  // ----- Migrations: additional admin-only columns on motos -----
+  const existingCols = new Set(
+    (db.prepare('PRAGMA table_info(motos)').all() as { name: string }[]).map((c) => c.name),
+  );
+  const addCol = (name: string, definition: string): void => {
+    if (!existingCols.has(name)) {
+      db.exec(`ALTER TABLE motos ADD COLUMN ${name} ${definition}`);
+      existingCols.add(name);
+    }
+  };
+  // Controle interno
+  addCol('tipo_entrada', "TEXT DEFAULT ''");        // 'compra' | 'consignada'
+  addCol('placa', "TEXT DEFAULT ''");
+  addCol('chassi', "TEXT DEFAULT ''");
+  addCol('renavam', "TEXT DEFAULT ''");
+  addCol('numero_motor', "TEXT DEFAULT ''");
+  addCol('valor_compra', 'REAL');
+  addCol('nome_cliente', "TEXT DEFAULT ''");
+  addCol('responsavel_compra', "TEXT DEFAULT ''");
+  // Fichamento técnico (podem ser expostos publicamente)
+  addCol('modelo', "TEXT DEFAULT ''");
+  addCol('ano_fabricacao', 'INTEGER');
+  addCol('versao', "TEXT DEFAULT ''");
+  addCol('cor', "TEXT DEFAULT ''");
+  addCol('combustivel', "TEXT DEFAULT ''");
+  addCol('transmissao', "TEXT DEFAULT ''");
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"
@@ -81,6 +110,30 @@ function initSchema(db: Database.Database): void {
   for (const k of seedKeys) {
     insert.run(k);
   }
+}
+
+/**
+ * Colunas que NUNCA devem ser expostas em endpoints públicos.
+ * Contém placa, chassi, documentos e dados financeiros/cliente internos.
+ */
+export const MOTOS_ADMIN_ONLY_COLS = [
+  'tipo_entrada',
+  'placa',
+  'chassi',
+  'renavam',
+  'numero_motor',
+  'valor_compra',
+  'nome_cliente',
+  'responsavel_compra',
+] as const;
+
+/**
+ * Remove colunas admin-only de uma linha de moto antes de expor publicamente.
+ */
+export function stripAdminFields<T extends Record<string, unknown>>(row: T): Partial<T> {
+  const copy: Record<string, unknown> = { ...row };
+  for (const col of MOTOS_ADMIN_ONLY_COLS) delete copy[col];
+  return copy as Partial<T>;
 }
 
 export default getDb;

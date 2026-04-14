@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getDb } from '@/lib/db';
+import { getDb, stripAdminFields } from '@/lib/db';
+import { parseMotoForm, MOTO_UPSERT_COLUMNS } from '@/lib/motos';
 
 export const dynamic = 'force-dynamic';
 import { saveFile, UPLOADS_DIR } from '@/lib/upload';
@@ -10,15 +11,19 @@ import { FOTOS_DIR } from '@/lib/upload';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const db = getDb();
-    const moto = db.prepare('SELECT * FROM motos WHERE id=?').get(Number(id));
+    const moto = db.prepare('SELECT * FROM motos WHERE id=?').get(Number(id)) as
+      | Record<string, unknown>
+      | undefined;
     if (!moto) {
       return NextResponse.json({ error: 'Não encontrada' }, { status: 404 });
     }
-    return NextResponse.json(moto);
+    // Admin autenticado recebe tudo; público recebe apenas colunas não-sensíveis.
+    const payload = isAuthenticated(request) ? moto : stripAdminFields(moto);
+    return NextResponse.json(payload);
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -39,18 +44,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const formData = await request.formData();
-    const nome = formData.get('nome') as string;
-    const marca = formData.get('marca') as string;
-    const categoria = (formData.get('categoria') as string) || 'outros';
-    const condicao = (formData.get('condicao') as string) || 'nova';
-    const preco = formData.get('preco') ? Number(formData.get('preco')) : null;
-    const preco_original = formData.get('preco_original') ? Number(formData.get('preco_original')) : null;
-    const descricao = (formData.get('descricao') as string) || '';
-    const destaque = formData.get('destaque') ? 1 : 0;
-    const ativoVal = formData.get('ativo');
-    const ativo = ativoVal === '0' ? 0 : 1;
-    const ano = formData.get('ano') ? Number(formData.get('ano')) : null;
-    const km = formData.get('km') ? Number(formData.get('km')) : null;
+    const fields = parseMotoForm(formData);
     const imagem_atual = formData.get('imagem_atual') as string | null;
 
     let imagem: string | null;
@@ -60,13 +54,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     } else if (imagem_atual !== null && imagem_atual !== undefined) {
       imagem = imagem_atual;
     } else {
-      imagem = old.imagem as string | null;
+      imagem = (old.imagem as string | null) ?? null;
     }
 
-    db.prepare(
-      `UPDATE motos SET nome=?,marca=?,categoria=?,condicao=?,preco=?,preco_original=?,
-        descricao=?,imagem=?,destaque=?,ativo=?,ano=?,km=? WHERE id=?`
-    ).run(nome, marca, categoria, condicao, preco, preco_original, descricao, imagem, destaque, ativo, ano, km, Number(id));
+    const cols = [...MOTO_UPSERT_COLUMNS, 'imagem'];
+    const setClause = cols.map((c) => `${c}=?`).join(',');
+    const values = cols.map((c) => (c === 'imagem' ? imagem : (fields as Record<string, unknown>)[c]));
+
+    db.prepare(`UPDATE motos SET ${setClause} WHERE id=?`).run(...values, Number(id));
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {

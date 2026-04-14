@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getDb } from '@/lib/db';
+import { getDb, stripAdminFields } from '@/lib/db';
+import { parseMotoForm, MOTO_UPSERT_COLUMNS } from '@/lib/motos';
 
 export const dynamic = 'force-dynamic';
 import { saveFile, UPLOADS_DIR } from '@/lib/upload';
@@ -29,8 +30,10 @@ export async function GET(request: NextRequest) {
     }
 
     sql += ' ORDER BY destaque DESC, id DESC';
-    const rows = db.prepare(sql).all(...params);
-    return NextResponse.json(rows);
+    const rows = db.prepare(sql).all(...params) as Record<string, unknown>[];
+    // Remove colunas internas (placa, chassi, valor_compra, etc.) antes de retornar
+    const safe = rows.map((r) => stripAdminFields(r));
+    return NextResponse.json(safe);
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -45,19 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const formData = await request.formData();
-
-    const nome = formData.get('nome') as string;
-    const marca = formData.get('marca') as string;
-    const categoria = (formData.get('categoria') as string) || 'outros';
-    const condicao = (formData.get('condicao') as string) || 'nova';
-    const preco = formData.get('preco') ? Number(formData.get('preco')) : null;
-    const preco_original = formData.get('preco_original') ? Number(formData.get('preco_original')) : null;
-    const descricao = (formData.get('descricao') as string) || '';
-    const destaque = formData.get('destaque') ? 1 : 0;
-    const ativoVal = formData.get('ativo');
-    const ativo = ativoVal === '0' ? 0 : 1;
-    const ano = formData.get('ano') ? Number(formData.get('ano')) : null;
-    const km = formData.get('km') ? Number(formData.get('km')) : null;
+    const fields = parseMotoForm(formData);
 
     let imagem: string | null = null;
     const file = formData.get('imagem') as File | null;
@@ -65,10 +56,13 @@ export async function POST(request: NextRequest) {
       imagem = await saveFile(file, UPLOADS_DIR);
     }
 
-    const result = db.prepare(
-      `INSERT INTO motos(nome,marca,categoria,condicao,preco,preco_original,descricao,imagem,destaque,ativo,ano,km)
-       VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`
-    ).run(nome, marca, categoria, condicao, preco, preco_original, descricao, imagem, destaque, ativo, ano, km);
+    const cols = [...MOTO_UPSERT_COLUMNS, 'imagem'];
+    const placeholders = cols.map(() => '?').join(',');
+    const values = cols.map((c) => (c === 'imagem' ? imagem : (fields as Record<string, unknown>)[c]));
+
+    const result = db
+      .prepare(`INSERT INTO motos(${cols.join(',')}) VALUES(${placeholders})`)
+      .run(...values);
 
     return NextResponse.json({ id: result.lastInsertRowid });
   } catch (e: unknown) {

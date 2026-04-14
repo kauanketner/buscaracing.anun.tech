@@ -480,6 +480,37 @@
   color: #555;
 }
 
+/* Form sections */
+.formSection {
+  margin-top: 1.5rem;
+  border-top: 1.5px solid #e4e4e0;
+  padding-top: 1.25rem;
+}
+.formSectionTitle {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #27367D;
+  margin: 0 0 0.15rem;
+}
+.formSectionSubtitle {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.78rem;
+  color: #8a8a85;
+  margin: 0 0 1rem;
+}
+.formSectionInternal {
+  background: #fff8ec;
+  margin: 1.5rem -1.5rem 0;
+  padding: 1.25rem 1.5rem 0.5rem;
+  border-top: 2px solid #f0b429;
+}
+.formSectionInternal .formSectionTitle {
+  color: #b54708;
+}
+
 /* Fotos gallery */
 .fotosSection {
   margin-top: 1.5rem;
