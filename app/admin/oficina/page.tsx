@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import OrdemModal from './OrdemModal';
-import FecharModal from './FecharModal';
-import AtualizarStatusModal from './AtualizarStatusModal';
-import { OFICINA_STATUS_LABELS, isTerminal } from '@/lib/oficina-status';
+import { OFICINA_STATUS_LABELS } from '@/lib/oficina-status';
 import styles from './page.module.css';
 
 const PAGE_SIZE = 12;
@@ -88,12 +86,6 @@ export default function OficinaPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [fecharTarget, setFecharTarget] = useState<
-    { id: number; label: string; defaultValor: number | null } | null
-  >(null);
-  const [atualizarTarget, setAtualizarTarget] = useState<
-    { id: number; label: string; statusAtual: string } | null
-  >(null);
 
   const reload = async () => {
     setLoading(true);
@@ -255,7 +247,7 @@ export default function OficinaPage() {
                       <Link
                         href={`/admin/oficina/${o.id}`}
                         className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
-                        title="Ver detalhes"
+                        title="Abrir detalhes (status, fechar, garantia, histórico)"
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                           <path
@@ -268,61 +260,6 @@ export default function OficinaPage() {
                         </svg>
                         Detalhes
                       </Link>
-                      {!isTerminal(o.status) && (
-                        <button
-                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                          onClick={() =>
-                            setAtualizarTarget({
-                              id: o.id,
-                              label: `#${o.id} – ${o.cliente_nome}`,
-                              statusAtual: o.status,
-                            })
-                          }
-                          title="Atualizar status"
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                            <polyline
-                              points="23 4 23 10 17 10"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M20.49 15a9 9 0 11-2.12-9.36L23 10"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          Status
-                        </button>
-                      )}
-                      {!isTerminal(o.status) && (
-                        <button
-                          className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                          onClick={() =>
-                            setFecharTarget({
-                              id: o.id,
-                              label: `#${o.id} – ${o.cliente_nome}`,
-                              defaultValor: o.valor_final ?? o.valor_estimado ?? null,
-                            })
-                          }
-                          title="Fechar OS"
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                            <polyline
-                              points="20 6 9 17 4 12"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          Fechar
-                        </button>
-                      )}
                       <button
                         className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
                         onClick={() => openEdit(o.id)}
@@ -346,12 +283,13 @@ export default function OficinaPage() {
                         </svg>
                       </button>
                       <button
-                        className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm} ${styles.btnIcon}`}
+                        className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
                         onClick={() =>
                           setDeleteTarget({ id: o.id, label: `#${o.id} – ${o.cliente_nome}` })
                         }
                         title="Excluir"
                         aria-label="Excluir"
+                        style={{ color: '#dc3545' }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                           <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -404,34 +342,6 @@ export default function OficinaPage() {
             setEditingId(null);
           }}
           onSaved={onSaved}
-          onToast={showToast}
-        />
-      )}
-
-      {fecharTarget && (
-        <FecharModal
-          ordemId={fecharTarget.id}
-          label={fecharTarget.label}
-          defaultValor={fecharTarget.defaultValor}
-          onClose={() => setFecharTarget(null)}
-          onClosed={async () => {
-            setFecharTarget(null);
-            await reload();
-          }}
-          onToast={showToast}
-        />
-      )}
-
-      {atualizarTarget && (
-        <AtualizarStatusModal
-          ordemId={atualizarTarget.id}
-          label={atualizarTarget.label}
-          statusAtual={atualizarTarget.statusAtual}
-          onClose={() => setAtualizarTarget(null)}
-          onUpdated={async () => {
-            setAtualizarTarget(null);
-            await reload();
-          }}
           onToast={showToast}
         />
       )}

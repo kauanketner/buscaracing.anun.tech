@@ -174,7 +174,14 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
 
   const onSelectMoto = (id: string) => {
     if (!id) {
-      setForm((prev) => ({ ...prev, moto_id: '' }));
+      setForm((prev) => ({
+        ...prev,
+        moto_id: '',
+        moto_marca: '',
+        moto_modelo: '',
+        moto_placa: '',
+        moto_ano: '',
+      }));
       return;
     }
     const moto = motosSelector.find((m) => String(m.id) === id);
@@ -182,21 +189,37 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
       setForm((prev) => ({ ...prev, moto_id: id }));
       return;
     }
+    // Quando vincula, sempre sobrescreve os campos com os dados da moto.
     setForm((prev) => ({
       ...prev,
       moto_id: id,
-      moto_marca: moto.marca || prev.moto_marca,
-      moto_modelo: moto.modelo || moto.nome || prev.moto_modelo,
-      moto_placa: moto.placa || prev.moto_placa,
-      moto_ano: moto.ano != null ? String(moto.ano) : (moto.ano_fabricacao != null ? String(moto.ano_fabricacao) : prev.moto_ano),
+      moto_marca: moto.marca || '',
+      moto_modelo: moto.modelo || moto.nome || '',
+      moto_placa: moto.placa || '',
+      moto_ano:
+        moto.ano != null
+          ? String(moto.ano)
+          : moto.ano_fabricacao != null
+          ? String(moto.ano_fabricacao)
+          : '',
     }));
   };
 
   const clearMoto = () => {
-    setForm((prev) => ({ ...prev, moto_id: '' }));
+    setForm((prev) => ({
+      ...prev,
+      moto_id: '',
+      moto_marca: '',
+      moto_modelo: '',
+      moto_placa: '',
+      moto_ano: '',
+    }));
   };
 
   const isLinked = !!form.moto_id;
+  const motoVinculada = isLinked
+    ? motosSelector.find((m) => String(m.id) === form.moto_id) || null
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -351,55 +374,102 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
 
                 <div className={styles.formSection}>
                   <div className={styles.formSectionTitle}>Moto</div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Marca</label>
-                      <input
-                        type="text"
-                        value={form.moto_marca}
-                        onChange={(e) => setField('moto_marca', e.target.value)}
-                        readOnly={isLinked}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Modelo</label>
-                      <input
-                        type="text"
-                        value={form.moto_modelo}
-                        onChange={(e) => setField('moto_modelo', e.target.value)}
-                        readOnly={isLinked}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.formRow3}>
-                    <div className={styles.formGroup}>
-                      <label>Ano</label>
-                      <input
-                        type="number"
-                        value={form.moto_ano}
-                        onChange={(e) => setField('moto_ano', e.target.value)}
-                        readOnly={isLinked}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Placa</label>
-                      <input
-                        type="text"
-                        value={form.moto_placa}
-                        onChange={(e) => setField('moto_placa', e.target.value.toUpperCase())}
-                        style={{ textTransform: 'uppercase' }}
-                        readOnly={isLinked}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>KM</label>
-                      <input
-                        type="number"
-                        value={form.moto_km}
-                        onChange={(e) => setField('moto_km', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  {isLinked ? (
+                    <>
+                      <div
+                        style={{
+                          background: '#f8f8f5',
+                          border: '1px solid #e4e4e0',
+                          padding: '10px 14px',
+                          marginBottom: 12,
+                          fontSize: '0.85rem',
+                          color: '#333',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, 1fr)',
+                          gap: '6px 16px',
+                        }}
+                      >
+                        <div>
+                          <strong style={{ color: '#777', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            Moto vinculada
+                          </strong>
+                          <div>
+                            {motoVinculada?.nome ||
+                              [form.moto_marca, form.moto_modelo].filter(Boolean).join(' ') ||
+                              '—'}
+                          </div>
+                        </div>
+                        <div>
+                          <strong style={{ color: '#777', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            Placa · Ano
+                          </strong>
+                          <div style={{ fontFamily: 'Courier New, monospace', textTransform: 'uppercase' }}>
+                            {(form.moto_placa || '—')}
+                            {' · '}
+                            <span style={{ fontFamily: 'Barlow, sans-serif', textTransform: 'none' }}>
+                              {form.moto_ano || '—'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>KM atual (na entrada)</label>
+                        <input
+                          type="number"
+                          value={form.moto_km}
+                          onChange={(e) => setField('moto_km', e.target.value)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                          <label>Marca</label>
+                          <input
+                            type="text"
+                            value={form.moto_marca}
+                            onChange={(e) => setField('moto_marca', e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Modelo</label>
+                          <input
+                            type="text"
+                            value={form.moto_modelo}
+                            onChange={(e) => setField('moto_modelo', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.formRow3}>
+                        <div className={styles.formGroup}>
+                          <label>Ano</label>
+                          <input
+                            type="number"
+                            value={form.moto_ano}
+                            onChange={(e) => setField('moto_ano', e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Placa</label>
+                          <input
+                            type="text"
+                            value={form.moto_placa}
+                            onChange={(e) => setField('moto_placa', e.target.value.toUpperCase())}
+                            style={{ textTransform: 'uppercase' }}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>KM</label>
+                          <input
+                            type="number"
+                            value={form.moto_km}
+                            onChange={(e) => setField('moto_km', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className={styles.formSection}>
