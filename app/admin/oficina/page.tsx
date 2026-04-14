@@ -84,8 +84,6 @@ export default function OficinaPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const reload = async () => {
     setLoading(true);
@@ -154,22 +152,6 @@ export default function OficinaPage() {
     setModalOpen(false);
     setEditingId(null);
     await reload();
-  };
-
-  const doDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const r = await fetch(`/api/oficina/${deleteTarget.id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('fail');
-      showToast('Ordem excluída!', 'success');
-      setDeleteTarget(null);
-      await reload();
-    } catch {
-      showToast('Erro ao excluir ordem', 'error');
-    } finally {
-      setDeleting(false);
-    }
   };
 
   return (
@@ -282,25 +264,6 @@ export default function OficinaPage() {
                           />
                         </svg>
                       </button>
-                      <button
-                        className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
-                        onClick={() =>
-                          setDeleteTarget({ id: o.id, label: `#${o.id} – ${o.cliente_nome}` })
-                        }
-                        title="Excluir"
-                        aria-label="Excluir"
-                        style={{ color: '#dc3545' }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                          <path
-                            d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -346,51 +309,6 @@ export default function OficinaPage() {
         />
       )}
 
-      {deleteTarget && (
-        <div
-          className={styles.modalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setDeleteTarget(null);
-          }}
-        >
-          <div className={`${styles.modal} ${styles.modalSm}`}>
-            <div className={styles.modalHeader}>
-              <h3>Confirmar exclusão</h3>
-              <button
-                className={styles.modalClose}
-                onClick={() => setDeleteTarget(null)}
-                aria-label="Fechar"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={`${styles.modalBody} ${styles.modalBodyCentered}`}>
-              <div className={styles.delIcon}>🗑️</div>
-              <p className={styles.delText}>Tem certeza que deseja excluir a ordem</p>
-              <strong className={styles.delName}>{deleteTarget.label}</strong>
-              <p className={styles.delHint}>Esta ação não pode ser desfeita.</p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button
-                className={`${styles.btn} ${styles.btnGhost}`}
-                onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
-              >
-                Cancelar
-              </button>
-              <button
-                className={`${styles.btn} ${styles.btnDanger}`}
-                onClick={doDelete}
-                disabled={deleting}
-              >
-                {deleting ? 'Excluindo...' : 'Excluir'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

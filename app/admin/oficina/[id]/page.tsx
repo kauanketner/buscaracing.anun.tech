@@ -147,6 +147,22 @@ export default function OficinaDetailPage() {
   const [atualizarOpen, setAtualizarOpen] = useState(false);
   const [fecharOpen, setFecharOpen] = useState(false);
   const [garantiaOpen, setGarantiaOpen] = useState(false);
+  const [excluirOpen, setExcluirOpen] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+
+  const doExcluir = async () => {
+    if (!ordem) return;
+    setExcluindo(true);
+    try {
+      const r = await fetch(`/api/oficina/${ordem.id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('fail');
+      showToast('Ordem excluída!', 'success');
+      router.push('/admin/oficina');
+    } catch {
+      showToast('Erro ao excluir ordem', 'error');
+      setExcluindo(false);
+    }
+  };
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -270,6 +286,23 @@ export default function OficinaDetailPage() {
               Abrir garantia
             </button>
           )}
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.btnDanger}`}
+            onClick={() => setExcluirOpen(true)}
+            title="Excluir OS"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            Excluir
+          </button>
         </div>
       </div>
 
@@ -461,6 +494,64 @@ export default function OficinaDetailPage() {
           }}
           onToast={showToast}
         />
+      )}
+
+      {excluirOpen && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !excluindo) setExcluirOpen(false);
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #e4e4e0',
+              width: '100%',
+              maxWidth: 420,
+              padding: '1.5rem',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '2.2rem', marginBottom: 8 }}>🗑️</div>
+            <p style={{ margin: '0 0 6px', color: '#333' }}>
+              Tem certeza que deseja excluir a ordem
+            </p>
+            <strong style={{ display: 'block', color: '#27367D', fontSize: '1.05rem', marginBottom: 6 }}>
+              OS #{ordem.id} – {ordem.cliente_nome}
+            </strong>
+            <p style={{ margin: '0 0 1.25rem', color: '#777', fontSize: '0.85rem' }}>
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGhost}`}
+                onClick={() => setExcluirOpen(false)}
+                disabled={excluindo}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnDanger}`}
+                onClick={doExcluir}
+                disabled={excluindo}
+              >
+                {excluindo ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
