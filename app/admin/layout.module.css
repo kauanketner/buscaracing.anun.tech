@@ -152,34 +152,35 @@
   z-index: 50;
   background: #ffffff;
   border-bottom: 1px solid #e4e4e0;
-  padding: 1rem 2rem;
-  min-height: 78px;
+  padding: 0.65rem 2rem;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .adminHeaderText {
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+  line-height: 1;
 }
 .adminHeaderTitle {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #27367D;
   letter-spacing: 0.03em;
-  line-height: 1.15;
+  line-height: 1;
   margin: 0;
 }
 .adminHeaderSubtitle {
-  margin: 0.25rem 0 0;
-  font-size: 0.82rem;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
   color: #6b7280;
   letter-spacing: 0.01em;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .adminHeaderActions {
   display: flex;
@@ -189,7 +190,7 @@
 
 .adminContent {
   flex: 1;
-  padding: 2rem;
+  padding: 1.25rem 2rem 2rem;
 }
 
 .loading {

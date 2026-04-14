@@ -2,6 +2,7 @@
 .hero {
   position: relative;
   height: 400px;
+  margin-top: 68px;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
