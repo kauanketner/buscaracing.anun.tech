@@ -38,6 +38,20 @@ export default function Home() {
     db.prepare('SELECT COUNT(*) as c FROM motos WHERE ativo=1').get() as { c: number }
   ).c;
 
+  // Imagens customizadas das categorias (cadastradas em Admin → Configurações)
+  const catImgRows = db
+    .prepare(
+      "SELECT chave, valor FROM configuracoes WHERE chave IN ('cat_rua_img','cat_offroad_img','cat_quad_img','cat_infantil_img')",
+    )
+    .all() as { chave: string; valor: string }[];
+  const catImgs: Record<string, string> = Object.fromEntries(
+    catImgRows.filter((r) => r.valor).map((r) => [r.chave, r.valor]),
+  );
+  const imgRua = catImgs.cat_rua_img || '';
+  const imgOffroad = catImgs.cat_offroad_img || '';
+  const imgQuad = catImgs.cat_quad_img || '';
+  const imgInfantil = catImgs.cat_infantil_img || '';
+
   return (
     <>
       {/* HERO */}
@@ -184,7 +198,15 @@ export default function Home() {
         <div className={styles.catsGrid}>
           {/* Motos de Rua */}
           <Link href="/produtos?categoria=motos-rua" className={styles.catCard}>
-            <div className={styles.catBg} style={{ background: 'linear-gradient(145deg,#060c1f 0%,#111d4a 40%,#1e2e6e 70%,#0e1840 100%)' }}>
+            <div
+              className={styles.catBg}
+              style={
+                imgRua
+                  ? { backgroundImage: `url(${imgRua})` }
+                  : { background: 'linear-gradient(145deg,#060c1f 0%,#111d4a 40%,#1e2e6e 70%,#0e1840 100%)' }
+              }
+            >
+              {!imgRua && (
               <svg viewBox="0 0 500 340" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: '24px 30px', opacity: 0.4 }}>
                 <circle cx="118" cy="258" r="72" stroke="white" strokeWidth="7" />
                 <circle cx="382" cy="258" r="72" stroke="white" strokeWidth="7" />
@@ -199,6 +221,7 @@ export default function Home() {
                 <rect x="272" y="202" width="112" height="60" rx="7" fill="rgba(255,255,255,.08)" stroke="white" strokeWidth="1.5" />
                 <path d="M338 258 Q368 264 400 258" stroke="rgba(255,180,50,.65)" strokeWidth="5" strokeLinecap="round" fill="none" />
               </svg>
+              )}
             </div>
             <div className={styles.catOverlay} />
             <div className={styles.catArrow}>
@@ -213,7 +236,15 @@ export default function Home() {
 
           {/* Offroad */}
           <Link href="/produtos?categoria=offroad" className={styles.catCard}>
-            <div className={styles.catBg} style={{ background: 'linear-gradient(145deg,#120800 0%,#2e1200 40%,#522200 70%,#3a1700 100%)' }}>
+            <div
+              className={styles.catBg}
+              style={
+                imgOffroad
+                  ? { backgroundImage: `url(${imgOffroad})` }
+                  : { background: 'linear-gradient(145deg,#120800 0%,#2e1200 40%,#522200 70%,#3a1700 100%)' }
+              }
+            >
+              {!imgOffroad && (
               <svg viewBox="0 0 500 340" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: '24px 30px', opacity: 0.4 }}>
                 <circle cx="118" cy="265" r="76" stroke="white" strokeWidth="7" />
                 <circle cx="382" cy="265" r="76" stroke="white" strokeWidth="7" />
@@ -228,6 +259,7 @@ export default function Home() {
                 <path d="M320 210 Q340 180 368 166 Q392 154 408 156" stroke="rgba(255,180,50,.7)" strokeWidth="6" strokeLinecap="round" fill="none" />
                 <path d="M50 318 Q150 308 250 318 Q350 328 450 312" stroke="rgba(255,255,255,.25)" strokeWidth="2.5" fill="none" strokeDasharray="8 6" />
               </svg>
+              )}
             </div>
             <div className={styles.catOverlay} />
             <div className={styles.catArrow}>
@@ -242,7 +274,15 @@ export default function Home() {
 
           {/* Quadriciclos */}
           <Link href="/produtos?categoria=quadriciclos" className={styles.catCard}>
-            <div className={styles.catBg} style={{ background: 'linear-gradient(145deg,#001208 0%,#002918 40%,#004526 70%,#003018 100%)' }}>
+            <div
+              className={styles.catBg}
+              style={
+                imgQuad
+                  ? { backgroundImage: `url(${imgQuad})` }
+                  : { background: 'linear-gradient(145deg,#001208 0%,#002918 40%,#004526 70%,#003018 100%)' }
+              }
+            >
+              {!imgQuad && (
               <svg viewBox="0 0 500 340" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: '30px 40px', opacity: 0.4 }}>
                 <circle cx="108" cy="268" r="56" stroke="white" strokeWidth="6" />
                 <circle cx="392" cy="268" r="56" stroke="white" strokeWidth="6" />
@@ -257,6 +297,7 @@ export default function Home() {
                 <rect x="196" y="214" width="108" height="54" rx="7" fill="rgba(255,255,255,.08)" stroke="white" strokeWidth="1.5" />
                 <path d="M300 240 Q340 234 370 240 Q390 244 400 252" stroke="rgba(255,180,50,.65)" strokeWidth="5" strokeLinecap="round" fill="none" />
               </svg>
+              )}
             </div>
             <div className={styles.catOverlay} />
             <div className={styles.catArrow}>
@@ -271,7 +312,15 @@ export default function Home() {
 
           {/* Infantil */}
           <Link href="/produtos?categoria=infantil" className={styles.catCard}>
-            <div className={styles.catBg} style={{ background: 'linear-gradient(145deg,#100018 0%,#240038 40%,#3e0060 70%,#2c0048 100%)' }}>
+            <div
+              className={styles.catBg}
+              style={
+                imgInfantil
+                  ? { backgroundImage: `url(${imgInfantil})` }
+                  : { background: 'linear-gradient(145deg,#100018 0%,#240038 40%,#3e0060 70%,#2c0048 100%)' }
+              }
+            >
+              {!imgInfantil && (
               <svg viewBox="0 0 500 340" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: '30px 40px', opacity: 0.4 }}>
                 <circle cx="128" cy="265" r="62" stroke="white" strokeWidth="6" />
                 <circle cx="372" cy="265" r="62" stroke="white" strokeWidth="6" />
@@ -286,6 +335,7 @@ export default function Home() {
                 <path d="M60 100 L64 90 L68 100 L58 94 L70 94 Z" fill="rgba(255,200,50,.5)" />
                 <path d="M450 80 L453 72 L456 80 L448 75 L458 75 Z" fill="rgba(255,200,50,.5)" />
               </svg>
+              )}
             </div>
             <div className={styles.catOverlay} />
             <div className={styles.catArrow}>
