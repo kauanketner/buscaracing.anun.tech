@@ -95,6 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [logo, setLogo] = useState<string>('');
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 
+  const headerCtxValue = useMemo(() => ({ setActions: setHeaderActions }), []);
+
   // Load logo
   useEffect(() => {
     let cancelled = false;
@@ -156,8 +158,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const { title: pageTitle, subtitle: pageSubtitle } = getPageMeta(pathname);
-
-  const headerCtxValue = useMemo(() => ({ setActions: setHeaderActions }), []);
 
   return (
     <ToastProvider>
