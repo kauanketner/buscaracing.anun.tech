@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/Toast';
@@ -157,9 +157,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { title: pageTitle, subtitle: pageSubtitle } = getPageMeta(pathname);
 
+  const headerCtxValue = useMemo(() => ({ setActions: setHeaderActions }), []);
+
   return (
     <ToastProvider>
-      <HeaderActionsContext.Provider value={{ setActions: setHeaderActions }}>
+      <HeaderActionsContext.Provider value={headerCtxValue}>
         <div className={styles.adminLayout}>
           <aside className={styles.sidebar}>
             <div className={styles.sidebarLogo}>
