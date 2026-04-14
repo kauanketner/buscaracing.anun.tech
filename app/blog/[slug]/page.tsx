@@ -7,6 +7,8 @@ import JsonLd, { blogPostSchema } from '@/components/JsonLd';
 import BlogCard from '@/components/BlogCard';
 import styles from './page.module.css';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: Promise<{ slug: string }>;
 }

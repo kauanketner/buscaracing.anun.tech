@@ -3,6 +3,8 @@ import { getDb, initDb } from '@/lib/db';
 import MotoCard from '@/components/MotoCard';
 import styles from './page.module.css';
 
+export const dynamic = 'force-dynamic';
+
 const BRANDS = [
   'Honda', 'Yamaha', 'Kawasaki', 'Suzuki', 'KTM', 'BMW',
   'Ducati', 'Triumph', 'Harley-Davidson', 'MXF', 'Shineray',

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const SITE_URL = process.env.SITE_URL || 'https://buscaracing.com';
 
 function escapeXml(s: unknown): string {

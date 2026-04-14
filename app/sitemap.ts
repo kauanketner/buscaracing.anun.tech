@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import getDb from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const db = getDb();
   const baseUrl = 'https://buscaracing.com';

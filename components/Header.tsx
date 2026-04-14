@@ -5,11 +5,11 @@ import Link from 'next/link';
 import styles from './Header.module.css';
 
 const NAV_LINKS = [
-  { href: '/motos', label: 'Motos' },
+  { href: '/produtos', label: 'Motos' },
   { href: '/pecas', label: 'Peças' },
   { href: '/acessorios', label: 'Acessórios' },
   { href: '/venda-sua-moto', label: 'Venda sua Moto' },
-  { href: '/#contato', label: 'Contato' },
+  { href: '/contato', label: 'Contato' },
   { href: '/blog', label: 'Blog' },
 ];
 

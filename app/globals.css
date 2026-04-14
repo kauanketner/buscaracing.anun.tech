@@ -26,8 +26,8 @@ body {
 ::-webkit-scrollbar-track { background: var(--deep); }
 ::-webkit-scrollbar-thumb { background: var(--red); }
 
-/* Main content min-height */
-main { min-height: calc(100vh - 68px); }
+/* Main content: offset below fixed 68px header */
+main { min-height: calc(100vh - 68px); padding-top: 68px; }
 
 /* ── BUTTONS ── */
 .btn {

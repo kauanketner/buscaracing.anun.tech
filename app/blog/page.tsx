@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://buscaracing.com/blog' },
 };
 
+export const dynamic = 'force-dynamic';
+
 const CATEGORIES = ['Todas', 'Dicas', 'Novidades', 'Comparativos', 'Manutenção'];
 
 interface Props {

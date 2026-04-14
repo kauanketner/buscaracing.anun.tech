@@ -6,6 +6,8 @@ import JsonLd, { productSchema } from '@/components/JsonLd';
 import MotoGallery from './MotoGallery';
 import styles from './page.module.css';
 
+export const dynamic = 'force-dynamic';
+
 interface Moto {
   id: number;
   nome: string;
