@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <main className={styles.adminMain}>
             <div className={styles.adminHeader}>
-              <div>
+              <div className={styles.adminHeaderText}>
                 <h1 className={styles.adminHeaderTitle}>{pageTitle}</h1>
                 {pageSubtitle && (
                   <p className={styles.adminHeaderSubtitle}>{pageSubtitle}</p>

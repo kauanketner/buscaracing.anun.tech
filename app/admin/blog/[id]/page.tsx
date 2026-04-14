@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import BlogForm, { type Post, type PostFormData } from '../BlogForm';
@@ -20,8 +20,8 @@ type RawPost = {
   meta_desc?: string | null;
 };
 
-export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function EditPostPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const router = useRouter();
   const { showToast } = useToast();
 
