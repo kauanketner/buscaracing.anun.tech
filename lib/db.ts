@@ -116,7 +116,8 @@ function initSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_oficina_status ON oficina_ordens(status);
     CREATE INDEX IF NOT EXISTS idx_oficina_data_entrada ON oficina_ordens(data_entrada);
-    CREATE INDEX IF NOT EXISTS idx_oficina_moto_id ON oficina_ordens(moto_id);
+    -- Note: idx_oficina_moto_id is created AFTER the moto_id column migration below
+    -- (cannot create index here because legacy DBs may not yet have the column)
   `);
 
   // ----- Migrations: additional columns on oficina_ordens -----
