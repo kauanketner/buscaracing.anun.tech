@@ -250,6 +250,13 @@
   animation: modalIn 0.25s ease;
 }
 .modalSm { max-width: 420px; }
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
 @keyframes modalIn {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }

@@ -177,21 +177,20 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
       }}
     >
       <div className={styles.modal}>
-        <div className={styles.modalHeader}>
-          <h3>{editingId ? 'Editar Ordem' : 'Nova Ordem'}</h3>
-          <button
-            type="button"
-            className={styles.modalClose}
-            onClick={onClose}
-            aria-label="Fechar"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <div className={styles.modalHeader}>
+            <h3>{editingId ? 'Editar Ordem' : 'Nova Ordem'}</h3>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={onClose}
+              aria-label="Fechar"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
           <div className={styles.modalBody}>
             {loading ? (
               <div className={styles.empty}>Carregando...</div>
