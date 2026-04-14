@@ -1,0 +1,198 @@
+.adminLayout {
+  display: flex;
+  min-height: 100vh;
+  background: #f2f2ef;
+  color: #333;
+  font-family: 'Barlow', sans-serif;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #0d1638;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+.sidebarLogo {
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sidebarLogoLink {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.7rem;
+  text-decoration: none;
+  display: block;
+  line-height: 1;
+}
+.sidebarLogoLink .b {
+  color: #FDFDFB;
+}
+.sidebarLogoLink .r {
+  color: #DC2627;
+}
+.sidebarLogoImg {
+  height: 38px;
+  object-fit: contain;
+  display: block;
+}
+.sidebarTag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 4px;
+}
+
+.sidebarNav {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 1.25rem;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  user-select: none;
+  text-decoration: none;
+  background: transparent;
+}
+.navItem:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+}
+.navItemActive {
+  color: #FDFDFB;
+  border-left-color: #DC2627;
+  background: rgba(220, 38, 39, 0.08);
+}
+.navItemActive:hover {
+  color: #FDFDFB;
+}
+.navItem svg {
+  flex-shrink: 0;
+}
+
+.sidebarFooter {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.verSiteLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+.verSiteLink:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btnLogout {
+  width: 100%;
+  padding: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btnLogout:hover {
+  border-color: #DC2627;
+  color: #DC2627;
+}
+
+.adminMain {
+  flex: 1;
+  margin-left: 240px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.adminHeader {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e0;
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.adminHeaderTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: #27367D;
+  letter-spacing: 0.03em;
+}
+.adminHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.adminContent {
+  flex: 1;
+  padding: 2rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Barlow Condensed', sans-serif;
+  color: #777;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 200px;
+  }
+  .adminMain {
+    margin-left: 200px;
+  }
+}

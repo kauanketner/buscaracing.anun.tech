@@ -1,0 +1,72 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-top: 3px solid #e4e4e0;
+  transition: border-color 0.3s;
+}
+.statCard:hover {
+  border-top-color: #DC2627;
+}
+.statCardLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 0.5rem;
+}
+.statCardValue {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  line-height: 1;
+  color: #27367D;
+}
+.statCardValue span {
+  color: #DC2627;
+}
+
+.catsBreakdown {
+  background: #ffffff;
+  padding: 1.5rem;
+}
+.catsTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: #27367D;
+  margin-bottom: 1.25rem;
+}
+.catBarItem {
+  margin-bottom: 0.85rem;
+}
+.catBarHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  color: #555;
+}
+.catBarTrack {
+  height: 8px;
+  background: #e4e4e0;
+  overflow: hidden;
+}
+.catBarFill {
+  height: 100%;
+  background: #27367D;
+  transition: width 0.8s ease;
+}
+
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

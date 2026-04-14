@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Barlow, Barlow_Condensed } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import SiteChrome from '@/components/SiteChrome';
 import JsonLd, { localBusinessSchema } from '@/components/JsonLd';
 
 const barlow = Barlow({
@@ -52,9 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
         <JsonLd data={localBusinessSchema()} />
       </body>
     </html>
