@@ -268,46 +268,5 @@
   .fieldRow dt { padding-top: 0; }
 }
 
-/* ─── PRINT ─── */
-@media print {
-  @page {
-    size: A4;
-    margin: 15mm;
-  }
-  body {
-    background: #fff !important;
-  }
-  /* Esconde chrome do admin */
-  :global(.admin-topbar),
-  :global(.admin-sidebar),
-  :global(aside),
-  :global(nav),
-  :global(header) {
-    display: none !important;
-  }
-  .actions,
-  .noPrint {
-    display: none !important;
-  }
-  .wrap {
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
-  }
-  .grid { grid-template-columns: 1fr 1fr; gap: 8mm; }
-  .card {
-    border: 1px solid #888;
-    padding: 6mm 8mm;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  .topbar {
-    border-bottom: 2px solid #27367D;
-    padding-bottom: 4mm;
-    margin-bottom: 6mm;
-  }
-  .topbar h1 { font-size: 20pt; }
-  .timeline::before { background: #888; }
-  .tlDot { background: #27367D; box-shadow: 0 0 0 1px #888; }
-  .badge { border: 1px solid #888; }
-}
+/* Print rules for this page live in ./print.css (plain CSS, not a module,
+   so global selectors like `body` and `aside` are allowed). */

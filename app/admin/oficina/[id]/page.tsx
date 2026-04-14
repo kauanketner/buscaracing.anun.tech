@@ -16,6 +16,7 @@ import AtualizarStatusModal from '../AtualizarStatusModal';
 import FecharModal from '../FecharModal';
 import GarantiaModal from '../GarantiaModal';
 import styles from './detail.module.css';
+import './print.css';
 
 type HistoricoItem = {
   id: number;
@@ -208,8 +209,8 @@ export default function OficinaDetailPage() {
   const motoLabel = ordem.moto_nome || [ordem.moto_marca, ordem.moto_modelo].filter(Boolean).join(' ');
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.topbar}>
+    <div className={`${styles.wrap} os-print-wrap`}>
+      <div className={`${styles.topbar} os-print-topbar`}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <h1>
             OS #{ordem.id}{' '}
@@ -229,7 +230,7 @@ export default function OficinaDetailPage() {
           </span>
         </div>
 
-        <div className={`${styles.actions} ${styles.noPrint}`}>
+        <div className={`${styles.actions} os-no-print`}>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnGhost}`}
@@ -273,7 +274,7 @@ export default function OficinaDetailPage() {
       </div>
 
       {ordem.garantia_de && (
-        <div className={`${styles.garantiaBanner} ${styles.noPrint}`}>
+        <div className={`${styles.garantiaBanner} os-no-print`}>
           <span>
             Esta OS é uma <strong>garantia</strong> da OS #{ordem.garantia_de.id} (
             {formatDateBR(ordem.garantia_de.data_entrada)}).
@@ -283,7 +284,7 @@ export default function OficinaDetailPage() {
       )}
 
       <div className={styles.grid}>
-        <div className={styles.card}>
+        <div className={`${styles.card} os-print-card`}>
           <h2 className={styles.cardTitle}>Cliente</h2>
           <dl>
             <div className={styles.fieldRow}>
@@ -301,7 +302,7 @@ export default function OficinaDetailPage() {
           </dl>
         </div>
 
-        <div className={styles.card}>
+        <div className={`${styles.card} os-print-card`}>
           <h2 className={styles.cardTitle}>Moto</h2>
           <dl>
             <div className={styles.fieldRow}>
@@ -333,7 +334,7 @@ export default function OficinaDetailPage() {
           </dl>
         </div>
 
-        <div className={`${styles.card} ${styles.gridFull}`}>
+        <div className={`${styles.card} ${styles.gridFull} os-print-card`}>
           <h2 className={styles.cardTitle}>Serviço</h2>
           <dl>
             <div className={styles.fieldRow}>
@@ -353,7 +354,7 @@ export default function OficinaDetailPage() {
           </dl>
         </div>
 
-        <div className={styles.card}>
+        <div className={`${styles.card} os-print-card`}>
           <h2 className={styles.cardTitle}>Datas</h2>
           <dl>
             <div className={styles.fieldRow}>
@@ -371,7 +372,7 @@ export default function OficinaDetailPage() {
           </dl>
         </div>
 
-        <div className={styles.card}>
+        <div className={`${styles.card} os-print-card`}>
           <h2 className={styles.cardTitle}>Valores</h2>
           <dl>
             <div className={styles.fieldRow}>
@@ -385,13 +386,13 @@ export default function OficinaDetailPage() {
           </dl>
         </div>
 
-        <div className={`${styles.card} ${styles.gridFull}`}>
+        <div className={`${styles.card} ${styles.gridFull} os-print-card`}>
           <h2 className={styles.cardTitle}>Histórico desta OS</h2>
           <Timeline items={ordem.historico} />
         </div>
 
         {ordem.garantia_de && (
-          <div className={`${styles.card} ${styles.gridFull}`}>
+          <div className={`${styles.card} ${styles.gridFull} os-print-card`}>
             <h2 className={styles.cardTitle}>
               Histórico da OS original #{ordem.garantia_de.id}
             </h2>
@@ -400,7 +401,7 @@ export default function OficinaDetailPage() {
         )}
 
         {ordem.garantias.length > 0 && (
-          <div className={`${styles.card} ${styles.gridFull}`}>
+          <div className={`${styles.card} ${styles.gridFull} os-print-card`}>
             <h2 className={styles.cardTitle}>Garantias abertas a partir desta OS</h2>
             <ul className={styles.garantiasList}>
               {ordem.garantias.map((g) => (

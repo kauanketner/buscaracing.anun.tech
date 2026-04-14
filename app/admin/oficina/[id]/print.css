@@ -1,0 +1,54 @@
+/*
+ * Print styles for the OS detail page. Plain CSS (not a CSS Module) so it can
+ * target global selectors like `body` and the admin chrome. The detail page
+ * adds the `os-print-*` marker classes to the elements that need print-specific
+ * behaviour; all other styling comes from detail.module.css.
+ */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  /* Hide admin chrome (sidebar, top bar, global header) */
+  aside,
+  nav,
+  header {
+    display: none !important;
+  }
+
+  /* Elements explicitly marked as "don't print" */
+  .os-no-print {
+    display: none !important;
+  }
+
+  /* The print root is the page wrapper */
+  .os-print-wrap {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent cards from splitting across pages */
+  .os-print-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #888 !important;
+    padding: 6mm 8mm !important;
+  }
+
+  /* Render the topbar as a print header */
+  .os-print-topbar {
+    border-bottom: 2px solid #27367D !important;
+    padding-bottom: 4mm !important;
+    margin-bottom: 6mm !important;
+  }
+  .os-print-topbar h1 {
+    font-size: 20pt !important;
+  }
+}
