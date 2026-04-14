@@ -3,6 +3,8 @@ import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { saveFile, FOTOS_DIR } from '@/lib/upload';
 
+export const dynamic = 'force-dynamic';
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {

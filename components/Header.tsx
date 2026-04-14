@@ -9,8 +9,8 @@ const NAV_LINKS = [
   { href: '/pecas', label: 'Peças' },
   { href: '/acessorios', label: 'Acessórios' },
   { href: '/venda-sua-moto', label: 'Venda sua Moto' },
-  { href: '/contato', label: 'Contato' },
   { href: '/blog', label: 'Blog' },
+  { href: '/contato', label: 'Contato' },
 ];
 
 export default function Header() {

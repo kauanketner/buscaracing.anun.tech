@@ -39,13 +39,22 @@ export default async function BlogPage({ searchParams }: Props) {
   }
 
   return (
-    <main>
+    <>
       {/* Banner */}
-      <section className={styles.banner}>
+      <section className={styles.pageBanner}>
+        <div className={styles.bannerStripe} />
+        <div className={styles.bannerStripe2} />
         <div className={styles.bannerInner}>
-          <h1 className={styles.bannerTitle}>BLOG</h1>
-          <p className={styles.bannerSub}>
-            Dicas, novidades e comparativos do mundo das duas rodas
+          <div className={styles.breadcrumb}>
+            <Link href="/">Home</Link>
+            <span className={styles.breadcrumbSep}>/</span>
+            Blog
+          </div>
+          <h1 className={styles.bannerTitle}>
+            BLOG <span className={styles.bannerTitleEm}>RACING</span>
+          </h1>
+          <p className={styles.pageSub}>
+            Dicas, novidades e comparativos do mundo das duas rodas.
           </p>
         </div>
       </section>
@@ -97,6 +106,6 @@ export default async function BlogPage({ searchParams }: Props) {
           <p className={styles.emptyText}>Nenhum post publicado ainda</p>
         </section>
       )}
-    </main>
+    </>
   );
 }

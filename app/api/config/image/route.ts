@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { saveFile, UPLOADS_DIR } from '@/lib/upload';
 
 const ALLOWED_IMG_KEYS = [

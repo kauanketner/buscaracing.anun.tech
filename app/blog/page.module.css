@@ -1,28 +1,95 @@
-/* ── BANNER ── */
-.banner {
-  background: linear-gradient(135deg, var(--deep) 0%, var(--blue) 100%);
-  padding: 100px 1.5rem 60px;
-  text-align: center;
+/* ── PAGE BANNER ── */
+.pageBanner {
+  background: var(--blue);
+  padding: 3.5rem 3vw 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageBanner::before {
+  content: 'BLOG';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22vw;
+  color: rgba(255, 255, 255, 0.03);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bannerStripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 30%;
+  width: 4px;
+  background: var(--red);
+  transform: skewX(-7deg);
+}
+
+.bannerStripe2 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(30% + 12px);
+  width: 1.5px;
+  background: var(--red);
+  opacity: 0.4;
+  transform: skewX(-7deg);
 }
 
 .bannerInner {
-  max-width: 700px;
+  max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumb {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.breadcrumbSep {
+  color: var(--red);
 }
 
 .bannerTitle {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(3rem, 8vw, 5rem);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 0.9;
   color: var(--white);
-  letter-spacing: 0.15em;
-  line-height: 1;
 }
 
-.bannerSub {
-  font-family: 'Barlow Condensed', sans-serif;
+.bannerTitleEm {
+  color: var(--red);
+}
+
+.pageSub {
+  font-family: 'Barlow Condensed', var(--font-barlow-condensed), sans-serif;
   font-size: 1.1rem;
-  color: rgba(253, 253, 251, 0.65);
-  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 500px;
+  line-height: 1.55;
   margin-top: 0.75rem;
 }
 

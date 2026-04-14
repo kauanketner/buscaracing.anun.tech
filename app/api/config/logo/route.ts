@@ -3,6 +3,8 @@ import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { saveFile, UPLOADS_DIR } from '@/lib/upload';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const db = getDb();

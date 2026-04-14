@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 function generateSlug(text: string): string {
   return text
     .normalize('NFD')

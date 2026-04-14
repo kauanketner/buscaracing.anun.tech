@@ -41,6 +41,13 @@ COPY --from=builder /app/node_modules/better-sqlite3    ./node_modules/better-sq
 COPY --from=builder /app/node_modules/bindings          ./node_modules/bindings
 COPY --from=builder /app/node_modules/file-uri-to-path  ./node_modules/file-uri-to-path
 
+# sharp (image conversion to WebP) — marked as external, so we ship it
+# explicitly. Prebuilt musl binary lives under node_modules/@img/*.
+COPY --from=builder /app/node_modules/sharp         ./node_modules/sharp
+COPY --from=builder /app/node_modules/@img          ./node_modules/@img
+COPY --from=builder /app/node_modules/detect-libc   ./node_modules/detect-libc
+COPY --from=builder /app/node_modules/semver        ./node_modules/semver
+
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
     mkdir -p /data/uploads /data/fotos

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { FOTOS_DIR } from '@/lib/upload';
 import fs from 'fs';
 import path from 'path';

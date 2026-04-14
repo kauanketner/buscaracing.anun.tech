@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   if (!isAuthenticated(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
