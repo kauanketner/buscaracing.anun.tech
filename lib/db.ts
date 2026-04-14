@@ -11,13 +11,16 @@ export function getDb(): Database.Database {
   if (!_db) {
     _db = new Database(DB_PATH);
     _db.pragma('journal_mode = WAL');
+    initSchema(_db);
   }
   return _db;
 }
 
 export function initDb(): void {
-  const db = getDb();
+  getDb();
+}
 
+function initSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS motos (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
