@@ -105,18 +105,16 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [responsavelCompra, setResponsavelCompra] = useState('');
   const [dataCadastro, setDataCadastro] = useState('');
 
-  // Imagem principal
+  // Imagem capa (URL pública da capa atual salva no banco)
   const [imagemAtual, setImagemAtual] = useState('');
-  const [imgPreview, setImgPreview] = useState<string | null>(null);
 
   // Galeria
   const [fotos, setFotos] = useState<Foto[]>([]);
   const [fotosLoading, setFotosLoading] = useState(false);
   const [uploadingCount, setUploadingCount] = useState(0);
-  // Fotos "pendentes" quando ainda estamos criando a moto (sem ID)
+  // Fotos "pendentes" — selecionadas no formulário antes do envio
   const [pendingFotos, setPendingFotos] = useState<Array<{ file: File; preview: string }>>([]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const fotosInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = editingId !== null;
@@ -158,7 +156,6 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         setDataCadastro(m.created_at || '');
         if (m.imagem) {
           setImagemAtual(m.imagem);
-          setImgPreview(m.imagem);
         }
       } catch {
         onToast('Erro ao carregar moto', 'error');
@@ -181,16 +178,6 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
       cancelled = true;
     };
   }, [editingId, onToast]);
-
-  const onImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImgPreview((ev.target?.result as string) || null);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const refreshFotos = async () => {
     if (editingId === null) return;
@@ -305,10 +292,15 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     fd.append('valor_compra', valorCompra);
     fd.append('nome_cliente', nomeCliente.trim());
     fd.append('responsavel_compra', responsavelCompra.trim());
-    // Imagem
+    // Imagem capa
+    // - Edição: mantém capa atual (imagemAtual) a menos que usuário tenha escolhido outra via "Definir como capa"
+    // - Criação: se há fotos pendentes, a PRIMEIRA vira a capa (imagem) e o restante vai pra galeria
     fd.append('imagem_atual', imagemAtual);
-    const file = fileInputRef.current?.files?.[0];
-    if (file) fd.append('imagem', file);
+    const fotosParaGaleria = [...pendingFotos];
+    if (!isEditing && fotosParaGaleria.length > 0) {
+      const capa = fotosParaGaleria.shift()!;
+      fd.append('imagem', capa.file);
+    }
 
     try {
       const url = isEditing ? `/api/motos/${editingId}` : '/api/motos';
@@ -316,13 +308,15 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
       const r = await fetch(url, { method, body: fd });
       if (!r.ok) throw new Error('fail');
 
-      // Ao criar nova moto: enviar fotos pendentes agora que temos o ID
-      if (!isEditing && pendingFotos.length > 0) {
+      // Fotos adicionais pra galeria
+      if (fotosParaGaleria.length > 0) {
+        const motoId = isEditing
+          ? (editingId as number)
+          : ((await r.json()) as { id: number }).id;
         try {
-          const { id: novoId } = (await r.json()) as { id: number };
           const ffd = new FormData();
-          pendingFotos.forEach((p) => ffd.append('fotos', p.file));
-          const fr = await fetch(`/api/motos/${novoId}/fotos`, {
+          fotosParaGaleria.forEach((p) => ffd.append('fotos', p.file));
+          const fr = await fetch(`/api/motos/${motoId}/fotos`, {
             method: 'POST',
             body: ffd,
           });
@@ -361,47 +355,6 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
 
         <div className={styles.modalBody}>
           {loading && <div style={{ color: '#777', fontSize: '0.85rem', marginBottom: '1rem' }}>Carregando...</div>}
-
-          {/* Image upload */}
-          <div
-            className={`${styles.imgUploadArea} ${imgPreview ? styles.hasImg : ''}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {imgPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={imgPreview} alt="" />
-            ) : (
-              <>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ color: '#ccc' }}>
-                  <path
-                    d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className={styles.imgUploadTxt}>Clique para adicionar foto</span>
-              </>
-            )}
-            <div className={styles.imgUploadOverlay}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className={`${styles.imgUploadTxt} ${styles.imgUploadTxtLight}`}>Trocar foto</span>
-            </div>
-          </div>
-          <input
-            ref={fileInputRef}
-            className={styles.hiddenInput}
-            type="file"
-            accept="image/*"
-            onChange={onImageChange}
-          />
 
           {/* ============== IDENTIFICAÇÃO ============== */}
           <div className={styles.formRow}>
@@ -713,7 +666,7 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
 
           <div className={styles.fotosSection}>
             <div className={styles.fotosHead}>
-              <label className={styles.fotosHeadLabel}>Galeria de Fotos</label>
+              <label className={styles.fotosHeadLabel}>Fotos da Moto</label>
               <label
                 className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
                 style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
@@ -738,10 +691,38 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
               </label>
             </div>
             <div className={styles.fotosGrid}>
+              {/* Capa atual (modo edição, se houver) */}
+              {isEditing && imagemAtual && (
+                <div className={styles.fotoThumb}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagemAtual} alt="Capa" loading="lazy" />
+                  <span className={styles.fotoThumbCover}>★ Capa</span>
+                  <button
+                    type="button"
+                    className={styles.fotoThumbDel}
+                    onClick={() => setImagemAtual('')}
+                    title="Remover capa"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Demais fotos da galeria (modo edição) */}
               {fotos.map((f) => (
                 <div key={f.id} className={styles.fotoThumb}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={f.url} alt={`Foto ${f.id}`} loading="lazy" />
+                  {isEditing && imagemAtual !== f.url && (
+                    <button
+                      type="button"
+                      className={styles.fotoThumbSetCover}
+                      onClick={() => setImagemAtual(f.url)}
+                      title="Definir como capa"
+                    >
+                      ★ Definir como capa
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.fotoThumbDel}
@@ -752,37 +733,48 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
                   </button>
                 </div>
               ))}
-              {pendingFotos.map((p, i) => (
-                <div key={`pending-${i}`} className={styles.fotoThumb}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.preview} alt={`Nova foto ${i + 1}`} loading="lazy" />
-                  <button
-                    type="button"
-                    className={styles.fotoThumbDel}
-                    onClick={() => onPendingFotoRemove(i)}
-                    title="Remover foto"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
+
+              {/* Fotos pendentes (ainda não enviadas) */}
+              {pendingFotos.map((p, i) => {
+                const isCapaPendente = !isEditing && !imagemAtual && i === 0;
+                return (
+                  <div key={`pending-${i}`} className={styles.fotoThumb}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.preview} alt={`Nova foto ${i + 1}`} loading="lazy" />
+                    {isCapaPendente && (
+                      <span className={styles.fotoThumbCover}>★ Capa</span>
+                    )}
+                    <button
+                      type="button"
+                      className={styles.fotoThumbDel}
+                      onClick={() => onPendingFotoRemove(i)}
+                      title="Remover foto"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+
               {Array.from({ length: uploadingCount }).map((_, i) => (
                 <div key={`up-${i}`} className={styles.fotoUploading}>
                   <div className={styles.fotoSpin} />
                   Enviando...
                 </div>
               ))}
+
               {!fotosLoading &&
+                !imagemAtual &&
                 fotos.length === 0 &&
                 pendingFotos.length === 0 &&
                 uploadingCount === 0 && (
-                  <div className={styles.fotosEmpty}>Nenhuma foto na galeria</div>
+                  <div className={styles.fotosEmpty}>Nenhuma foto adicionada</div>
                 )}
             </div>
             <p className={styles.fotosNote}>
               {isEditing
-                ? 'Você pode adicionar várias fotos de uma vez. Elas ficam salvas na pasta fotos/.'
-                : 'Selecione várias fotos — elas serão enviadas ao salvar a moto.'}
+                ? 'A foto marcada como ★ Capa aparece na vitrine. Passe o mouse em qualquer foto para defini-la como capa.'
+                : 'Selecione várias fotos — a primeira será a capa e o restante vai para a galeria.'}
             </p>
           </div>
         </div>

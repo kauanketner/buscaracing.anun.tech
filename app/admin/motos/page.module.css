@@ -571,6 +571,46 @@
 .fotoThumb:hover .fotoThumbDel {
   opacity: 1;
 }
+.fotoThumbCover {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(39, 54, 125, 0.92);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.fotoThumbSetCover {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #27367D;
+  border: none;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.fotoThumb:hover .fotoThumbSetCover {
+  opacity: 1;
+}
+.fotoThumbSetCover:hover {
+  background: #27367D;
+  color: #fff;
+}
 .fotoUploading {
   aspect-ratio: 1;
   display: flex;
