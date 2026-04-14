@@ -26,6 +26,15 @@
   flex-shrink: 0;
 }
 .logoFlag { width: 30px; height: 30px; flex-shrink: 0; }
+.logoImg {
+  height: 44px;
+  max-height: 44px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
 .logoText {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.85rem;

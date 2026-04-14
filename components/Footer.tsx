@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './Footer.module.css';
 
@@ -17,24 +20,50 @@ const CATEGORY_LINKS = [
 ];
 
 export default function Footer() {
+  const [logoUrl, setLogoUrl] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/config/logo', { cache: 'no-store' });
+        if (!r.ok) return;
+        const d: { logo?: string } = await r.json();
+        if (!cancelled && d.logo) setLogoUrl(d.logo);
+      } catch {
+        /* silent fallback */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerTop}>
         {/* Column 1: Logo + tagline */}
         <div className={styles.brandCol}>
           <Link href="/" className={styles.logoLink}>
-            <svg className={styles.logoFlag} width="28" height="28" viewBox="0 0 30 30" fill="none">
-              <rect width="15" height="30" fill="#27367D" />
-              <rect x="15" width="15" height="30" fill="#DC2627" />
-              <rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB" />
-              <rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45" />
-              <rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45" />
-              <rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB" />
-            </svg>
-            <div className={styles.logoText}>
-              <span className={styles.logoB}>BUSCA </span>
-              <span className={styles.logoR}>RACING</span>
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="Busca Racing" className={styles.logoImg} />
+            ) : (
+              <>
+                <svg className={styles.logoFlag} width="28" height="28" viewBox="0 0 30 30" fill="none">
+                  <rect width="15" height="30" fill="#27367D" />
+                  <rect x="15" width="15" height="30" fill="#DC2627" />
+                  <rect y="7.5" width="7.5" height="7.5" fill="#FDFDFB" />
+                  <rect x="15" y="7.5" width="7.5" height="7.5" fill="#111d45" />
+                  <rect x="7.5" y="15" width="7.5" height="7.5" fill="#111d45" />
+                  <rect x="22.5" y="15" width="7.5" height="7.5" fill="#FDFDFB" />
+                </svg>
+                <div className={styles.logoText}>
+                  <span className={styles.logoB}>BUSCA </span>
+                  <span className={styles.logoR}>RACING</span>
+                </div>
+              </>
+            )}
           </Link>
           <p className={styles.tagline}>
             Sua loja de motos multi marcas em Franco da Rocha – SP. Motos de rua, offroad, quadriciclos e bikes infantis desde 2010.

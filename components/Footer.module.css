@@ -32,6 +32,16 @@
   flex-shrink: 0;
 }
 
+.logoImg {
+  height: 56px;
+  max-height: 56px;
+  width: auto;
+  max-width: 240px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+
 .logoText {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.35rem;
