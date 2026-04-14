@@ -1,0 +1,313 @@
+.wrap {
+  background: #ffffff;
+  padding: 1.25rem 1.5rem 2.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.topbar h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  color: #27367D;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+.topbar .subtitle {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.85rem;
+  color: #777;
+  display: block;
+  margin-top: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btnPrimary {
+  background: #27367D;
+  color: #FDFDFB;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+.btnPrimary:hover { background: #DC2627; }
+.btnSuccess { background: #16a34a; color: #FDFDFB; }
+.btnSuccess:hover { background: #15803d; }
+.btnDanger  { background: #dc3545; color: #FDFDFB; }
+.btnDanger:hover { background: #b02a37; }
+.btnGhost {
+  background: transparent;
+  color: #777;
+  border: 1.5px solid #e4e4e0;
+}
+.btnGhost:hover { border-color: #27367D; color: #27367D; }
+
+/* Card grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.gridFull { grid-column: 1 / -1; }
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e4e4e0;
+  padding: 1.25rem 1.5rem;
+}
+.cardTitle {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #27367D;
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e4e4e0;
+}
+.fieldRow {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 0.75rem;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
+.fieldRow dt {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: #777;
+  text-transform: uppercase;
+  padding-top: 2px;
+}
+.fieldRow dd {
+  margin: 0;
+  color: #222;
+  word-break: break-word;
+}
+.big {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  color: #27367D;
+  line-height: 1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.bgGreen { background: #d4f5dc; color: #1a7430; }
+.bgBlue  { background: #dce4f8; color: #27367D; }
+.bgOrange{ background: #ffe6c9; color: #8b4a00; }
+.bgRed   { background: #fcdcdc; color: #8b1820; }
+.bgYellow{ background: #fff4c9; color: #7a6400; }
+.bgPurple{ background: #ecdcf8; color: #52277D; }
+.bgGray  { background: #ebebeb; color: #666; }
+
+/* Timeline */
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: #e4e4e0;
+}
+.tlItem {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 1.1rem;
+}
+.tlItem:last-child { padding-bottom: 0; }
+.tlDot {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  background: #27367D;
+  border: 3px solid #FDFDFB;
+  box-shadow: 0 0 0 1px #e4e4e0;
+  border-radius: 50%;
+}
+.tlHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+.tlArrow {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+.tlDate {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.78rem;
+  color: #777;
+}
+.tlMsg {
+  font-size: 0.88rem;
+  color: #333;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.tlAutor {
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.emptyHistorico {
+  padding: 1.5rem;
+  text-align: center;
+  color: #777;
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+/* Garantia banner */
+.garantiaBanner {
+  background: #fff4c9;
+  border: 1px solid #e7c878;
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #7a5800;
+}
+.garantiaBanner strong { color: #52277D; }
+.garantiaBanner a {
+  margin-left: auto;
+  color: #27367D;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Garantias filhas */
+.garantiasList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.garantiasList a {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #e4e4e0;
+  text-decoration: none;
+  color: #27367D;
+  font-size: 0.88rem;
+  transition: background 0.15s;
+}
+.garantiasList a:hover { background: #f8f8f5; }
+
+.loading {
+  padding: 4rem 1.25rem;
+  text-align: center;
+  color: #777;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; }
+  .topbar h1 { font-size: 1.4rem; }
+  .fieldRow { grid-template-columns: 1fr; gap: 2px; }
+  .fieldRow dt { padding-top: 0; }
+}
+
+/* ─── PRINT ─── */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  /* Esconde chrome do admin */
+  :global(.admin-topbar),
+  :global(.admin-sidebar),
+  :global(aside),
+  :global(nav),
+  :global(header) {
+    display: none !important;
+  }
+  .actions,
+  .noPrint {
+    display: none !important;
+  }
+  .wrap {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  .grid { grid-template-columns: 1fr 1fr; gap: 8mm; }
+  .card {
+    border: 1px solid #888;
+    padding: 6mm 8mm;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .topbar {
+    border-bottom: 2px solid #27367D;
+    padding-bottom: 4mm;
+    margin-bottom: 6mm;
+  }
+  .topbar h1 { font-size: 20pt; }
+  .timeline::before { background: #888; }
+  .tlDot { background: #27367D; box-shadow: 0 0 0 1px #888; }
+  .badge { border: 1px solid #888; }
+}

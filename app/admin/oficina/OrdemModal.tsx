@@ -50,11 +50,15 @@ type MecanicoOption = {
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'aberta', label: 'Aberta' },
-  { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'diagnostico', label: 'Diagnóstico' },
+  { value: 'em_servico', label: 'Em serviço' },
   { value: 'aguardando_peca', label: 'Aguardando peça' },
-  { value: 'concluida', label: 'Concluída' },
-  { value: 'entregue', label: 'Entregue' },
+  { value: 'aguardando_aprovacao', label: 'Aguardando aprovação' },
+  { value: 'aguardando_administrativo', label: 'Aguardando administrativo' },
+  { value: 'agendar_entrega', label: 'Agendar entrega' },
+  { value: 'lavagem', label: 'Lavagem' },
   { value: 'cancelada', label: 'Cancelada' },
+  // 'finalizada' não aparece aqui: use o botão "Fechar OS" (exige valor final).
 ];
 
 const EMPTY: FormState = {

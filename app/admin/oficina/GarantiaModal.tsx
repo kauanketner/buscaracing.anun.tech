@@ -6,64 +6,48 @@ import styles from './page.module.css';
 type Props = {
   ordemId: number;
   label: string;
-  defaultValor: number | null;
   onClose: () => void;
-  onClosed: () => void;
+  onCreated: (newId: number) => void;
   onToast: (msg: string, type: 'success' | 'error') => void;
 };
 
-export default function FecharModal({
+export default function GarantiaModal({
   ordemId,
   label,
-  defaultValor,
   onClose,
-  onClosed,
+  onCreated,
   onToast,
 }: Props) {
-  const [valorFinal, setValorFinal] = useState<string>(
-    defaultValor != null ? String(defaultValor) : '',
-  );
-  const [dataConclusao, setDataConclusao] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
-  const [observacoes, setObservacoes] = useState('');
+  const [servicoDescricao, setServicoDescricao] = useState('');
+  const [mensagem, setMensagem] = useState('');
+  const [autor, setAutor] = useState('');
   const [saving, setSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valorFinal.trim()) {
-      onToast('Informe o valor final', 'error');
-      return;
-    }
-    const n = Number(valorFinal);
-    if (!Number.isFinite(n) || n < 0) {
-      onToast('Valor final inválido', 'error');
+    if (!servicoDescricao.trim()) {
+      onToast('Descreva o motivo da garantia', 'error');
       return;
     }
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = {
-        valor_final: valorFinal,
-        status: 'finalizada',
-        data_conclusao: dataConclusao || null,
-      };
-      if (observacoes.trim()) {
-        payload.observacoes = observacoes.trim();
-        payload.mensagem_historico = observacoes.trim();
-      }
-      const r = await fetch(`/api/oficina/${ordemId}`, {
-        method: 'PUT',
+      const r = await fetch(`/api/oficina/${ordemId}/garantia`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          servico_descricao: servicoDescricao.trim(),
+          mensagem: mensagem.trim(),
+          autor: autor.trim(),
+        }),
       });
+      const d = (await r.json().catch(() => ({}))) as { id?: number; error?: string };
       if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err?.error || 'fail');
+        throw new Error(d?.error || 'fail');
       }
-      onToast('Ordem fechada!', 'success');
-      onClosed();
+      onToast('Garantia aberta!', 'success');
+      if (d.id) onCreated(d.id);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao fechar ordem';
+      const msg = err instanceof Error ? err.message : 'Erro ao abrir garantia';
       onToast(msg, 'error');
     } finally {
       setSaving(false);
@@ -80,7 +64,7 @@ export default function FecharModal({
       <div className={`${styles.modal} ${styles.modalSm}`}>
         <form onSubmit={submit} className={styles.modalForm}>
           <div className={styles.modalHeader}>
-            <h3>Fechar Ordem</h3>
+            <h3>Abrir Garantia</h3>
             <button
               type="button"
               className={styles.modalClose}
@@ -94,36 +78,36 @@ export default function FecharModal({
           </div>
           <div className={styles.modalBody}>
             <p style={{ color: '#555', marginBottom: '1rem', fontSize: '0.9rem' }}>
-              Fechando a ordem <strong>{label}</strong>. Informe o valor final cobrado e
-              a data de conclusão.
+              Abrindo uma nova OS de garantia a partir da <strong>{label}</strong>. Os dados do
+              cliente e da moto serão copiados.
             </p>
             <div className={styles.formGroup}>
-              <label>Valor final (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={valorFinal}
-                onChange={(e) => setValorFinal(e.target.value)}
+              <label>Motivo da garantia *</label>
+              <textarea
+                value={servicoDescricao}
+                onChange={(e) => setServicoDescricao(e.target.value)}
+                rows={3}
                 required
                 autoFocus
+                placeholder="Ex: mesmo ruído na transmissão voltou após 15 dias"
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Data de conclusão</label>
-              <input
-                type="date"
-                value={dataConclusao}
-                onChange={(e) => setDataConclusao(e.target.value)}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Observações finais (opcional)</label>
+              <label>Observação inicial (opcional)</label>
               <textarea
-                value={observacoes}
-                onChange={(e) => setObservacoes(e.target.value)}
+                value={mensagem}
+                onChange={(e) => setMensagem(e.target.value)}
                 rows={2}
-                placeholder="Ex: troca de óleo + revisão geral concluída"
+                placeholder="Anotação pra abrir no histórico"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Responsável (opcional)</label>
+              <input
+                type="text"
+                value={autor}
+                onChange={(e) => setAutor(e.target.value)}
+                placeholder="Seu nome"
               />
             </div>
           </div>
@@ -141,7 +125,7 @@ export default function FecharModal({
               className={`${styles.btn} ${styles.btnPrimary}`}
               disabled={saving}
             >
-              {saving ? 'Fechando...' : 'Fechar Ordem'}
+              {saving ? 'Abrindo...' : 'Abrir Garantia'}
             </button>
           </div>
         </form>

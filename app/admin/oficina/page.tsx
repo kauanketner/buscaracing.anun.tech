@@ -1,10 +1,13 @@
 'use client';
 
 import { useContext, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import OrdemModal from './OrdemModal';
 import FecharModal from './FecharModal';
+import AtualizarStatusModal from './AtualizarStatusModal';
+import { OFICINA_STATUS_LABELS, isTerminal } from '@/lib/oficina-status';
 import styles from './page.module.css';
 
 const PAGE_SIZE = 12;
@@ -32,21 +35,30 @@ type Ordem = {
   updated_at: string | null;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  aberta: 'Aberta',
-  em_andamento: 'Em andamento',
-  aguardando_peca: 'Aguardando peça',
-  concluida: 'Concluída',
-  entregue: 'Entregue',
-  cancelada: 'Cancelada',
-};
+const STATUS_LABELS: Record<string, string> = OFICINA_STATUS_LABELS;
 
 function badgeForStatus(status: string): string {
-  if (status === 'aberta') return styles.bgBlue;
-  if (status === 'em_andamento') return styles.bgOrange;
-  if (status === 'aguardando_peca') return styles.bgRed;
-  if (status === 'concluida' || status === 'entregue') return styles.bgGreen;
-  return styles.bgGray;
+  switch (status) {
+    case 'aberta':
+    case 'diagnostico':
+      return styles.bgBlue;
+    case 'em_servico':
+      return styles.bgOrange;
+    case 'aguardando_peca':
+      return styles.bgRed;
+    case 'aguardando_aprovacao':
+    case 'aguardando_administrativo':
+      return styles.bgOrange;
+    case 'agendar_entrega':
+    case 'lavagem':
+      return styles.bgBlue;
+    case 'finalizada':
+      return styles.bgGreen;
+    case 'cancelada':
+      return styles.bgGray;
+    default:
+      return styles.bgGray;
+  }
 }
 
 function formatDateBR(iso?: string | null): string {
@@ -78,6 +90,9 @@ export default function OficinaPage() {
   const [deleting, setDeleting] = useState(false);
   const [fecharTarget, setFecharTarget] = useState<
     { id: number; label: string; defaultValor: number | null } | null
+  >(null);
+  const [atualizarTarget, setAtualizarTarget] = useState<
+    { id: number; label: string; statusAtual: string } | null
   >(null);
 
   const reload = async () => {
@@ -237,32 +252,77 @@ export default function OficinaPage() {
                   </td>
                   <td>
                     <div className={styles.actionsCell}>
-                      {o.status !== 'concluida' &&
-                        o.status !== 'entregue' &&
-                        o.status !== 'cancelada' && (
-                          <button
-                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                            onClick={() =>
-                              setFecharTarget({
-                                id: o.id,
-                                label: `#${o.id} – ${o.cliente_nome}`,
-                                defaultValor: o.valor_final ?? o.valor_estimado ?? null,
-                              })
-                            }
-                            title="Fechar OS"
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                              <polyline
-                                points="20 6 9 17 4 12"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            Fechar OS
-                          </button>
-                        )}
+                      <Link
+                        href={`/admin/oficina/${o.id}`}
+                        className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                        title="Ver detalhes"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        Detalhes
+                      </Link>
+                      {!isTerminal(o.status) && (
+                        <button
+                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                          onClick={() =>
+                            setAtualizarTarget({
+                              id: o.id,
+                              label: `#${o.id} – ${o.cliente_nome}`,
+                              statusAtual: o.status,
+                            })
+                          }
+                          title="Atualizar status"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <polyline
+                              points="23 4 23 10 17 10"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M20.49 15a9 9 0 11-2.12-9.36L23 10"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          Status
+                        </button>
+                      )}
+                      {!isTerminal(o.status) && (
+                        <button
+                          className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                          onClick={() =>
+                            setFecharTarget({
+                              id: o.id,
+                              label: `#${o.id} – ${o.cliente_nome}`,
+                              defaultValor: o.valor_final ?? o.valor_estimado ?? null,
+                            })
+                          }
+                          title="Fechar OS"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <polyline
+                              points="20 6 9 17 4 12"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          Fechar
+                        </button>
+                      )}
                       <button
                         className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
                         onClick={() => openEdit(o.id)}
@@ -356,6 +416,20 @@ export default function OficinaPage() {
           onClose={() => setFecharTarget(null)}
           onClosed={async () => {
             setFecharTarget(null);
+            await reload();
+          }}
+          onToast={showToast}
+        />
+      )}
+
+      {atualizarTarget && (
+        <AtualizarStatusModal
+          ordemId={atualizarTarget.id}
+          label={atualizarTarget.label}
+          statusAtual={atualizarTarget.statusAtual}
+          onClose={() => setAtualizarTarget(null)}
+          onUpdated={async () => {
+            setAtualizarTarget(null);
             await reload();
           }}
           onToast={showToast}

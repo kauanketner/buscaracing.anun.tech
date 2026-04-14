@@ -133,6 +133,30 @@ function initSchema(db: Database.Database): void {
   // Vínculo opcional com moto do estoque
   addOfCol('moto_id', 'INTEGER');
   db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_moto_id ON oficina_ordens(moto_id)');
+  // Garantia: OS nova referenciando OS finalizada anterior
+  addOfCol('garantia_de_id', 'INTEGER');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_garantia_de ON oficina_ordens(garantia_de_id)');
+
+  // ----- Histórico de mudanças de status -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oficina_historico (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      ordem_id        INTEGER NOT NULL REFERENCES oficina_ordens(id) ON DELETE CASCADE,
+      status_anterior TEXT,
+      status_novo     TEXT NOT NULL,
+      mensagem        TEXT DEFAULT '',
+      autor           TEXT DEFAULT '',
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_historico_ordem ON oficina_historico(ordem_id);
+  `);
+
+  // ----- Migration: map legacy oficina_ordens.status values to new taxonomy -----
+  // old: em_andamento | concluida | entregue   →   new: em_servico | finalizada | finalizada
+  db.exec(`
+    UPDATE oficina_ordens SET status='em_servico' WHERE status='em_andamento';
+    UPDATE oficina_ordens SET status='finalizada' WHERE status IN ('concluida','entregue');
+  `);
 
   // ----- Migrations: additional admin-only columns on motos -----
   const existingCols = new Set(

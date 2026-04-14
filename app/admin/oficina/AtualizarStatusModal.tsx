@@ -1,69 +1,66 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  OFICINA_STATUSES,
+  OFICINA_STATUS_LABELS,
+  STATUS_EXCLUIDOS_DO_MODAL,
+  type OficinaStatus,
+} from '@/lib/oficina-status';
 import styles from './page.module.css';
 
 type Props = {
   ordemId: number;
   label: string;
-  defaultValor: number | null;
+  statusAtual: string;
   onClose: () => void;
-  onClosed: () => void;
+  onUpdated: () => void;
   onToast: (msg: string, type: 'success' | 'error') => void;
 };
 
-export default function FecharModal({
+export default function AtualizarStatusModal({
   ordemId,
   label,
-  defaultValor,
+  statusAtual,
   onClose,
-  onClosed,
+  onUpdated,
   onToast,
 }: Props) {
-  const [valorFinal, setValorFinal] = useState<string>(
-    defaultValor != null ? String(defaultValor) : '',
+  const opcoes = OFICINA_STATUSES.filter(
+    (s) => !STATUS_EXCLUIDOS_DO_MODAL.includes(s) && s !== statusAtual,
   );
-  const [dataConclusao, setDataConclusao] = useState<string>(
-    new Date().toISOString().slice(0, 10),
+  const [novoStatus, setNovoStatus] = useState<OficinaStatus | ''>(
+    (opcoes[0] as OficinaStatus | undefined) ?? '',
   );
-  const [observacoes, setObservacoes] = useState('');
+  const [mensagem, setMensagem] = useState('');
+  const [autor, setAutor] = useState('');
   const [saving, setSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valorFinal.trim()) {
-      onToast('Informe o valor final', 'error');
-      return;
-    }
-    const n = Number(valorFinal);
-    if (!Number.isFinite(n) || n < 0) {
-      onToast('Valor final inválido', 'error');
+    if (!novoStatus) {
+      onToast('Selecione o novo status', 'error');
       return;
     }
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = {
-        valor_final: valorFinal,
-        status: 'finalizada',
-        data_conclusao: dataConclusao || null,
-      };
-      if (observacoes.trim()) {
-        payload.observacoes = observacoes.trim();
-        payload.mensagem_historico = observacoes.trim();
-      }
       const r = await fetch(`/api/oficina/${ordemId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          status: novoStatus,
+          mensagem_historico: mensagem.trim(),
+          autor: autor.trim(),
+        }),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
         throw new Error(err?.error || 'fail');
       }
-      onToast('Ordem fechada!', 'success');
-      onClosed();
+      onToast('Status atualizado!', 'success');
+      onUpdated();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao fechar ordem';
+      const msg = err instanceof Error ? err.message : 'Erro ao atualizar status';
       onToast(msg, 'error');
     } finally {
       setSaving(false);
@@ -80,7 +77,7 @@ export default function FecharModal({
       <div className={`${styles.modal} ${styles.modalSm}`}>
         <form onSubmit={submit} className={styles.modalForm}>
           <div className={styles.modalHeader}>
-            <h3>Fechar Ordem</h3>
+            <h3>Atualizar Status</h3>
             <button
               type="button"
               className={styles.modalClose}
@@ -94,36 +91,43 @@ export default function FecharModal({
           </div>
           <div className={styles.modalBody}>
             <p style={{ color: '#555', marginBottom: '1rem', fontSize: '0.9rem' }}>
-              Fechando a ordem <strong>{label}</strong>. Informe o valor final cobrado e
-              a data de conclusão.
+              Atualizando <strong>{label}</strong>. Status atual:{' '}
+              <strong>{OFICINA_STATUS_LABELS[statusAtual as OficinaStatus] ?? statusAtual}</strong>
             </p>
             <div className={styles.formGroup}>
-              <label>Valor final (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={valorFinal}
-                onChange={(e) => setValorFinal(e.target.value)}
+              <label>Novo status *</label>
+              <select
+                value={novoStatus}
+                onChange={(e) => setNovoStatus(e.target.value as OficinaStatus)}
                 required
                 autoFocus
-              />
+              >
+                {opcoes.map((s) => (
+                  <option key={s} value={s}>
+                    {OFICINA_STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: '#777', fontSize: '0.75rem', display: 'block', marginTop: 4 }}>
+                Para finalizar, use o botão &quot;Fechar OS&quot; (precisa do valor final).
+              </small>
             </div>
             <div className={styles.formGroup}>
-              <label>Data de conclusão</label>
-              <input
-                type="date"
-                value={dataConclusao}
-                onChange={(e) => setDataConclusao(e.target.value)}
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Observações finais (opcional)</label>
+              <label>Mensagem / observação (opcional)</label>
               <textarea
-                value={observacoes}
-                onChange={(e) => setObservacoes(e.target.value)}
-                rows={2}
-                placeholder="Ex: troca de óleo + revisão geral concluída"
+                value={mensagem}
+                onChange={(e) => setMensagem(e.target.value)}
+                rows={3}
+                placeholder="Ex: peça chegou, retomando montagem"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Responsável (opcional)</label>
+              <input
+                type="text"
+                value={autor}
+                onChange={(e) => setAutor(e.target.value)}
+                placeholder="Seu nome"
               />
             </div>
           </div>
@@ -139,9 +143,9 @@ export default function FecharModal({
             <button
               type="submit"
               className={`${styles.btn} ${styles.btnPrimary}`}
-              disabled={saving}
+              disabled={saving || !novoStatus}
             >
-              {saving ? 'Fechando...' : 'Fechar Ordem'}
+              {saving ? 'Salvando...' : 'Atualizar'}
             </button>
           </div>
         </form>
