@@ -7,19 +7,29 @@ import { ToastProvider } from '@/components/Toast';
 import { HeaderActionsContext } from './HeaderActionsContext';
 import styles from './layout.module.css';
 
-const PAGE_TITLES: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/motos': 'Gestão de Motos',
-  '/admin/blog': 'Blog',
-  '/admin/config': 'Configurações',
+const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
+  '/admin': { title: 'Dashboard', subtitle: 'Visão geral da loja' },
+  '/admin/motos': { title: 'Gestão de Motos', subtitle: 'Cadastre, edite e organize o estoque' },
+  '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
+  '/admin/blog/novo': { title: 'Novo Post', subtitle: 'Crie um novo post para o blog' },
+  '/admin/config': { title: 'Configurações', subtitle: 'Logo, imagens e dados do site' },
 };
 
-function getPageTitle(pathname: string): string {
+function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  if (pathname.startsWith('/admin/motos')) return 'Gestão de Motos';
-  if (pathname.startsWith('/admin/blog')) return 'Blog';
-  if (pathname.startsWith('/admin/config')) return 'Configurações';
-  return 'Admin';
+  if (/^\/admin\/blog\/\d+$/.test(pathname)) {
+    return { title: 'Editar Post', subtitle: 'Atualize o conteúdo do post' };
+  }
+  if (pathname.startsWith('/admin/motos')) {
+    return { title: 'Gestão de Motos', subtitle: 'Cadastre, edite e organize o estoque' };
+  }
+  if (pathname.startsWith('/admin/blog')) {
+    return { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' };
+  }
+  if (pathname.startsWith('/admin/config')) {
+    return { title: 'Configurações', subtitle: 'Logo, imagens e dados do site' };
+  }
+  return { title: 'Admin' };
 }
 
 function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'blog' | 'config' }) {
@@ -145,7 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <div className={styles.loading}>Carregando...</div>;
   }
 
-  const pageTitle = getPageTitle(pathname);
+  const { title: pageTitle, subtitle: pageSubtitle } = getPageMeta(pathname);
 
   return (
     <ToastProvider>
@@ -211,7 +221,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <main className={styles.adminMain}>
             <div className={styles.adminHeader}>
-              <h1 className={styles.adminHeaderTitle}>{pageTitle}</h1>
+              <div>
+                <h1 className={styles.adminHeaderTitle}>{pageTitle}</h1>
+                {pageSubtitle && (
+                  <p className={styles.adminHeaderSubtitle}>{pageSubtitle}</p>
+                )}
+              </div>
               <div className={styles.adminHeaderActions}>{headerActions}</div>
             </div>
             <div className={styles.adminContent}>{children}</div>

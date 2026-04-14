@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+// StarterKit (v3) already includes Link and Underline extensions.
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
 import styles from './BlogEditor.module.css';
 
 type Props = {
@@ -232,12 +231,12 @@ export default function BlogEditor({ value, onChange, placeholder }: Props) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' },
+      StarterKit.configure({
+        link: {
+          openOnClick: false,
+          autolink: true,
+          HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' },
+        },
       }),
       Image.configure({ inline: false }),
       Placeholder.configure({

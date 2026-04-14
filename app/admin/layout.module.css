@@ -152,11 +152,12 @@
   z-index: 50;
   background: #ffffff;
   border-bottom: 1px solid #e4e4e0;
-  padding: 0 2rem;
-  height: 64px;
+  padding: 0.75rem 2rem;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .adminHeaderTitle {
@@ -164,6 +165,14 @@
   font-size: 1.5rem;
   color: #27367D;
   letter-spacing: 0.03em;
+  line-height: 1.1;
+  margin: 0;
+}
+.adminHeaderSubtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  letter-spacing: 0.01em;
 }
 .adminHeaderActions {
   display: flex;
