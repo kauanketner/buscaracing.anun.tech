@@ -1,0 +1,236 @@
+/* ── HERO ── */
+.hero {
+  position: relative;
+  height: 400px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.heroImg {
+  object-fit: cover;
+  z-index: 0;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(17, 29, 69, 0.92) 0%,
+    rgba(17, 29, 69, 0.4) 50%,
+    rgba(17, 29, 69, 0.15) 100%
+  );
+  z-index: 1;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 1.5rem 3rem;
+}
+
+.badge {
+  display: inline-block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--red);
+  padding: 4px 14px;
+  clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+  margin-bottom: 1rem;
+}
+
+.heroTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+
+/* ── META BAR ── */
+.metaBar {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.share {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #25d366;
+  transition: opacity 0.2s;
+}
+
+.share:hover {
+  opacity: 0.7;
+}
+
+/* ── ARTICLE ── */
+.article {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* ── CONTENT (rendered HTML) ── */
+.content {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+.content h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  color: var(--blue);
+  margin: 2.5rem 0 1rem;
+  letter-spacing: 0.03em;
+}
+
+.content h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: var(--blue);
+  margin: 2rem 0 0.75rem;
+}
+
+.content p {
+  margin-bottom: 1.25rem;
+}
+
+.content ul,
+.content ol {
+  margin: 1rem 0 1.5rem 1.5rem;
+}
+
+.content li {
+  margin-bottom: 0.4rem;
+}
+
+.content a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s;
+}
+
+.content a:hover {
+  opacity: 0.7;
+}
+
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5rem 0;
+}
+
+.content blockquote {
+  border-left: 4px solid var(--red);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  background: rgba(39, 54, 125, 0.04);
+  font-style: italic;
+  color: var(--muted);
+}
+
+.content pre {
+  background: var(--deep);
+  color: var(--white);
+  padding: 1.25rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.content code {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.88em;
+}
+
+.content :not(pre) > code {
+  background: rgba(39, 54, 125, 0.07);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── RELATED ── */
+.related {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.relatedTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--blue);
+  text-align: center;
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 960px) {
+  .relatedGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    height: 300px;
+  }
+
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metaBar {
+    gap: 1rem;
+  }
+
+  .share {
+    margin-left: 0;
+  }
+}
