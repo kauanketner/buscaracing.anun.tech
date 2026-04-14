@@ -1,0 +1,153 @@
+.editor {
+  border: 1.5px solid #e4e4e0;
+  background: #fafaf8;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, background 0.2s;
+}
+.editor:focus-within {
+  border-color: #27367D;
+  background: #FDFDFB;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1.5px solid #e4e4e0;
+  background: #f4f4f2;
+}
+
+.tbBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  color: #555;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tbBtn:hover {
+  background: #fff;
+  border-color: #e4e4e0;
+  color: #27367D;
+}
+.tbBtnActive {
+  background: #27367D;
+  color: #FDFDFB;
+  border-color: #27367D;
+}
+.tbBtnActive:hover {
+  background: #27367D;
+  color: #FDFDFB;
+  border-color: #27367D;
+}
+.tbBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tbDivider {
+  width: 1px;
+  background: #e4e4e0;
+  margin: 4px 4px;
+}
+
+.content {
+  padding: 14px 16px;
+  min-height: 320px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #333;
+  outline: none;
+}
+.content :global(.ProseMirror) {
+  outline: none;
+  min-height: 280px;
+}
+.content :global(.ProseMirror p) {
+  margin: 0 0 0.75rem;
+}
+.content :global(.ProseMirror p:last-child) {
+  margin-bottom: 0;
+}
+.content :global(.ProseMirror h1),
+.content :global(.ProseMirror h2),
+.content :global(.ProseMirror h3) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  color: #27367D;
+  line-height: 1.2;
+  margin: 1.2em 0 0.5em;
+}
+.content :global(.ProseMirror h1) { font-size: 1.9rem; }
+.content :global(.ProseMirror h2) { font-size: 1.55rem; }
+.content :global(.ProseMirror h3) { font-size: 1.25rem; }
+.content :global(.ProseMirror ul),
+.content :global(.ProseMirror ol) {
+  padding-left: 1.5rem;
+  margin: 0 0 0.75rem;
+}
+.content :global(.ProseMirror li) {
+  margin: 0.2rem 0;
+}
+.content :global(.ProseMirror blockquote) {
+  border-left: 3px solid #DC2627;
+  padding: 0.25rem 0.75rem;
+  margin: 0.75rem 0;
+  color: #555;
+  font-style: italic;
+  background: #fafaf8;
+}
+.content :global(.ProseMirror code) {
+  background: #f2f2ef;
+  padding: 1px 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+.content :global(.ProseMirror pre) {
+  background: #1f2330;
+  color: #fafaf8;
+  padding: 0.75rem 1rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.content :global(.ProseMirror pre code) {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+.content :global(.ProseMirror a) {
+  color: #27367D;
+  text-decoration: underline;
+}
+.content :global(.ProseMirror a:hover) {
+  color: #DC2627;
+}
+.content :global(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.75rem 0;
+}
+.content :global(.ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #aaa;
+  pointer-events: none;
+  height: 0;
+}
+.content :global(.ProseMirror u) {
+  text-decoration: underline;
+}
