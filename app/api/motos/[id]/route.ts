@@ -75,6 +75,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
+  // Requer senha de confirmação para evitar exclusão acidental
+  const DELETE_PASSWORD = process.env.DELETE_PASSWORD || 'Anuntech@2001';
+  const provided =
+    request.headers.get('x-delete-password') ||
+    new URL(request.url).searchParams.get('password') ||
+    '';
+  if (provided !== DELETE_PASSWORD) {
+    return NextResponse.json({ error: 'Senha incorreta' }, { status: 403 });
+  }
+
   try {
     const { id } = await context.params;
     const db = getDb();

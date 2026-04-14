@@ -13,11 +13,25 @@ type Props = {
 
 export default function DeleteConfirm({ label, motoId, onClose, onDeleted, onError }: Props) {
   const [submitting, setSubmitting] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
 
   const doDelete = async () => {
+    if (!password) {
+      onError('Informe a senha para excluir');
+      return;
+    }
     setSubmitting(true);
     try {
-      const r = await fetch(`/api/motos/${motoId}`, { method: 'DELETE' });
+      const r = await fetch(`/api/motos/${motoId}`, {
+        method: 'DELETE',
+        headers: { 'x-delete-password': password },
+      });
+      if (r.status === 403) {
+        onError('Senha incorreta');
+        setSubmitting(false);
+        return;
+      }
       if (!r.ok) throw new Error('fail');
       onDeleted();
     } catch {
@@ -47,12 +61,41 @@ export default function DeleteConfirm({ label, motoId, onClose, onDeleted, onErr
           <p className={styles.delText}>Tem certeza que deseja excluir</p>
           <strong className={styles.delName}>{label}</strong>
           <p className={styles.delHint}>Esta ação não pode ser desfeita.</p>
+
+          <div className={styles.formGroup} style={{ marginTop: '1.25rem', textAlign: 'left' }}>
+            <label>Senha de confirmação *</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+              <input
+                type={showPwd ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite a senha"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !submitting) {
+                    e.preventDefault();
+                    doDelete();
+                  }
+                }}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                onClick={() => setShowPwd((v) => !v)}
+                tabIndex={-1}
+                style={{ flexShrink: 0 }}
+              >
+                {showPwd ? 'Ocultar' : 'Mostrar'}
+              </button>
+            </div>
+          </div>
         </div>
         <div className={styles.modalFooter}>
           <button className={`${styles.btn} ${styles.btnGhost}`} onClick={onClose} disabled={submitting}>
             Cancelar
           </button>
-          <button className={`${styles.btn} ${styles.btnDanger}`} onClick={doDelete} disabled={submitting}>
+          <button className={`${styles.btn} ${styles.btnDanger}`} onClick={doDelete} disabled={submitting || !password}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

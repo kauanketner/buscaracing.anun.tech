@@ -5,6 +5,7 @@ import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import MotoModal from './MotoModal';
 import DeleteConfirm from './DeleteConfirm';
+import SellModal from './SellModal';
 import styles from './page.module.css';
 
 const CATS: Record<string, string> = {
@@ -32,6 +33,7 @@ type Moto = {
   ano?: number | null;
   km?: number | null;
   created_at?: string | null;
+  vendida?: number | null;
 };
 
 function diasEmEstoque(createdAt?: string | null): number {
@@ -58,6 +60,7 @@ export default function MotosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [sellTarget, setSellTarget] = useState<{ id: number; label: string } | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -135,6 +138,24 @@ export default function MotosPage() {
     setDeleteTarget(null);
     showToast('Moto excluída!', 'success');
     await reload();
+  };
+
+  const onSold = async () => {
+    setSellTarget(null);
+    showToast('Venda registrada!', 'success');
+    await reload();
+  };
+
+  const undoSale = async (id: number) => {
+    if (!confirm('Tem certeza que deseja desmarcar a venda desta moto?')) return;
+    try {
+      const r = await fetch(`/api/motos/${id}/venda`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('fail');
+      showToast('Venda desmarcada', 'success');
+      await reload();
+    } catch {
+      showToast('Erro ao desmarcar venda', 'error');
+    }
   };
 
   return (
@@ -231,9 +252,13 @@ export default function MotosPage() {
                       <span className={m.destaque ? styles.destStar : styles.destNo}>★</span>
                     </td>
                     <td>
-                      <span className={`${styles.badge} ${m.ativo ? styles.bgGreen : styles.bgGray}`}>
-                        {m.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
+                      {m.vendida ? (
+                        <span className={`${styles.badge} ${styles.bgBlue}`}>Vendida</span>
+                      ) : (
+                        <span className={`${styles.badge} ${m.ativo ? styles.bgGreen : styles.bgGray}`}>
+                          {m.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className={`${styles.badge} ${diasAlerta ? styles.bgRed : styles.bgGray}`}>
@@ -264,6 +289,38 @@ export default function MotosPage() {
                             />
                           </svg>
                         </button>
+                        {m.vendida ? (
+                          <button
+                            className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
+                            onClick={() => undoSale(m.id)}
+                            title="Desmarcar venda"
+                            aria-label="Desmarcar venda"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                              <path
+                                d="M3 12a9 9 0 019-9 9 9 0 016.36 2.64L21 8M21 3v5h-5M21 12a9 9 0 01-9 9 9 9 0 01-6.36-2.64L3 16M3 21v-5h5"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm} ${styles.btnIcon}`}
+                            onClick={() =>
+                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                            }
+                            title="Registrar venda"
+                            aria-label="Registrar venda"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm} ${styles.btnIcon}`}
                           onClick={() =>
@@ -339,6 +396,16 @@ export default function MotosPage() {
           label={deleteTarget.label}
           onClose={() => setDeleteTarget(null)}
           onDeleted={onDeleted}
+          onError={(m) => showToast(m, 'error')}
+        />
+      )}
+
+      {sellTarget && (
+        <SellModal
+          motoId={sellTarget.id}
+          motoLabel={sellTarget.label}
+          onClose={() => setSellTarget(null)}
+          onSold={onSold}
           onError={(m) => showToast(m, 'error')}
         />
       )}

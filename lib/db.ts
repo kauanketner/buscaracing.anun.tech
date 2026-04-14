@@ -70,6 +70,15 @@ function initSchema(db: Database.Database): void {
       created_at  TEXT DEFAULT (datetime('now','localtime')),
       updated_at  TEXT DEFAULT (datetime('now','localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS vendedores (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome       TEXT    NOT NULL,
+      telefone   TEXT    DEFAULT '',
+      email      TEXT    DEFAULT '',
+      ativo      INTEGER DEFAULT 1,
+      created_at TEXT    DEFAULT (datetime('now','localtime'))
+    );
   `);
 
   // ----- Migrations: additional admin-only columns on motos -----
@@ -98,6 +107,12 @@ function initSchema(db: Database.Database): void {
   addCol('cor', "TEXT DEFAULT ''");
   addCol('combustivel', "TEXT DEFAULT ''");
   addCol('transmissao', "TEXT DEFAULT ''");
+  // Venda (admin-only)
+  addCol('vendida', 'INTEGER DEFAULT 0');
+  addCol('vendedor_id', 'INTEGER');
+  addCol('comprador_nome', "TEXT DEFAULT ''");
+  addCol('valor_venda_final', 'REAL');
+  addCol('data_venda', 'TEXT');
 
   // Seed default configuration keys
   const insert = db.prepare(
@@ -125,6 +140,11 @@ export const MOTOS_ADMIN_ONLY_COLS = [
   'valor_compra',
   'nome_cliente',
   'responsavel_compra',
+  'vendida',
+  'vendedor_id',
+  'comprador_nome',
+  'valor_venda_final',
+  'data_venda',
 ] as const;
 
 /**

@@ -6,6 +6,14 @@ import styles from './page.module.css';
 
 type ConfigMap = Record<string, string>;
 
+type Vendedor = {
+  id: number;
+  nome: string;
+  telefone: string;
+  email: string;
+  ativo: number;
+};
+
 const IMG_KEYS: { key: string; label: string }[] = [
   { key: 'hero_img', label: 'Banner Hero (página inicial)' },
   { key: 'cat_rua_img', label: 'Categoria: Motos de Rua' },
@@ -40,7 +48,25 @@ export default function ConfigPage() {
   const [endereco, setEndereco] = useState('');
   const [savingContact, setSavingContact] = useState(false);
 
+  // Vendedores
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  const [novoVendedorNome, setNovoVendedorNome] = useState('');
+  const [novoVendedorTelefone, setNovoVendedorTelefone] = useState('');
+  const [novoVendedorEmail, setNovoVendedorEmail] = useState('');
+  const [savingVendedor, setSavingVendedor] = useState(false);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const loadVendedores = async () => {
+    try {
+      const r = await fetch('/api/config/vendedores');
+      if (!r.ok) throw new Error('fail');
+      const d: Vendedor[] = await r.json();
+      setVendedores(Array.isArray(d) ? d : []);
+    } catch {
+      // silent — vendedores podem não existir ainda na primeira vez
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +85,7 @@ export default function ConfigPage() {
         setWhatsapp(cfg.whatsapp || '');
         setEmail(cfg.email || '');
         setEndereco(cfg.endereco || '');
+        await loadVendedores();
       } catch {
         if (!cancelled) showToast('Erro ao carregar configurações', 'error');
       } finally {
@@ -69,6 +96,68 @@ export default function ConfigPage() {
       cancelled = true;
     };
   }, [showToast]);
+
+  const addVendedor = async (e: FormEvent) => {
+    e.preventDefault();
+    const nome = novoVendedorNome.trim();
+    if (!nome) {
+      showToast('Informe o nome do vendedor', 'error');
+      return;
+    }
+    setSavingVendedor(true);
+    try {
+      const r = await fetch('/api/config/vendedores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          telefone: novoVendedorTelefone.trim(),
+          email: novoVendedorEmail.trim(),
+        }),
+      });
+      if (!r.ok) throw new Error('fail');
+      setNovoVendedorNome('');
+      setNovoVendedorTelefone('');
+      setNovoVendedorEmail('');
+      showToast('Vendedor cadastrado!', 'success');
+      await loadVendedores();
+    } catch {
+      showToast('Erro ao cadastrar vendedor', 'error');
+    } finally {
+      setSavingVendedor(false);
+    }
+  };
+
+  const toggleVendedorAtivo = async (v: Vendedor) => {
+    try {
+      const r = await fetch(`/api/config/vendedores/${v.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: v.nome,
+          telefone: v.telefone,
+          email: v.email,
+          ativo: !v.ativo,
+        }),
+      });
+      if (!r.ok) throw new Error('fail');
+      await loadVendedores();
+    } catch {
+      showToast('Erro ao atualizar vendedor', 'error');
+    }
+  };
+
+  const removeVendedor = async (v: Vendedor) => {
+    if (!confirm(`Remover vendedor "${v.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      const r = await fetch(`/api/config/vendedores/${v.id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('fail');
+      showToast('Vendedor removido', 'success');
+      await loadVendedores();
+    } catch {
+      showToast('Erro ao remover vendedor', 'error');
+    }
+  };
 
   const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -271,6 +360,129 @@ export default function ConfigPage() {
             {savingContact ? 'Salvando...' : 'Salvar Configurações'}
           </button>
         </form>
+      </section>
+
+      {/* Vendedores */}
+      <section className={styles.configSection}>
+        <h2 className={styles.configSectionTitle}>Vendedores</h2>
+        <p style={{ fontSize: '0.85rem', color: '#777', margin: '0 0 1rem' }}>
+          Cadastre os vendedores da loja. Ao registrar uma venda na tela de motos, você seleciona
+          qual vendedor realizou a venda.
+        </p>
+
+        <form onSubmit={addVendedor} style={{ marginBottom: '1.25rem' }}>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>Nome *</label>
+              <input
+                type="text"
+                value={novoVendedorNome}
+                onChange={(e) => setNovoVendedorNome(e.target.value)}
+                placeholder="Ex: Carlos Pereira"
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Telefone</label>
+              <input
+                type="text"
+                value={novoVendedorTelefone}
+                onChange={(e) => setNovoVendedorTelefone(e.target.value)}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>E-mail</label>
+              <input
+                type="text"
+                value={novoVendedorEmail}
+                onChange={(e) => setNovoVendedorEmail(e.target.value)}
+                placeholder="vendedor@buscaracing.com"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            disabled={savingVendedor}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            {savingVendedor ? 'Salvando...' : 'Cadastrar Vendedor'}
+          </button>
+        </form>
+
+        {vendedores.length === 0 ? (
+          <div
+            style={{
+              padding: '1rem',
+              background: '#f7f7f4',
+              color: '#777',
+              fontSize: '0.85rem',
+              border: '1px solid #e4e4e0',
+            }}
+          >
+            Nenhum vendedor cadastrado ainda.
+          </div>
+        ) : (
+          <div style={{ border: '1px solid #e4e4e0', background: '#fff' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ background: '#f7f7f4', textAlign: 'left' }}>
+                  <th style={{ padding: '0.6rem 0.75rem' }}>Nome</th>
+                  <th style={{ padding: '0.6rem 0.75rem' }}>Telefone</th>
+                  <th style={{ padding: '0.6rem 0.75rem' }}>E-mail</th>
+                  <th style={{ padding: '0.6rem 0.75rem' }}>Status</th>
+                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendedores.map((v) => (
+                  <tr key={v.id} style={{ borderTop: '1px solid #e4e4e0' }}>
+                    <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>{v.nome}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#555' }}>
+                      {v.telefone || '—'}
+                    </td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#555' }}>{v.email || '—'}</td>
+                    <td style={{ padding: '0.6rem 0.75rem' }}>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          background: v.ativo ? '#dcfce7' : '#f2f2ef',
+                          color: v.ativo ? '#166534' : '#777',
+                          fontWeight: 600,
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {v.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>
+                      <button
+                        className={`${styles.btn} ${styles.btnGhost}`}
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: 4 }}
+                        onClick={() => toggleVendedorAtivo(v)}
+                      >
+                        {v.ativo ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button
+                        className={`${styles.btn} ${styles.btnGhost}`}
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', color: '#dc3545', borderColor: '#f0b4b9' }}
+                        onClick={() => removeVendedor(v)}
+                      >
+                        Remover
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

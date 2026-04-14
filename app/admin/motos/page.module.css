@@ -198,6 +198,13 @@
 .btnDanger:hover {
   background: #b02a37;
 }
+.btnSuccess {
+  background: #16a34a;
+  color: #FDFDFB;
+}
+.btnSuccess:hover {
+  background: #128a3c;
+}
 .btnGhost {
   background: transparent;
   color: #777;
