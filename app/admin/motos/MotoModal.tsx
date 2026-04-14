@@ -113,6 +113,8 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [fotos, setFotos] = useState<Foto[]>([]);
   const [fotosLoading, setFotosLoading] = useState(false);
   const [uploadingCount, setUploadingCount] = useState(0);
+  // Fotos "pendentes" quando ainda estamos criando a moto (sem ID)
+  const [pendingFotos, setPendingFotos] = useState<Array<{ file: File; preview: string }>>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fotosInputRef = useRef<HTMLInputElement>(null);
@@ -202,9 +204,21 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   };
 
   const onFotosUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (editingId === null) return;
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // Modo criação (sem ID ainda): acumula em pendingFotos
+    if (editingId === null) {
+      const novos = Array.from(files).map((f) => ({
+        file: f,
+        preview: URL.createObjectURL(f),
+      }));
+      setPendingFotos((prev) => [...prev, ...novos]);
+      if (fotosInputRef.current) fotosInputRef.current.value = '';
+      return;
+    }
+
+    // Modo edição: envia direto ao servidor
     const count = files.length;
     setUploadingCount(count);
     const fd = new FormData();
@@ -232,6 +246,23 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
       onToast('Erro ao remover foto', 'error');
     }
   };
+
+  const onPendingFotoRemove = (index: number) => {
+    setPendingFotos((prev) => {
+      const copy = [...prev];
+      const removed = copy.splice(index, 1)[0];
+      if (removed) URL.revokeObjectURL(removed.preview);
+      return copy;
+    });
+  };
+
+  // Libera URLs dos previews ao desmontar
+  useEffect(() => {
+    return () => {
+      pendingFotos.forEach((p) => URL.revokeObjectURL(p.preview));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -284,6 +315,25 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
       const method = isEditing ? 'PUT' : 'POST';
       const r = await fetch(url, { method, body: fd });
       if (!r.ok) throw new Error('fail');
+
+      // Ao criar nova moto: enviar fotos pendentes agora que temos o ID
+      if (!isEditing && pendingFotos.length > 0) {
+        try {
+          const { id: novoId } = (await r.json()) as { id: number };
+          const ffd = new FormData();
+          pendingFotos.forEach((p) => ffd.append('fotos', p.file));
+          const fr = await fetch(`/api/motos/${novoId}/fotos`, {
+            method: 'POST',
+            body: ffd,
+          });
+          if (!fr.ok) {
+            onToast('Moto salva, mas houve erro ao enviar fotos', 'error');
+          }
+        } catch {
+          onToast('Moto salva, mas houve erro ao enviar fotos', 'error');
+        }
+      }
+
       onToast(isEditing ? 'Moto atualizada!' : 'Moto cadastrada!', 'success');
       onSaved();
     } catch {
@@ -661,63 +711,80 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             )}
           </div>
 
-          {isEditing && (
-            <div className={styles.fotosSection}>
-              <div className={styles.fotosHead}>
-                <label className={styles.fotosHeadLabel}>Galeria de Fotos</label>
-                <label
-                  className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  Adicionar fotos
-                  <input
-                    ref={fotosInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className={styles.hiddenInput}
-                    onChange={onFotosUpload}
+          <div className={styles.fotosSection}>
+            <div className={styles.fotosHead}>
+              <label className={styles.fotosHeadLabel}>Galeria de Fotos</label>
+              <label
+                className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                   />
-                </label>
-              </div>
-              <div className={styles.fotosGrid}>
-                {fotos.map((f) => (
-                  <div key={f.id} className={styles.fotoThumb}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={f.url} alt={`Foto ${f.id}`} loading="lazy" />
-                    <button
-                      type="button"
-                      className={styles.fotoThumbDel}
-                      onClick={() => onFotoDelete(f.id)}
-                      title="Remover foto"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                {Array.from({ length: uploadingCount }).map((_, i) => (
-                  <div key={`up-${i}`} className={styles.fotoUploading}>
-                    <div className={styles.fotoSpin} />
-                    Enviando...
-                  </div>
-                ))}
-                {!fotosLoading && fotos.length === 0 && uploadingCount === 0 && (
+                </svg>
+                Adicionar fotos
+                <input
+                  ref={fotosInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className={styles.hiddenInput}
+                  onChange={onFotosUpload}
+                />
+              </label>
+            </div>
+            <div className={styles.fotosGrid}>
+              {fotos.map((f) => (
+                <div key={f.id} className={styles.fotoThumb}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.url} alt={`Foto ${f.id}`} loading="lazy" />
+                  <button
+                    type="button"
+                    className={styles.fotoThumbDel}
+                    onClick={() => onFotoDelete(f.id)}
+                    title="Remover foto"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {pendingFotos.map((p, i) => (
+                <div key={`pending-${i}`} className={styles.fotoThumb}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.preview} alt={`Nova foto ${i + 1}`} loading="lazy" />
+                  <button
+                    type="button"
+                    className={styles.fotoThumbDel}
+                    onClick={() => onPendingFotoRemove(i)}
+                    title="Remover foto"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {Array.from({ length: uploadingCount }).map((_, i) => (
+                <div key={`up-${i}`} className={styles.fotoUploading}>
+                  <div className={styles.fotoSpin} />
+                  Enviando...
+                </div>
+              ))}
+              {!fotosLoading &&
+                fotos.length === 0 &&
+                pendingFotos.length === 0 &&
+                uploadingCount === 0 && (
                   <div className={styles.fotosEmpty}>Nenhuma foto na galeria</div>
                 )}
-              </div>
-              <p className={styles.fotosNote}>
-                Você pode adicionar várias fotos de uma vez. Elas ficam salvas na pasta <code>fotos/</code>.
-              </p>
             </div>
-          )}
+            <p className={styles.fotosNote}>
+              {isEditing
+                ? 'Você pode adicionar várias fotos de uma vez. Elas ficam salvas na pasta fotos/.'
+                : 'Selecione várias fotos — elas serão enviadas ao salvar a moto.'}
+            </p>
+          </div>
         </div>
 
         <div className={styles.modalFooter}>
