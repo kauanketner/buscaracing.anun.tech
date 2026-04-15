@@ -15,6 +15,7 @@ import {
 import AtualizarStatusModal from '../AtualizarStatusModal';
 import FecharModal from '../FecharModal';
 import GarantiaModal from '../GarantiaModal';
+import OrdemModal from '../OrdemModal';
 import styles from './detail.module.css';
 import './print.css';
 
@@ -149,6 +150,7 @@ export default function OficinaDetailPage() {
   const [garantiaOpen, setGarantiaOpen] = useState(false);
   const [excluirOpen, setExcluirOpen] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
+  const [editarOpen, setEditarOpen] = useState(false);
 
   const doExcluir = async () => {
     if (!ordem) return;
@@ -286,6 +288,29 @@ export default function OficinaDetailPage() {
               Abrir garantia
             </button>
           )}
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.btnGhost}`}
+            onClick={() => setEditarOpen(true)}
+            title="Editar dados da OS"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Editar
+          </button>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnDanger}`}
@@ -491,6 +516,18 @@ export default function OficinaDetailPage() {
           onCreated={(newId) => {
             setGarantiaOpen(false);
             router.push(`/admin/oficina/${newId}`);
+          }}
+          onToast={showToast}
+        />
+      )}
+
+      {editarOpen && (
+        <OrdemModal
+          editingId={ordem.id}
+          onClose={() => setEditarOpen(false)}
+          onSaved={async () => {
+            setEditarOpen(false);
+            await reload();
           }}
           onToast={showToast}
         />
