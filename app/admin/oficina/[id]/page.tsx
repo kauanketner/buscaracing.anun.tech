@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { HeaderActionsContext } from '../../HeaderActionsContext';
@@ -151,6 +151,27 @@ export default function OficinaDetailPage() {
   const [excluirOpen, setExcluirOpen] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [editarOpen, setEditarOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!menuWrapRef.current) return;
+      if (!menuWrapRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [menuOpen]);
 
   const doExcluir = async () => {
     if (!ordem) return;
@@ -249,18 +270,6 @@ export default function OficinaDetailPage() {
         </div>
 
         <div className={`${styles.actions} os-no-print`}>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnGhost}`}
-            onClick={() => window.print()}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <polyline points="6 9 6 2 18 2 18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="2" />
-              <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            Imprimir
-          </button>
           {podeAtualizar && (
             <button
               type="button"
@@ -268,15 +277,6 @@ export default function OficinaDetailPage() {
               onClick={() => setAtualizarOpen(true)}
             >
               Atualizar status
-            </button>
-          )}
-          {podeFinalizar && (
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnSuccess}`}
-              onClick={() => setFecharOpen(true)}
-            >
-              Fechar OS
             </button>
           )}
           {podeAbrirGarantia && (
@@ -288,46 +288,131 @@ export default function OficinaDetailPage() {
               Abrir garantia
             </button>
           )}
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnGhost}`}
-            onClick={() => setEditarOpen(true)}
-            title="Editar dados da OS"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Editar
-          </button>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnDanger}`}
-            onClick={() => setExcluirOpen(true)}
-            title="Excluir OS"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path
-                d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            Excluir
-          </button>
+          <div className={styles.kebabWrap} ref={menuWrapRef}>
+            <button
+              type="button"
+              className={`${styles.kebabBtn} ${menuOpen ? styles.kebabActive : ''}`}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Mais ações"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="5" r="1.6" fill="currentColor" />
+                <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+                <circle cx="12" cy="19" r="1.6" fill="currentColor" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <ul className={styles.menu} role="menu">
+                {podeFinalizar && (
+                  <li role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.menuItem}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setFecharOpen(true);
+                      }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <polyline
+                          points="20 6 9 17 4 12"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Fechar OS
+                    </button>
+                  </li>
+                )}
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={styles.menuItem}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      window.print();
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <polyline
+                        points="6 9 6 2 18 2 18 9"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    Imprimir
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={styles.menuItem}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setEditarOpen(true);
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Editar
+                  </button>
+                </li>
+                <li role="none" aria-hidden="true">
+                  <div className={styles.menuDivider} />
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setExcluirOpen(true);
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path
+                        d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Excluir
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
