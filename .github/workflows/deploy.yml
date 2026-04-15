@@ -1,0 +1,54 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Prepare SSH key and known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Run sitectl deploy on production
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # The authorized_keys entry on the server is pinned with
+          # `command="/srv/platform/bin/sitectl deploy --domain buscaracing.com"`,
+          # so the remote command below is ignored on the server — it only runs
+          # the forced command. We still pass `true` as a no-op for clarity.
+          ssh -i ~/.ssh/id_deploy \
+              -o IdentitiesOnly=yes \
+              -o BatchMode=yes \
+              -o ServerAliveInterval=30 \
+              "${DEPLOY_USER}@${DEPLOY_HOST}" true
+
+      - name: Verify site is responding
+        run: |
+          set -e
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://buscaracing.com/ || echo 000)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Site did not return HTTP 200 after deploy"
+          exit 1
