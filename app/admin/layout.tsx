@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Histórico de vendas, comissões e faturamento' },
   '/admin/consignacoes': { title: 'Consignadas', subtitle: 'Motos de terceiros, repasses e links' },
+  '/admin/financeiro': { title: 'Financeiro', subtitle: 'Fluxo de caixa, comissões e repasses' },
   '/admin/mecanicos': { title: 'Mecânicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
   '/admin/blog/novo': { title: 'Novo Post', subtitle: 'Crie um novo post para o blog' },
@@ -39,7 +40,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'mecanicos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'mecanicos' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -81,6 +82,14 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
       </svg>
     );
   }
+  if (name === 'financeiro') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
   if (name === 'consignacoes') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -119,7 +128,7 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'mecanicos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'mecanicos' | 'blog' | 'config';
   exact?: boolean;
 };
 
@@ -129,6 +138,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
   { href: '/admin/consignacoes', label: 'Consignadas', icon: 'consignacoes' },
+  { href: '/admin/financeiro', label: 'Financeiro', icon: 'financeiro' },
   { href: '/admin/mecanicos', label: 'Mecânicos', icon: 'mecanicos' },
   { href: '/admin/blog', label: 'Blog', icon: 'blog' },
   { href: '/admin/config', label: 'Configurações', icon: 'config' },
