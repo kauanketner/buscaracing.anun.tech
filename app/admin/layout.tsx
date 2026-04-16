@@ -161,24 +161,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [checking, setChecking] = useState(!isLoginPage);
   const [authed, setAuthed] = useState(false);
-  const [logo, setLogo] = useState<string>('');
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 
   const headerCtxValue = useMemo(() => ({ setActions: setHeaderActions }), []);
-
-  // Load logo
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/config/logo')
-      .then((r) => r.json())
-      .then((d: { logo?: string }) => {
-        if (!cancelled && d.logo) setLogo(d.logo);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Auth guard — skip on login page
   useEffect(() => {
@@ -233,22 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <HeaderActionsContext.Provider value={headerCtxValue}>
         <div className={styles.adminLayout}>
           <aside className={styles.sidebar}>
-            <div className={styles.sidebarLogo}>
-              <Link href="/admin" className={styles.sidebarLogoLink}>
-                {logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logo} alt="Busca Racing" className={styles.sidebarLogoImg} />
-                ) : (
-                  <>
-                    <span style={{ color: '#FDFDFB' }}>BUSCA</span>
-                    <span style={{ color: '#DC2627' }}>&nbsp;RACING</span>
-                  </>
-                )}
-              </Link>
-              <div className={styles.sidebarTag}>Painel Admin</div>
-            </div>
-
-            <nav className={styles.sidebarNav}>
+            <nav className={styles.sidebarNav} style={{ paddingTop: '1rem' }}>
               {NAV_LINKS.map((link) => {
                 const active = link.exact
                   ? pathname === link.href
@@ -267,14 +237,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </nav>
 
             <div className={styles.sidebarFooter}>
-              <a href="/" target="_blank" rel="noopener noreferrer" className={styles.verSiteLink}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <polyline points="15 3 21 3 21 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                Ver Site
-              </a>
               <button className={styles.btnLogout} onClick={doLogout}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
