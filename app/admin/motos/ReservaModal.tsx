@@ -62,7 +62,7 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
             </svg>
           </button>
         </div>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <div className={styles.modalBody}>
             <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '1rem' }}>
               {motoLabel}

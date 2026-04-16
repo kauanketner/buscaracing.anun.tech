@@ -190,7 +190,7 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
             </svg>
           </button>
         </div>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <div className={styles.modalBody}>
             {/* Moto data */}
             <div className={styles.formRow}>

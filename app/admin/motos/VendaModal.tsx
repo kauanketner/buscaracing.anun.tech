@@ -112,7 +112,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
             </svg>
           </button>
         </div>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <div className={styles.modalBody}>
             <p style={{ fontSize: '0.85rem', color: '#27367D', fontWeight: 600, marginBottom: '1rem' }}>
               {motoLabel}{motoPreco ? ` — R$ ${Number(motoPreco).toLocaleString('pt-BR')}` : ''}
