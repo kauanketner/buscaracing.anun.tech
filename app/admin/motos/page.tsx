@@ -3,6 +3,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
+import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
 import MotoModal from './MotoModal';
 import DeleteConfirm from './DeleteConfirm';
 import SellModal from './SellModal';
@@ -34,6 +35,8 @@ type Moto = {
   km?: number | null;
   created_at?: string | null;
   vendida?: number | null;
+  estado?: string;
+  origem?: string;
 };
 
 function diasEmEstoque(createdAt?: string | null): number {
@@ -53,7 +56,7 @@ export default function MotosPage() {
   const [search, setSearch] = useState('');
   const [fCat, setFCat] = useState('');
   const [fCond, setFCond] = useState('');
-  const [fAtivo, setFAtivo] = useState('');
+  const [fEstado, setFEstado] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,19 +109,19 @@ export default function MotosPage() {
     return motos.filter((m) => {
       if (fCat && m.categoria !== fCat) return false;
       if (fCond && m.condicao !== fCond) return false;
-      if (fAtivo !== '' && String(m.ativo) !== fAtivo) return false;
+      if (fEstado && m.estado !== fEstado) return false;
       if (q) {
         const t = `${m.nome} ${m.marca} ${m.categoria}`.toLowerCase();
         if (!t.includes(q)) return false;
       }
       return true;
     });
-  }, [motos, search, fCat, fCond, fAtivo]);
+  }, [motos, search, fCat, fCond, fEstado]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, fCat, fCond, fAtivo]);
+  }, [search, fCat, fCond, fEstado]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -187,10 +190,15 @@ export default function MotosPage() {
             <option value="nova">Nova</option>
             <option value="usada">Usada</option>
           </select>
-          <select className={styles.toolbarSelect} value={fAtivo} onChange={(e) => setFAtivo(e.target.value)}>
-            <option value="">Todos status</option>
-            <option value="1">Anunciada</option>
-            <option value="0">Pausada</option>
+          <select className={styles.toolbarSelect} value={fEstado} onChange={(e) => setFEstado(e.target.value)}>
+            <option value="">Todos os estados</option>
+            <option value="avaliacao">Avaliação</option>
+            <option value="em_oficina">Em oficina</option>
+            <option value="disponivel">Disponível</option>
+            <option value="anunciada">Anunciada</option>
+            <option value="reservada">Reservada</option>
+            <option value="vendida">Vendida</option>
+            <option value="entregue">Entregue</option>
           </select>
         </div>
 
@@ -252,13 +260,18 @@ export default function MotosPage() {
                       <span className={m.destaque ? styles.destStar : styles.destNo}>★</span>
                     </td>
                     <td>
-                      {m.vendida ? (
-                        <span className={`${styles.badge} ${styles.bgBlue}`}>Vendida</span>
-                      ) : (
-                        <span className={`${styles.badge} ${m.ativo ? styles.bgGreen : styles.bgGray}`}>
-                          {m.ativo ? 'Anunciada' : 'Pausada'}
-                        </span>
-                      )}
+                      {(() => {
+                        const est = (m.estado || 'disponivel') as MotoEstado;
+                        const cor = ESTADO_COR[est] || ESTADO_COR.disponivel;
+                        return (
+                          <span
+                            className={styles.badge}
+                            style={{ background: cor.bg, color: cor.color }}
+                          >
+                            {MOTO_ESTADO_LABELS[est] || est}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td>
                       <span className={`${styles.badge} ${diasAlerta ? styles.bgRed : styles.bgGray}`}>

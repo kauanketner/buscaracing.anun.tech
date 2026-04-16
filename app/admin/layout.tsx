@@ -9,7 +9,7 @@ import styles from './layout.module.css';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin': { title: 'Dashboard', subtitle: 'Visão geral da loja' },
-  '/admin/motos': { title: 'Anúncios', subtitle: 'Cadastre, edite e organize os anúncios de motos' },
+  '/admin/motos': { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' },
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/mecanicos': { title: 'Mecânicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
@@ -106,7 +106,7 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
-  { href: '/admin/motos', label: 'Anúncios', icon: 'motos' },
+  { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/mecanicos', label: 'Mecânicos', icon: 'mecanicos' },
   { href: '/admin/blog', label: 'Blog', icon: 'blog' },
