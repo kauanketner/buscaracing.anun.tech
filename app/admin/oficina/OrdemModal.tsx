@@ -520,7 +520,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                     </select>
                     {mecanicos.length === 0 && (
                       <p style={{ fontSize: '0.75rem', color: '#777', marginTop: 6 }}>
-                        Nenhum mecânico cadastrado. Cadastre em Configurações → Mecânicos.
+                        Nenhum mecânico cadastrado. Cadastre em Admin → Mecânicos.
                       </p>
                     )}
                   </div>
