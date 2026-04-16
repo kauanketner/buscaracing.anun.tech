@@ -14,15 +14,6 @@ type Vendedor = {
   ativo: number;
 };
 
-type Mecanico = {
-  id: number;
-  nome: string;
-  telefone: string;
-  email: string;
-  especialidade: string;
-  ativo: number;
-};
-
 const IMG_KEYS: { key: string; label: string }[] = [
   { key: 'hero_img', label: 'Banner Hero (página inicial)' },
   { key: 'cat_rua_img', label: 'Categoria: Motos de Rua' },
@@ -64,14 +55,6 @@ export default function ConfigPage() {
   const [novoVendedorEmail, setNovoVendedorEmail] = useState('');
   const [savingVendedor, setSavingVendedor] = useState(false);
 
-  // Mecânicos
-  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
-  const [novoMecanicoNome, setNovoMecanicoNome] = useState('');
-  const [novoMecanicoTelefone, setNovoMecanicoTelefone] = useState('');
-  const [novoMecanicoEmail, setNovoMecanicoEmail] = useState('');
-  const [novoMecanicoEsp, setNovoMecanicoEsp] = useState('');
-  const [savingMecanico, setSavingMecanico] = useState(false);
-
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const loadVendedores = async () => {
@@ -85,18 +68,7 @@ export default function ConfigPage() {
     }
   };
 
-  const loadMecanicos = async () => {
-    try {
-      const r = await fetch('/api/config/mecanicos');
-      if (!r.ok) throw new Error('fail');
-      const d: Mecanico[] = await r.json();
-      setMecanicos(Array.isArray(d) ? d : []);
-    } catch {
-      // silent
-    }
-  };
-
-  useEffect(() => {
+useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -114,7 +86,6 @@ export default function ConfigPage() {
         setEmail(cfg.email || '');
         setEndereco(cfg.endereco || '');
         await loadVendedores();
-        await loadMecanicos();
       } catch {
         if (!cancelled) showToast('Erro ao carregar configurações', 'error');
       } finally {
@@ -188,72 +159,7 @@ export default function ConfigPage() {
     }
   };
 
-  const addMecanico = async (e: FormEvent) => {
-    e.preventDefault();
-    const nome = novoMecanicoNome.trim();
-    if (!nome) {
-      showToast('Informe o nome do mecânico', 'error');
-      return;
-    }
-    setSavingMecanico(true);
-    try {
-      const r = await fetch('/api/config/mecanicos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome,
-          telefone: novoMecanicoTelefone.trim(),
-          email: novoMecanicoEmail.trim(),
-          especialidade: novoMecanicoEsp.trim(),
-        }),
-      });
-      if (!r.ok) throw new Error('fail');
-      setNovoMecanicoNome('');
-      setNovoMecanicoTelefone('');
-      setNovoMecanicoEmail('');
-      setNovoMecanicoEsp('');
-      showToast('Mecânico cadastrado!', 'success');
-      await loadMecanicos();
-    } catch {
-      showToast('Erro ao cadastrar mecânico', 'error');
-    } finally {
-      setSavingMecanico(false);
-    }
-  };
-
-  const toggleMecanicoAtivo = async (m: Mecanico) => {
-    try {
-      const r = await fetch(`/api/config/mecanicos/${m.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: m.nome,
-          telefone: m.telefone,
-          email: m.email,
-          especialidade: m.especialidade,
-          ativo: !m.ativo,
-        }),
-      });
-      if (!r.ok) throw new Error('fail');
-      await loadMecanicos();
-    } catch {
-      showToast('Erro ao atualizar mecânico', 'error');
-    }
-  };
-
-  const removeMecanico = async (m: Mecanico) => {
-    if (!confirm(`Remover mecânico "${m.nome}"? Esta ação não pode ser desfeita.`)) return;
-    try {
-      const r = await fetch(`/api/config/mecanicos/${m.id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('fail');
-      showToast('Mecânico removido', 'success');
-      await loadMecanicos();
-    } catch {
-      showToast('Erro ao remover mecânico', 'error');
-    }
-  };
-
-  const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingLogo(true);
@@ -579,146 +485,6 @@ export default function ConfigPage() {
         )}
       </section>
 
-      {/* Mecânicos */}
-      <section className={styles.configSection}>
-        <h2 className={styles.configSectionTitle}>Mecânicos</h2>
-        <p style={{ fontSize: '0.85rem', color: '#777', margin: '0 0 1rem' }}>
-          Cadastre os mecânicos responsáveis pelas ordens de serviço. Ao criar uma ordem na
-          tela de oficina, você seleciona qual mecânico é responsável pelo serviço.
-        </p>
-
-        <form onSubmit={addMecanico} style={{ marginBottom: '1.25rem' }}>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Nome *</label>
-              <input
-                type="text"
-                value={novoMecanicoNome}
-                onChange={(e) => setNovoMecanicoNome(e.target.value)}
-                placeholder="Ex: Rogério Silva"
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Especialidade</label>
-              <input
-                type="text"
-                value={novoMecanicoEsp}
-                onChange={(e) => setNovoMecanicoEsp(e.target.value)}
-                placeholder="Ex: Motor, injeção, elétrica"
-              />
-            </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Telefone</label>
-              <input
-                type="text"
-                value={novoMecanicoTelefone}
-                onChange={(e) => setNovoMecanicoTelefone(e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>E-mail</label>
-              <input
-                type="text"
-                value={novoMecanicoEmail}
-                onChange={(e) => setNovoMecanicoEmail(e.target.value)}
-                placeholder="mecanico@buscaracing.com"
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            disabled={savingMecanico}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            {savingMecanico ? 'Salvando...' : 'Cadastrar Mecânico'}
-          </button>
-        </form>
-
-        {mecanicos.length === 0 ? (
-          <div
-            style={{
-              padding: '1rem',
-              background: '#f7f7f4',
-              color: '#777',
-              fontSize: '0.85rem',
-              border: '1px solid #e4e4e0',
-            }}
-          >
-            Nenhum mecânico cadastrado ainda.
-          </div>
-        ) : (
-          <div style={{ border: '1px solid #e4e4e0', background: '#fff' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ background: '#f7f7f4', textAlign: 'left' }}>
-                  <th style={{ padding: '0.6rem 0.75rem' }}>Nome</th>
-                  <th style={{ padding: '0.6rem 0.75rem' }}>Especialidade</th>
-                  <th style={{ padding: '0.6rem 0.75rem' }}>Telefone</th>
-                  <th style={{ padding: '0.6rem 0.75rem' }}>Status</th>
-                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mecanicos.map((m) => (
-                  <tr key={m.id} style={{ borderTop: '1px solid #e4e4e0' }}>
-                    <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>{m.nome}</td>
-                    <td style={{ padding: '0.6rem 0.75rem', color: '#555' }}>
-                      {m.especialidade || '—'}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', color: '#555' }}>
-                      {m.telefone || '—'}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem' }}>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '2px 8px',
-                          background: m.ativo ? '#dcfce7' : '#f2f2ef',
-                          color: m.ativo ? '#166534' : '#777',
-                          fontWeight: 600,
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {m.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>
-                      <button
-                        className={`${styles.btn} ${styles.btnGhost}`}
-                        style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: 4 }}
-                        onClick={() => toggleMecanicoAtivo(m)}
-                      >
-                        {m.ativo ? 'Desativar' : 'Ativar'}
-                      </button>
-                      <button
-                        className={`${styles.btn} ${styles.btnGhost}`}
-                        style={{
-                          padding: '4px 10px',
-                          fontSize: '0.75rem',
-                          color: '#dc3545',
-                          borderColor: '#f0b4b9',
-                        }}
-                        onClick={() => removeMecanico(m)}
-                      >
-                        Remover
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

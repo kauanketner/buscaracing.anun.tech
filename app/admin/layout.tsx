@@ -11,7 +11,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin': { title: 'Dashboard', subtitle: 'Visão geral da loja' },
   '/admin/motos': { title: 'Anúncios', subtitle: 'Cadastre, edite e organize os anúncios de motos' },
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
-  '/admin/tecnicos': { title: 'Técnicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
+  '/admin/mecanicos': { title: 'Mecânicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
   '/admin/blog/novo': { title: 'Novo Post', subtitle: 'Crie um novo post para o blog' },
   '/admin/config': { title: 'Configurações', subtitle: 'Logo, imagens e dados do site' },
@@ -37,7 +37,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'tecnicos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'mecanicos' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -70,7 +70,7 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'tecnicos
       </svg>
     );
   }
-  if (name === 'tecnicos') {
+  if (name === 'mecanicos') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -100,7 +100,7 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'tecnicos
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'oficina' | 'tecnicos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'oficina' | 'mecanicos' | 'blog' | 'config';
   exact?: boolean;
 };
 
@@ -108,7 +108,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
   { href: '/admin/motos', label: 'Anúncios', icon: 'motos' },
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
-  { href: '/admin/tecnicos', label: 'Técnicos', icon: 'tecnicos' },
+  { href: '/admin/mecanicos', label: 'Mecânicos', icon: 'mecanicos' },
   { href: '/admin/blog', label: 'Blog', icon: 'blog' },
   { href: '/admin/config', label: 'Configurações', icon: 'config' },
 ];

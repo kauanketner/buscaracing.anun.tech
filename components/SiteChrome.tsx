@@ -6,9 +6,11 @@ import Footer from './Footer';
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdmin = pathname?.startsWith('/admin') ?? false;
+  // Admin e PWA do mecânico renderizam seus próprios layouts — sem header/footer do site público.
+  const isBare =
+    pathname?.startsWith('/admin') || pathname?.startsWith('/m/') || pathname === '/m';
 
-  if (isAdmin) {
+  if (isBare) {
     return <>{children}</>;
   }
 

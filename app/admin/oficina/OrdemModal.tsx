@@ -23,7 +23,7 @@ type FormState = {
   servico_descricao: string;
   observacoes: string;
   mecanico: string;
-  tecnico_id: string;
+  mecanico_id: string;
   valor_estimado: string;
   valor_final: string;
   status: string;
@@ -75,7 +75,7 @@ const EMPTY: FormState = {
   servico_descricao: '',
   observacoes: '',
   mecanico: '',
-  tecnico_id: '',
+  mecanico_id: '',
   valor_estimado: '',
   valor_final: '',
   status: 'aberta',
@@ -152,7 +152,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
           servico_descricao: normStr(d.servico_descricao),
           observacoes: normStr(d.observacoes),
           mecanico: normStr(d.mecanico),
-          tecnico_id: normNum(d.tecnico_id),
+          mecanico_id: normNum(d.mecanico_id),
           valor_estimado: normNum(d.valor_estimado),
           valor_final: normNum(d.valor_final),
           status: normStr(d.status) || 'aberta',
@@ -245,7 +245,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
         servico_descricao: form.servico_descricao.trim(),
         observacoes: form.observacoes.trim(),
         mecanico: form.mecanico.trim(),
-        tecnico_id: form.tecnico_id || null,
+        mecanico_id: form.mecanico_id || null,
         status: form.status,
         data_entrada: form.data_entrada || null,
         data_prevista: form.data_prevista || null,
@@ -279,7 +279,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
   };
 
   const mecanicosAtivos = mecanicos.filter(
-    (m) => m.ativo || String(m.id) === form.tecnico_id,
+    (m) => m.ativo || String(m.id) === form.mecanico_id,
   );
 
   return (
@@ -499,13 +499,13 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                   <div className={styles.formGroup}>
                     <label>Mecânico responsável</label>
                     <select
-                      value={form.tecnico_id}
+                      value={form.mecanico_id}
                       onChange={(e) => {
                         const id = e.target.value;
                         const found = mecanicos.find((m) => String(m.id) === id);
                         setForm((prev) => ({
                           ...prev,
-                          tecnico_id: id,
+                          mecanico_id: id,
                           mecanico: found ? found.nome : '',
                         }));
                       }}

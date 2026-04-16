@@ -137,11 +137,19 @@ function initSchema(db: Database.Database): void {
   // Garantia: OS nova referenciando OS finalizada anterior
   addOfCol('garantia_de_id', 'INTEGER');
   db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_garantia_de ON oficina_ordens(garantia_de_id)');
-  // Técnico responsável pela OS (FK lógica pra mecanicos.id)
-  addOfCol('tecnico_id', 'INTEGER');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_tecnico_id ON oficina_ordens(tecnico_id)');
+  // Mecânico responsável pela OS (FK lógica pra mecanicos.id)
+  // Rename idempotente: deploys antigos têm `tecnico_id`; renomeamos para `mecanico_id`.
+  if (existingOfCols.has('tecnico_id') && !existingOfCols.has('mecanico_id')) {
+    db.exec('ALTER TABLE oficina_ordens RENAME COLUMN tecnico_id TO mecanico_id');
+    existingOfCols.delete('tecnico_id');
+    existingOfCols.add('mecanico_id');
+  }
+  addOfCol('mecanico_id', 'INTEGER');
+  // Rename do índice (idempotente): DROP o antigo se existir, CREATE o novo.
+  db.exec('DROP INDEX IF EXISTS idx_oficina_tecnico_id');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_mecanico_id ON oficina_ordens(mecanico_id)');
 
-  // ----- Migrations: PIN columns on mecanicos (módulo /tecnico) -----
+  // ----- Migrations: PIN columns on mecanicos (módulo /mecanico) -----
   const existingMecCols = new Set(
     (db.prepare('PRAGMA table_info(mecanicos)').all() as { name: string }[]).map((c) => c.name),
   );
@@ -152,23 +160,49 @@ function initSchema(db: Database.Database): void {
     }
   };
   addMecCol('pin_hash', "TEXT DEFAULT ''");           // scrypt:<salt_b64>:<hash_b64>
-  addMecCol('pin_ativo', 'INTEGER DEFAULT 0');        // 0 = sem acesso ao /tecnico
+  addMecCol('pin_ativo', 'INTEGER DEFAULT 0');        // 0 = sem acesso ao /mecanico
   addMecCol('pin_trocado_em', 'TEXT');
 
   // ----- Rate-limit de tentativas de PIN -----
+  // Rename idempotente: deploys antigos têm `tecnico_login_attempts`; renomeamos.
+  const hasOldAttemptsTable = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='tecnico_login_attempts'",
+    )
+    .get() as { name: string } | undefined;
+  const hasNewAttemptsTable = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='mecanico_login_attempts'",
+    )
+    .get() as { name: string } | undefined;
+  if (hasOldAttemptsTable && !hasNewAttemptsTable) {
+    db.exec('ALTER TABLE tecnico_login_attempts RENAME TO mecanico_login_attempts');
+    // Renomeia a coluna antiga `tecnico_id` para `mecanico_id`.
+    const attemptCols = new Set(
+      (db
+        .prepare('PRAGMA table_info(mecanico_login_attempts)')
+        .all() as { name: string }[]).map((c) => c.name),
+    );
+    if (attemptCols.has('tecnico_id') && !attemptCols.has('mecanico_id')) {
+      db.exec(
+        'ALTER TABLE mecanico_login_attempts RENAME COLUMN tecnico_id TO mecanico_id',
+      );
+    }
+  }
   db.exec(`
-    CREATE TABLE IF NOT EXISTS tecnico_login_attempts (
+    CREATE TABLE IF NOT EXISTS mecanico_login_attempts (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
       ip          TEXT    NOT NULL,
-      tecnico_id  INTEGER,
+      mecanico_id INTEGER,
       success     INTEGER NOT NULL,
       created_at  TEXT    DEFAULT (datetime('now','localtime'))
     );
-    CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time
-      ON tecnico_login_attempts(ip, created_at);
+    DROP INDEX IF EXISTS idx_login_attempts_ip_time;
+    CREATE INDEX IF NOT EXISTS idx_mec_login_attempts_ip_time
+      ON mecanico_login_attempts(ip, created_at);
   `);
   // Limpeza: tentativas com mais de 7 dias são irrelevantes
-  db.exec("DELETE FROM tecnico_login_attempts WHERE created_at < datetime('now','-7 days')");
+  db.exec("DELETE FROM mecanico_login_attempts WHERE created_at < datetime('now','-7 days')");
 
   // ----- Histórico de mudanças de status -----
   db.exec(`
@@ -210,7 +244,7 @@ function initSchema(db: Database.Database): void {
   addCol('valor_compra', 'REAL');
   addCol('nome_cliente', "TEXT DEFAULT ''");
   addCol('responsavel_compra', "TEXT DEFAULT ''");
-  // Fichamento técnico (podem ser expostos publicamente)
+  // Fichamento mecânico (podem ser expostos publicamente)
   addCol('modelo', "TEXT DEFAULT ''");
   addCol('ano_fabricacao', 'INTEGER');
   addCol('versao', "TEXT DEFAULT ''");
@@ -236,22 +270,37 @@ function initSchema(db: Database.Database): void {
     insert.run(k);
   }
 
-  // Seed slug do módulo /tecnico (12 chars base32 aleatórios).
-  // Se já existe (com valor), mantém; se ainda não existe, cria.
+  // Seed slug do módulo /mecanico (12 chars base32 aleatórios).
+  // Migração idempotente: se já existe a chave antiga `mecanico_url_slug`, renomeia
+  // para `mecanico_url_slug` preservando o valor.
+  const legacySlug = db
+    .prepare("SELECT valor FROM configuracoes WHERE chave='mecanico_url_slug'")
+    .get() as { valor: string } | undefined;
+  const newSlug = db
+    .prepare("SELECT valor FROM configuracoes WHERE chave='mecanico_url_slug'")
+    .get() as { valor: string } | undefined;
+  if (legacySlug && legacySlug.valor && (!newSlug || !newSlug.valor)) {
+    db.prepare(
+      "INSERT INTO configuracoes(chave, valor) VALUES('mecanico_url_slug', ?) " +
+        'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
+    ).run(legacySlug.valor);
+  }
+  db.exec("DELETE FROM configuracoes WHERE chave='mecanico_url_slug'");
+  // Se ainda não existe (com valor), gera um novo.
   const currentSlug = db
-    .prepare("SELECT valor FROM configuracoes WHERE chave='tecnico_url_slug'")
+    .prepare("SELECT valor FROM configuracoes WHERE chave='mecanico_url_slug'")
     .get() as { valor: string } | undefined;
   if (!currentSlug || !currentSlug.valor) {
-    const slug = generateTecnicoSlug();
+    const slug = generateMecanicoSlug();
     db.prepare(
-      "INSERT INTO configuracoes(chave, valor) VALUES('tecnico_url_slug', ?) " +
+      "INSERT INTO configuracoes(chave, valor) VALUES('mecanico_url_slug', ?) " +
         'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
     ).run(slug);
   }
 }
 
 /** Gera um slug base32 (a-z, 2-7) de 12 caracteres. ~60 bits de entropia. */
-export function generateTecnicoSlug(): string {
+export function generateMecanicoSlug(): string {
   // 8 bytes → 64 bits de entropia; transformamos em 13 chars base32 e cortamos pra 12.
   const bytes = crypto.randomBytes(8);
   const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';

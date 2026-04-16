@@ -1,6 +1,6 @@
 User-agent: *
 Disallow: /admin/
 Disallow: /api/admin/
-Disallow: /api/tecnico/
+Disallow: /api/mecanico/
 Disallow: /api/auth/
-Disallow: /t/
+Disallow: /m/

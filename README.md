@@ -17,7 +17,7 @@ Domínios funcionais:
 - **Blog** (posts com editor rich-text)
 - **Oficina** (ordens de serviço, histórico, garantias)
 - **Configuração do site** (logo, hero, banners, contato)
-- **PWA do técnico** (`/t/<slug>`) — app mobile instalável onde cada técnico entra por PIN e atualiza as OSs que lhe foram atribuídas
+- **PWA do mecânico** (`/m/<slug>`) — app mobile instalável onde cada mecânico entra por PIN e atualiza as OSs que lhe foram atribuídas
 
 ---
 
@@ -60,22 +60,22 @@ app/                      App Router do Next.js
       AtualizarStatusModal.tsx
       FecharModal.tsx       Fluxo de finalização com valor_final
       GarantiaModal.tsx     Cria OS-garantia a partir de uma finalizada
-    tecnicos/               Gerenciar acesso dos mecânicos ao PWA (PIN + slug)
+    mecanicos/               Gerenciar acesso dos mecânicos ao PWA (PIN + slug)
     blog/ config/ login/
-  t/[slug]/                 PWA do técnico (mobile) — valida slug no layout
+  m/[slug]/                 PWA do mecânico (mobile) — valida slug no layout
     page.tsx                Redirect (tem cookie → ordens, senão → login)
     login/page.tsx          PIN de 4-8 dígitos
-    ordens/page.tsx         Lista das OSs atribuídas ao técnico logado
+    ordens/page.tsx         Lista das OSs atribuídas ao mecânico logado
     os/[id]/page.tsx        Detalhe + mudar status + adicionar nota
-    tecnico.css             Estilos globais do PWA (mobile-first)
+    mecanico.css             Estilos globais do PWA (mobile-first)
   api/                      Route handlers
     auth/route.ts             POST login/logout + GET isAdmin
     motos/  motos/[id]/  motos/selector/
     oficina/  oficina/[id]/
     config/  config/mecanicos/ vendedores/ logo/ image/ images/
     admin/motos/              (rotas sensíveis protegidas pelo matcher)
-    admin/tecnicos/           Lista mecânicos, set/revoke PIN, rotate slug
-    tecnico/                  APIs do PWA (login, me, logout, ordens, manifest)
+    admin/mecanicos/           Lista mecânicos, set/revoke PIN, rotate slug
+    mecanico/                  APIs do PWA (login, me, logout, ordens, manifest)
     fotos/  upload/  marcas/  stats/  blog/
 
 components/               Compartilhados (public + admin)
@@ -83,14 +83,14 @@ components/               Compartilhados (public + admin)
   BlogEditor, Toast, JsonLd
 
 lib/
-  db.ts                   Singleton SQLite + migrations + `generateTecnicoSlug`
+  db.ts                   Singleton SQLite + migrations + `generateMecanicoSlug`
   auth.ts                 verifyPassword / createSession / isAuthenticated
-  tecnico-auth.ts         PIN scrypt + HMAC cookie + rate limit + slug helper
+  mecanico-auth.ts         PIN scrypt + HMAC cookie + rate limit + slug helper
   motos.ts                Helpers de CRUD de moto
   oficina-status.ts       Taxonomia de status + validação de transições
   upload.ts               Upload/conversão WebP via sharp
 
-middleware.ts             Protege /admin/*, /api/admin/*, /api/tecnico/* (só checagem de cookie; HMAC + DB revalidados no handler)
+middleware.ts             Protege /admin/*, /api/admin/*, /api/mecanico/* (só checagem de cookie; HMAC + DB revalidados no handler)
 public/                   Estáticos (favicon, ícones, logos default)
 docs/plans/               Design docs e planos (este projeto usa brainstorming → plano)
 .github/workflows/        deploy.yml (CI/CD)
@@ -116,21 +116,21 @@ Schema é criado/migrado em `lib/db.ts → initSchema()`, **sempre idempotente**
 
 **`configuracoes`** — chave/valor (logo, hero, contatos, imagens de categoria).
 
-**`vendedores`** e **`mecanicos`** — cadastros simples (nome, telefone, email, `ativo`). `mecanicos` ganhou colunas `pin_hash` (scrypt, formato `scrypt:<salt_b64>:<hash_b64>`), `pin_ativo` e `pin_trocado_em` para o PWA do técnico. Um mecânico com PIN ativo é um "técnico" que loga em `/t/<slug>`.
+**`vendedores`** e **`mecanicos`** — cadastros simples (nome, telefone, email, `ativo`). `mecanicos` ganhou colunas `pin_hash` (scrypt, formato `scrypt:<salt_b64>:<hash_b64>`), `pin_ativo` e `pin_trocado_em` para o PWA do mecânico. Um mecânico com PIN ativo é alguém que loga no PWA em `/m/<slug>`.
 
 **`oficina_ordens`** — ordens de serviço.
 - Cliente: `cliente_nome / telefone / email`.
 - Moto: pode vincular do estoque (`moto_id FK → motos`) **ou** preencher manual (`moto_marca / moto_modelo / moto_ano / moto_placa / moto_km`).
-- Serviço: `servico_descricao`, `observacoes`, `mecanico` (texto, legado), `tecnico_id FK → mecanicos.id` (quem vê a OS no PWA), `valor_estimado`, `valor_final`.
+- Serviço: `servico_descricao`, `observacoes`, `mecanico` (texto, legado), `mecanico_id FK → mecanicos.id` (quem vê a OS no PWA), `valor_estimado`, `valor_final`.
 - Status: string validada por `lib/oficina-status.ts` (ver §6).
 - Datas: `data_entrada`, `data_prevista`, `data_conclusao`.
 - **Garantia:** `garantia_de_id` aponta pra uma OS finalizada anterior — quando o cliente retorna pelo mesmo problema, abre-se uma **nova OS** linkada.
 
-**`oficina_historico`** — uma linha por mudança de status (`status_anterior`, `status_novo`, `mensagem`, `autor`, `created_at`). Timeline no detalhe da OS renderiza daqui. Uma **nota** do técnico usa a mesma tabela com `status_anterior == status_novo`.
+**`oficina_historico`** — uma linha por mudança de status (`status_anterior`, `status_novo`, `mensagem`, `autor`, `created_at`). Timeline no detalhe da OS renderiza daqui. Uma **nota** do mecânico usa a mesma tabela com `status_anterior == status_novo`.
 
-**`tecnico_login_attempts`** — auditoria/rate-limit de login do PWA (`ip`, `tecnico_id`, `success`, `created_at`). Limpeza automática de registros >7 dias no bootstrap do DB.
+**`mecanico_login_attempts`** — auditoria/rate-limit de login do PWA (`ip`, `mecanico_id`, `success`, `created_at`). Limpeza automática de registros >7 dias no bootstrap do DB.
 
-**`configuracoes.tecnico_url_slug`** — chave única que guarda o slug atual do PWA. Rotacionar aqui invalida o link e o PWA instalado.
+**`configuracoes.mecanico_url_slug`** — chave única que guarda o slug atual do PWA. Rotacionar aqui invalida o link e o PWA instalado.
 
 ---
 
@@ -143,12 +143,12 @@ Dois modelos independentes, cada um com cookie próprio:
 - `POST /api/auth { action: 'login', password }` → cookie HTTP-only, 24h, `sameSite=lax`.
 - Middleware bloqueia `/admin/:path*` e `/api/admin/:path*`. APIs de domínio (`/api/oficina`, `/api/motos`, …) revalidam **dentro do handler** via `isAuthenticated()`.
 
-### 5.2 Técnico do PWA (`tecnico_session`)
-- **PIN por técnico** (4-8 dígitos) armazenado como `scrypt:<salt_b64>:<hash_b64>` em `mecanicos.pin_hash`. Apenas o admin define/troca PINs — nunca ficam gravados em texto.
-- Sessão: cookie HTTP-only de 30 dias, assinado com HMAC-SHA256 do payload `<tecnico_id>.<exp_ms>.<nonce>` usando `TECNICO_SESSION_SECRET` (env; em dev tem fallback inseguro).
-- Rate limit: 5 tentativas falhas em 15 min por IP → 429. Auditado em `tecnico_login_attempts`.
-- Middleware em `/api/tecnico/*` só verifica **presença** do cookie (o middleware roda no runtime Edge, sem acesso ao DB); a validação HMAC + revalidação `mecanicos.ativo && pin_ativo` acontece em cada handler via `getTecnicoFromRequest()`.
-- URL do PWA: `/t/<slug>` onde `slug` é um hash base32 de 12 chars armazenado em `configuracoes.tecnico_url_slug`. Se o slug da URL não bate com o atual, retorna 404. O admin pode rotacionar o slug (invalida o link + o PWA instalado).
+### 5.2 Mecânico do PWA (`mecanico_session`)
+- **PIN por mecânico** (4-8 dígitos) armazenado como `scrypt:<salt_b64>:<hash_b64>` em `mecanicos.pin_hash`. Apenas o admin define/troca PINs — nunca ficam gravados em texto.
+- Sessão: cookie HTTP-only de 30 dias, assinado com HMAC-SHA256 do payload `<mecanico_id>.<exp_ms>.<nonce>` usando `MECANICO_SESSION_SECRET` (env; em dev tem fallback inseguro).
+- Rate limit: 5 tentativas falhas em 15 min por IP → 429. Auditado em `mecanico_login_attempts`.
+- Middleware em `/api/mecanico/*` só verifica **presença** do cookie (o middleware roda no runtime Edge, sem acesso ao DB); a validação HMAC + revalidação `mecanicos.ativo && pin_ativo` acontece em cada handler via `getMecanicoFromRequest()`.
+- URL do PWA: `/m/<slug>` onde `slug` é um hash base32 de 12 chars armazenado em `configuracoes.mecanico_url_slug`. Se o slug da URL não bate com o atual, retorna 404. O admin pode rotacionar o slug (invalida o link + o PWA instalado).
 - Defesa em camadas: (1) slug aleatório dificulta descoberta, (2) `robots.txt` + `noindex` no layout, (3) PIN é a barreira real.
 
 ---
@@ -177,14 +177,14 @@ aberta → diagnostico → em_servico → [aguardando_peca | aguardando_aprovaca
 
 ---
 
-## 6.1 PWA do Técnico — fluxo
+## 6.1 PWA do Mecânico — fluxo
 
 Admin:
-1. Vai em **Admin → Técnicos**, cadastra mecânico (via Configurações → Mecânicos se ainda não existe), define PIN (manual ou "Gerar aleatório", que mostra o PIN uma única vez).
-2. Copia o link exibido no topo (`/t/<slug>`) e manda pro técnico por canal confiável (WhatsApp). Opcional: "Rotacionar" invalida o link — útil quando um técnico sai.
-3. No modal de OS, escolhe o técnico no dropdown "Técnico" (salva `tecnico_id`).
+1. Vai em **Admin → Mecânicos**, cadastra mecânico (via Configurações → Mecânicos se ainda não existe), define PIN (manual ou "Gerar aleatório", que mostra o PIN uma única vez).
+2. Copia o link exibido no topo (`/m/<slug>`) e manda pro mecânico por canal confiável (WhatsApp). Opcional: "Rotacionar" invalida o link — útil quando um mecânico sai.
+3. No modal de OS, escolhe o mecânico no dropdown "Mecânico" (salva `mecanico_id`).
 
-Técnico:
+Mecânico:
 1. Abre o link no celular, instala o PWA ("Adicionar à tela de início").
 2. Digita o PIN → vê só as OSs atribuídas a ele (exceto finalizadas/canceladas).
 3. No detalhe: muda status (com mensagem opcional) ou adiciona nota (não muda status, só entra na timeline). Tudo cai no mesmo `oficina_historico` que o admin vê.
@@ -193,7 +193,7 @@ Revogação:
 - "Desativar" no admin zera `pin_ativo` sem deletar histórico. O cookie existente vira 401 no próximo request (revalidação em cada handler).
 - Rotacionar slug: invalida qualquer bookmark antigo + o PWA instalado (o `start_url` do manifest reflete o slug do momento da instalação).
 
-Manifest dinâmico: `/api/tecnico/manifest.webmanifest` lê o slug atual e define `start_url` e `scope` como `/t/<slug>/`.
+Manifest dinâmico: `/api/mecanico/manifest.webmanifest` lê o slug atual e define `start_url` e `scope` como `/m/<slug>/`.
 
 ---
 
@@ -245,7 +245,7 @@ npm run dev          # Next.js em http://localhost:3000
 
 Variáveis (todas opcionais em dev):
 - `ADMIN_PASSWORD` — default `Anuntech@10`.
-- `TECNICO_SESSION_SECRET` — **obrigatória em prod** para assinar o cookie do PWA. Em dev cai num default inseguro.
+- `MECANICO_SESSION_SECRET` — **obrigatória em prod** para assinar o cookie do PWA. Em dev cai num default inseguro.
 - `DB_PATH` — default `./buscaracing.db`.
 - `DATA_DIR` — base pra uploads/fotos quando diferente da raiz.
 
@@ -285,7 +285,7 @@ Não pular o design, mesmo em features "simples".
 - **`shell cwd` reseta entre chamadas do Bash tool** neste ambiente — sempre usar `cd <absoluto> && <cmd>` em uma só linha.
 - **CSS Modules não aceitam seletores globais.** Se precisar, mover para plain CSS.
 - O domínio `buscaracing.anun.tech` **não existe em DNS**; é só o nome do repositório.
-- `oficina_ordens.mecanico` é **texto livre legado**; o vínculo real pro PWA é `oficina_ordens.tecnico_id FK → mecanicos.id`. Ao trocar o técnico no modal da OS, a UI sincroniza os dois (mas a fonte de verdade pro PWA é `tecnico_id`).
+- `oficina_ordens.mecanico` é **texto livre legado**; o vínculo real pro PWA é `oficina_ordens.mecanico_id FK → mecanicos.id`. Ao trocar o mecânico no modal da OS, a UI sincroniza os dois (mas a fonte de verdade pro PWA é `mecanico_id`).
 - **Middleware roda no Edge runtime** — nada de `getDb()`, `crypto.scryptSync`, etc. Lá só checa presença de cookie; a validação completa (HMAC + DB) acontece nos route handlers Node.
 - `better-sqlite3` é **síncrono** — OK porque o SQLite é local e rápido, mas não bloquear em operações longas.
 - `_backup/` é o código antigo (Express); **ignorado** no `tsconfig`. Nunca referenciar.
