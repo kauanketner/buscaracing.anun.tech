@@ -1,0 +1,362 @@
+/* Estilos globais do PWA do técnico. Mobile-first, paleta herdada do admin. */
+
+.tecnico-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #f6f6f3;
+  color: #222;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+}
+
+.tec-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #27367D;
+  color: #FDFDFB;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tec-topbar-title {
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  font-size: 1.15rem;
+  flex: 1;
+  margin: 0;
+}
+.tec-topbar-sub {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tec-topbar-btn {
+  background: transparent;
+  border: 1px solid rgba(253, 253, 251, 0.4);
+  color: #FDFDFB;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tec-topbar-btn:active { background: rgba(255, 255, 255, 0.12); }
+
+.tec-container {
+  padding: 14px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Login */
+.tec-login-wrap {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding: 24px;
+  background: #27367D;
+  color: #FDFDFB;
+  gap: 18px;
+}
+.tec-login-brand {
+  text-align: center;
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+.tec-login-brand .accent { color: #DC2627; }
+.tec-login-sub {
+  text-align: center;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: 0;
+}
+.tec-login-card {
+  background: #FDFDFB;
+  color: #222;
+  padding: 20px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tec-login-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #555;
+  margin: 0;
+}
+.tec-pin-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.6rem;
+  text-align: center;
+  letter-spacing: 0.3em;
+  font-family: 'Courier New', monospace;
+  border: 2px solid #e4e4e0;
+  border-radius: 4px;
+  outline: none;
+}
+.tec-pin-input:focus { border-color: #27367D; }
+.tec-btn-primary {
+  width: 100%;
+  background: #27367D;
+  color: #FDFDFB;
+  border: none;
+  padding: 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tec-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.tec-btn-primary:active:not(:disabled) { background: #DC2627; }
+
+/* Lista de OSs */
+.tec-os-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tec-os-card {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  border-radius: 6px;
+  padding: 14px;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.tec-os-card:active { background: #f6f6f3; }
+.tec-os-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.tec-os-id {
+  font-family: 'Bebas Neue', sans-serif;
+  color: #27367D;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+.tec-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.tec-badge-blue { background: #e6ebff; color: #27367D; }
+.tec-badge-amber { background: #fff2cc; color: #8a6b00; }
+.tec-badge-green { background: #d4f5dc; color: #1a7430; }
+.tec-badge-gray { background: #ebebeb; color: #666; }
+.tec-os-cliente {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.tec-os-moto {
+  color: #555;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.tec-os-desc {
+  color: #444;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tec-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+/* Detalhe da OS */
+.tec-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tec-section {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  border-radius: 6px;
+  padding: 14px;
+}
+.tec-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #27367D;
+  margin: 0 0 10px;
+}
+.tec-kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  font-size: 0.88rem;
+}
+.tec-kv-label {
+  color: #777;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tec-kv-val {
+  color: #222;
+  font-weight: 500;
+  word-break: break-word;
+}
+.tec-desc {
+  white-space: pre-wrap;
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.tec-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tec-event {
+  border-left: 3px solid #27367D;
+  padding: 8px 10px 8px 12px;
+  background: #fafaf7;
+  border-radius: 0 4px 4px 0;
+}
+.tec-event-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.tec-event-date {
+  color: #777;
+  font-size: 0.75rem;
+}
+.tec-event-autor {
+  font-size: 0.78rem;
+  color: #555;
+  font-weight: 600;
+}
+.tec-event-msg {
+  font-size: 0.88rem;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.tec-actions {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, #f6f6f3 70%, rgba(246, 246, 243, 0));
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tec-btn-secondary {
+  flex: 1;
+  min-width: 140px;
+  background: #FDFDFB;
+  color: #27367D;
+  border: 1.5px solid #27367D;
+  padding: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tec-btn-secondary:active { background: #e6ebff; }
+
+/* Modal */
+.tec-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 0;
+}
+.tec-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 10px 10px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.tec-modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #27367D;
+  font-size: 1.3rem;
+  margin: 0 0 12px;
+}
+.tec-select, .tec-textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1.5px solid #e4e4e0;
+  border-radius: 4px;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  color: #222;
+  margin-bottom: 12px;
+}
+.tec-select:focus, .tec-textarea:focus { border-color: #27367D; }
+.tec-textarea { resize: vertical; min-height: 96px; }
+
+.tec-loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: #777;
+}
+
+.tec-error {
+  background: #fcdcdc;
+  color: #8b1820;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin: 0;
+}

@@ -66,11 +66,11 @@ export async function POST(request: NextRequest) {
         `INSERT INTO oficina_ordens (
            cliente_nome, cliente_telefone, cliente_email,
            moto_id, moto_marca, moto_modelo, moto_ano, moto_placa, moto_km,
-           servico_descricao, observacoes, mecanico,
+           servico_descricao, observacoes, mecanico, tecnico_id,
            valor_estimado, valor_final,
            status, data_entrada, data_prevista, data_conclusao,
            garantia_de_id
-         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       );
       const result = stmt.run(
         cliente_nome,
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         toStr(body.servico_descricao),
         toStr(body.observacoes),
         toStr(body.mecanico),
+        toNullableNumber(body.tecnico_id),
         toNullableNumber(body.valor_estimado),
         toNullableNumber(body.valor_final),
         status,

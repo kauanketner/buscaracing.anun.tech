@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import crypto from 'crypto';
 import path from 'path';
 
 const ROOT = process.cwd();
@@ -136,6 +137,38 @@ function initSchema(db: Database.Database): void {
   // Garantia: OS nova referenciando OS finalizada anterior
   addOfCol('garantia_de_id', 'INTEGER');
   db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_garantia_de ON oficina_ordens(garantia_de_id)');
+  // Técnico responsável pela OS (FK lógica pra mecanicos.id)
+  addOfCol('tecnico_id', 'INTEGER');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_oficina_tecnico_id ON oficina_ordens(tecnico_id)');
+
+  // ----- Migrations: PIN columns on mecanicos (módulo /tecnico) -----
+  const existingMecCols = new Set(
+    (db.prepare('PRAGMA table_info(mecanicos)').all() as { name: string }[]).map((c) => c.name),
+  );
+  const addMecCol = (name: string, definition: string): void => {
+    if (!existingMecCols.has(name)) {
+      db.exec(`ALTER TABLE mecanicos ADD COLUMN ${name} ${definition}`);
+      existingMecCols.add(name);
+    }
+  };
+  addMecCol('pin_hash', "TEXT DEFAULT ''");           // scrypt:<salt_b64>:<hash_b64>
+  addMecCol('pin_ativo', 'INTEGER DEFAULT 0');        // 0 = sem acesso ao /tecnico
+  addMecCol('pin_trocado_em', 'TEXT');
+
+  // ----- Rate-limit de tentativas de PIN -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tecnico_login_attempts (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      ip          TEXT    NOT NULL,
+      tecnico_id  INTEGER,
+      success     INTEGER NOT NULL,
+      created_at  TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time
+      ON tecnico_login_attempts(ip, created_at);
+  `);
+  // Limpeza: tentativas com mais de 7 dias são irrelevantes
+  db.exec("DELETE FROM tecnico_login_attempts WHERE created_at < datetime('now','-7 days')");
 
   // ----- Histórico de mudanças de status -----
   db.exec(`
@@ -202,6 +235,44 @@ function initSchema(db: Database.Database): void {
   for (const k of seedKeys) {
     insert.run(k);
   }
+
+  // Seed slug do módulo /tecnico (12 chars base32 aleatórios).
+  // Se já existe (com valor), mantém; se ainda não existe, cria.
+  const currentSlug = db
+    .prepare("SELECT valor FROM configuracoes WHERE chave='tecnico_url_slug'")
+    .get() as { valor: string } | undefined;
+  if (!currentSlug || !currentSlug.valor) {
+    const slug = generateTecnicoSlug();
+    db.prepare(
+      "INSERT INTO configuracoes(chave, valor) VALUES('tecnico_url_slug', ?) " +
+        'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
+    ).run(slug);
+  }
+}
+
+/** Gera um slug base32 (a-z, 2-7) de 12 caracteres. ~60 bits de entropia. */
+export function generateTecnicoSlug(): string {
+  // 8 bytes → 64 bits de entropia; transformamos em 13 chars base32 e cortamos pra 12.
+  const bytes = crypto.randomBytes(8);
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+  // Agrupa os bits em um bitstream contínuo e puxa 5 bits por caractere.
+  let out = '';
+  let buffer = 0;
+  let bits = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    buffer = (buffer << 8) | bytes[i];
+    bits += 8;
+    while (bits >= 5) {
+      bits -= 5;
+      const idx = (buffer >>> bits) & 0x1f;
+      out += alphabet[idx];
+    }
+  }
+  if (bits > 0) {
+    const idx = (buffer << (5 - bits)) & 0x1f;
+    out += alphabet[idx];
+  }
+  return out.slice(0, 12);
 }
 
 /**

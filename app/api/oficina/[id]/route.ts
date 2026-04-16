@@ -29,6 +29,7 @@ const EDITABLE_NUMBER_COLS = [
   'moto_km',
   'valor_estimado',
   'valor_final',
+  'tecnico_id',
 ] as const;
 
 const EDITABLE_DATE_COLS = ['data_entrada', 'data_prevista', 'data_conclusao'] as const;
