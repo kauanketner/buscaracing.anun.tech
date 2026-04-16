@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
+import ContratoPdfButton from '@/components/ContratoPdfButton';
 import styles from '../vendas/page.module.css';
 
 type Consignacao = {
@@ -146,20 +147,24 @@ export default function ConsignacoesPage() {
                     ) : '—'}
                   </td>
                   <td>
-                    {c.status === 'ativa' && (
-                      <button
-                        type="button"
-                        style={{
-                          background: 'none', border: '1px solid #f0b4b9', padding: '4px 10px',
-                          fontSize: '0.72rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif",
-                          fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                          color: '#dc3545',
-                        }}
-                        onClick={() => retirar(c)}
-                      >
-                        Dono retirou
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      <ContratoPdfButton tipo="consignacao" id={c.id} label="PDF"
+                        style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#27367D' }} />
+                      {c.status === 'ativa' && (
+                        <button
+                          type="button"
+                          style={{
+                            background: 'none', border: '1px solid #f0b4b9', padding: '4px 10px',
+                            fontSize: '0.72rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif",
+                            fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                            color: '#dc3545',
+                          }}
+                          onClick={() => retirar(c)}
+                        >
+                          Retirada
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

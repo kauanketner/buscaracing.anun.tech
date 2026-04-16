@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { HeaderActionsContext } from '../../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
+import ContratoPdfButton from '@/components/ContratoPdfButton';
 import {
   OFICINA_STATUS_LABELS,
   isOficinaStatus,
@@ -288,6 +289,11 @@ export default function OficinaDetailPage() {
               Abrir garantia
             </button>
           )}
+          <ContratoPdfButton
+            tipo="os"
+            id={ordem.id}
+            className={`${styles.btn} ${styles.btnGhost}`}
+          />
           <div className={styles.kebabWrap} ref={menuWrapRef}>
             <button
               type="button"

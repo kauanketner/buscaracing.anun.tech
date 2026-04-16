@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
+import ContratoPdfButton from '@/components/ContratoPdfButton';
 import styles from './page.module.css';
 
 type Venda = {
@@ -90,6 +91,7 @@ export default function VendasPage() {
               <th>Comissão</th>
               <th>Data</th>
               <th>Link</th>
+              <th>Contratos</th>
             </tr>
           </thead>
           <tbody>
@@ -154,6 +156,14 @@ export default function VendasPage() {
                       Copiar link
                     </button>
                   ) : '—'}
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    <ContratoPdfButton tipo="venda" id={v.id} label="Venda"
+                      style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#27367D' }} />
+                    <ContratoPdfButton tipo="entrega" id={v.id} label="Entrega"
+                      style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#555' }} />
+                  </div>
                 </td>
               </tr>
             ))}
