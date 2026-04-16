@@ -8,7 +8,9 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   // Admin e PWA do mecânico renderizam seus próprios layouts — sem header/footer do site público.
   const isBare =
-    pathname?.startsWith('/admin') || pathname?.startsWith('/m/') || pathname === '/m';
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/m/') || pathname === '/m' ||
+    pathname?.startsWith('/c/') || pathname === '/c';
 
   if (isBare) {
     return <>{children}</>;

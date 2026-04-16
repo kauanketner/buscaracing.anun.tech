@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin/motos': { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' },
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Histórico de vendas, comissões e faturamento' },
+  '/admin/consignacoes': { title: 'Consignadas', subtitle: 'Motos de terceiros, repasses e links' },
   '/admin/mecanicos': { title: 'Mecânicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
   '/admin/blog/novo': { title: 'Novo Post', subtitle: 'Crie um novo post para o blog' },
@@ -38,7 +39,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'mecanicos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'mecanicos' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -80,6 +81,14 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
       </svg>
     );
   }
+  if (name === 'consignacoes') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M16 3h5v5M21 3l-7 7M4 11v6a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 15h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
   if (name === 'vendas') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -110,7 +119,7 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'mecanicos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'mecanicos' | 'blog' | 'config';
   exact?: boolean;
 };
 
@@ -119,6 +128,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
+  { href: '/admin/consignacoes', label: 'Consignadas', icon: 'consignacoes' },
   { href: '/admin/mecanicos', label: 'Mecânicos', icon: 'mecanicos' },
   { href: '/admin/blog', label: 'Blog', icon: 'blog' },
   { href: '/admin/config', label: 'Configurações', icon: 'config' },

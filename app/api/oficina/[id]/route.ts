@@ -177,8 +177,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const db = getDb();
     const existing = db
-      .prepare('SELECT id, status, moto_id FROM oficina_ordens WHERE id=?')
-      .get(numericId) as { id: number; status: string; moto_id: number | null } | undefined;
+      .prepare('SELECT id, status, moto_id, valor_final FROM oficina_ordens WHERE id=?')
+      .get(numericId) as { id: number; status: string; moto_id: number | null; valor_final: number | null } | undefined;
     if (!existing) return NextResponse.json({ error: 'Ordem não encontrada' }, { status: 404 });
 
     const sets: string[] = [];
@@ -264,6 +264,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           db.prepare("UPDATE motos SET estado='disponivel' WHERE id=?").run(moto.id);
         } else if (moto.estado === 'em_revisao') {
           db.prepare("UPDATE motos SET estado='entregue' WHERE id=?").run(moto.id);
+          // Consignada: update custo_revisao and adjust repasse
+          const consig = db
+            .prepare("SELECT id, valor_repasse FROM consignacoes WHERE moto_id=? AND status='vendida' ORDER BY id DESC LIMIT 1")
+            .get(moto.id) as { id: number; valor_repasse: number | null } | undefined;
+          if (consig) {
+            const custoRevisao = existing.valor_final || 0;
+            const repasseFinal = (consig.valor_repasse || 0) - custoRevisao;
+            db.prepare("UPDATE consignacoes SET custo_revisao=?, valor_repasse=?, status='entregue' WHERE id=?")
+              .run(custoRevisao, repasseFinal > 0 ? repasseFinal : 0, consig.id);
+          }
         }
       }
     }

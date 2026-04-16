@@ -121,12 +121,30 @@ export async function POST(request: NextRequest) {
       db.prepare('UPDATE motos SET estado=?, ativo=0, vendida=1, vendedor_id=?, comprador_nome=?, valor_venda_final=?, data_venda=date(\'now\',\'localtime\') WHERE id=?')
         .run(newState, body.vendedor_id || null, compradorNome, body.valor_venda, body.moto_id);
 
-      // 3. If consignada → auto-create OS for post-sale revision
+      // 3. If consignada → auto-create OS for post-sale revision + calculate repasse
       if (moto.origem === 'consignada') {
         db.prepare(
           `INSERT INTO oficina_ordens (cliente_nome, moto_id, moto_marca, moto_modelo, servico_descricao, status)
            VALUES (?, ?, ?, ?, 'Revisão pós-venda (consignada)', 'aberta')`,
         ).run(compradorNome, body.moto_id, moto.marca || '', moto.nome || '');
+
+        // Calculate and record repasse pendente
+        const consig = db
+          .prepare("SELECT id, margem_pct, dono_nome FROM consignacoes WHERE moto_id=? AND status='ativa' ORDER BY id DESC LIMIT 1")
+          .get(body.moto_id) as { id: number; margem_pct: number; dono_nome: string } | undefined;
+        if (consig) {
+          const margemPct = consig.margem_pct || 12;
+          const repasseBase = body.valor_venda * (1 - margemPct / 100);
+          // custo_revisao will be filled when OS closes (Phase 3 auto-transition)
+          db.prepare("UPDATE consignacoes SET valor_repasse=?, status='vendida' WHERE id=?")
+            .run(repasseBase, consig.id);
+
+          // Financial: repasse pendente
+          db.prepare(
+            `INSERT INTO lancamentos (tipo, categoria, valor, descricao, ref_tipo, ref_id)
+             VALUES ('saida', 'repasse_consignada', ?, ?, 'consignacao', ?)`,
+          ).run(repasseBase, `Repasse pendente — ${consig.dono_nome}`, consig.id);
+        }
       }
 
       // 4. If reservation existed → mark as converted

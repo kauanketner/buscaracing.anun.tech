@@ -352,6 +352,30 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_lanc_ref ON lancamentos(ref_tipo, ref_id);
   `);
 
+  // ----- Fase 3: consignacoes -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS consignacoes (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      moto_id         INTEGER NOT NULL REFERENCES motos(id),
+      dono_nome       TEXT NOT NULL,
+      dono_telefone   TEXT DEFAULT '',
+      dono_email      TEXT DEFAULT '',
+      dono_pix        TEXT DEFAULT '',
+      margem_pct      REAL DEFAULT 12,
+      custo_revisao   REAL DEFAULT 0,
+      valor_repasse   REAL,
+      repasse_pago    INTEGER DEFAULT 0,
+      data_entrada    TEXT DEFAULT (date('now','localtime')),
+      data_retirada   TEXT,
+      status          TEXT DEFAULT 'ativa',
+      token           TEXT,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_consig_moto ON consignacoes(moto_id);
+    CREATE INDEX IF NOT EXISTS idx_consig_token ON consignacoes(token);
+    CREATE INDEX IF NOT EXISTS idx_consig_status ON consignacoes(status);
+  `);
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"

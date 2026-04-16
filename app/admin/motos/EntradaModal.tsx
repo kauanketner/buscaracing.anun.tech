@@ -100,6 +100,20 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
         });
       }
 
+      // Create consignacao record if consignada
+      if (motoId && origem === 'consignada') {
+        await fetch('/api/consignacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            moto_id: motoId,
+            dono_nome: donoNome.trim(),
+            dono_telefone: donoTel.trim(),
+            margem_pct: Number(margemPct) || 12,
+          }),
+        });
+      }
+
       // Upload additional photos
       if (motoId && fotos.length > 1) {
         for (let i = 1; i < fotos.length; i++) {

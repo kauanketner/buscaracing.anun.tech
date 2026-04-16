@@ -4,3 +4,4 @@ Disallow: /api/admin/
 Disallow: /api/mecanico/
 Disallow: /api/auth/
 Disallow: /m/
+Disallow: /c/
