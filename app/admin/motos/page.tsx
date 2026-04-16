@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
 import MotoModal from './MotoModal';
 import EntradaModal from './EntradaModal';
+import ReservaModal from './ReservaModal';
 import DeleteConfirm from './DeleteConfirm';
 import SellModal from './SellModal';
 import styles from './page.module.css';
@@ -64,6 +65,7 @@ export default function MotosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [entradaOpen, setEntradaOpen] = useState(false);
+  const [reservaTarget, setReservaTarget] = useState<{ id: number; label: string } | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [sellTarget, setSellTarget] = useState<{ id: number; label: string } | null>(null);
@@ -329,24 +331,52 @@ export default function MotosPage() {
                           </>
                         )}
                         {m.estado === 'anunciada' && (
-                          <button
-                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                            onClick={() =>
-                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
-                            }
-                          >
-                            Vender
-                          </button>
+                          <>
+                            <button
+                              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                              onClick={() =>
+                                setReservaTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                              }
+                            >
+                              Reservar
+                            </button>
+                            <button
+                              className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                              onClick={() =>
+                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                              }
+                            >
+                              Vender
+                            </button>
+                          </>
                         )}
                         {m.estado === 'reservada' && (
-                          <button
-                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                            onClick={() =>
-                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
-                            }
-                          >
-                            Fechar venda
-                          </button>
+                          <>
+                            <button
+                              className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                              onClick={() =>
+                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                              }
+                            >
+                              Fechar venda
+                            </button>
+                            <button
+                              className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                              onClick={async () => {
+                                if (!confirm('Cancelar a reserva e devolver o sinal?')) return;
+                                try {
+                                  const r = await fetch(`/api/motos/${m.id}/reserva`, { method: 'DELETE' });
+                                  if (!r.ok) throw new Error('fail');
+                                  showToast('Reserva cancelada, sinal devolvido', 'success');
+                                  await reload();
+                                } catch {
+                                  showToast('Erro ao cancelar reserva', 'error');
+                                }
+                              }}
+                            >
+                              Cancelar reserva
+                            </button>
+                          </>
                         )}
                         {m.estado === 'vendida' && (
                           <button
@@ -415,6 +445,18 @@ export default function MotosPage() {
           </span>
         </div>
       </div>
+
+      {reservaTarget && (
+        <ReservaModal
+          motoId={reservaTarget.id}
+          motoLabel={reservaTarget.label}
+          onClose={() => setReservaTarget(null)}
+          onSaved={async () => {
+            setReservaTarget(null);
+            await reload();
+          }}
+        />
+      )}
 
       {entradaOpen && (
         <EntradaModal
