@@ -13,7 +13,7 @@
  * A antiga seção "Mecânicos" em /admin/config foi removida — este é o lugar
  * único pra administrar pessoas da oficina.
  */
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import styles from './page.module.css';
@@ -72,6 +72,26 @@ export default function MecanicosPage() {
   >(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [savingForm, setSavingForm] = useState(false);
+
+  // Menu kebab (1 aberto por vez — chave = id do mecânico)
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const menuWrapRef = useRef<HTMLTableElement>(null);
+  useEffect(() => {
+    if (menuOpenId == null) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!menuWrapRef.current) return;
+      if (!menuWrapRef.current.contains(e.target as Node)) setMenuOpenId(null);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpenId(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [menuOpenId]);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -319,7 +339,7 @@ export default function MecanicosPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
+          <table className={styles.table} ref={menuWrapRef}>
             <thead>
               <tr>
                 <th>Nome</th>
@@ -327,7 +347,7 @@ export default function MecanicosPage() {
                 <th>Telefone</th>
                 <th>Acesso ao app</th>
                 <th>Último PIN</th>
-                <th>Ações</th>
+                <th style={{ textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -339,6 +359,7 @@ export default function MecanicosPage() {
                   : t.has_pin
                   ? { label: 'Desativado', cls: styles.bgRed }
                   : { label: 'Sem PIN', cls: styles.bgGray };
+                const isMenuOpen = menuOpenId === t.id;
                 return (
                   <tr key={t.id}>
                     <td className={styles.tdName}>{t.nome}</td>
@@ -367,36 +388,113 @@ export default function MecanicosPage() {
                         >
                           {t.pin_ativo ? 'Trocar PIN' : 'Definir PIN'}
                         </button>
-                        {t.pin_ativo ? (
+                        <div className={styles.kebabWrap}>
                           <button
                             type="button"
-                            className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                            onClick={() => revokePin(t)}
+                            className={`${styles.kebabBtn} ${isMenuOpen ? styles.kebabActive : ''}`}
+                            onClick={() =>
+                              setMenuOpenId((cur) => (cur === t.id ? null : t.id))
+                            }
+                            aria-label="Mais ações"
+                            aria-haspopup="menu"
+                            aria-expanded={isMenuOpen}
                           >
-                            Revogar PIN
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="5" r="1.6" fill="currentColor" />
+                              <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+                              <circle cx="12" cy="19" r="1.6" fill="currentColor" />
+                            </svg>
                           </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                          onClick={() => openEdit(t)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                          onClick={() => toggleAtivo(t)}
-                        >
-                          {t.ativo ? 'Desativar' : 'Reativar'}
-                        </button>
-                        <button
-                          type="button"
-                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnGhostDanger}`}
-                          onClick={() => removeMecanico(t)}
-                        >
-                          Remover
-                        </button>
+                          {isMenuOpen && (
+                            <ul className={styles.menu} role="menu">
+                              <li role="none">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={styles.menuItem}
+                                  onClick={() => {
+                                    setMenuOpenId(null);
+                                    openEdit(t);
+                                  }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                      d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                  Editar dados
+                                </button>
+                              </li>
+                              {t.pin_ativo && (
+                                <li role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className={styles.menuItem}
+                                    onClick={() => {
+                                      setMenuOpenId(null);
+                                      revokePin(t);
+                                    }}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
+                                      <path d="M7 11V7a5 5 0 0110 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                      <line x1="9" y1="15" x2="15" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                      <line x1="15" y1="15" x2="9" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    </svg>
+                                    Revogar PIN
+                                  </button>
+                                </li>
+                              )}
+                              <li role="none">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={styles.menuItem}
+                                  onClick={() => {
+                                    setMenuOpenId(null);
+                                    toggleAtivo(t);
+                                  }}
+                                >
+                                  {t.ativo ? (
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                                      <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    </svg>
+                                  ) : (
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                                      <polyline points="8 12 11 15 16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                  {t.ativo ? 'Desativar mecânico' : 'Reativar mecânico'}
+                                </button>
+                              </li>
+                              <li role="none" className={styles.menuDivider} aria-hidden="true" />
+                              <li role="none">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                                  onClick={() => {
+                                    setMenuOpenId(null);
+                                    removeMecanico(t);
+                                  }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  Remover
+                                </button>
+                              </li>
+                            </ul>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
