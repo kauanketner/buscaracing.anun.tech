@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react';
+import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
 import styles from './page.module.css';
 
 const BRANDS = [
@@ -53,6 +54,8 @@ export type Moto = {
   responsavel_compra?: string | null;
   valor_venda_final?: number | null;
   created_at?: string | null;
+  estado?: string | null;
+  origem?: string | null;
   // Agregados anexados pelo GET /api/motos/[id] (admin)
   oficina_total?: number;
   oficina_count?: number;
@@ -97,6 +100,9 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [descricao, setDescricao] = useState('');
   const [destaque, setDestaque] = useState(false);
   const [ativo, setAtivo] = useState(true);
+
+  // Estado (lifecycle) — read-only display, not editable here
+  const [estado, setEstado] = useState<string>('');
 
   // Controle interno
   const [tipoEntrada, setTipoEntrada] = useState('');
@@ -154,6 +160,7 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         setDescricao(m.descricao || '');
         setDestaque(!!m.destaque);
         setAtivo(!!m.ativo);
+        setEstado(m.estado || '');
         setTipoEntrada(m.tipo_entrada || '');
         setPlaca(m.placa || '');
         setChassi(m.chassi || '');
@@ -359,7 +366,22 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     >
       <form className={styles.modal} onSubmit={onSubmit}>
         <div className={styles.modalHeader}>
-          <h3>{isEditing ? 'Editar Moto' : 'Nova Moto'}</h3>
+          <h3>
+            {isEditing ? 'Editar Moto' : 'Nova Moto'}
+            {isEditing && estado && (() => {
+              const est = estado as MotoEstado;
+              const cor = ESTADO_COR[est];
+              if (!cor) return null;
+              return (
+                <span
+                  className={styles.badge}
+                  style={{ background: cor.bg, color: cor.color, marginLeft: 12, verticalAlign: 'middle', fontSize: '0.55em' }}
+                >
+                  {MOTO_ESTADO_LABELS[est] || est}
+                </span>
+              );
+            })()}
+          </h3>
           <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fechar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
