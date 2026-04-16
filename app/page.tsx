@@ -31,11 +31,11 @@ export default function Home() {
   const db = getDb();
 
   const destaques = db
-    .prepare('SELECT * FROM motos WHERE ativo=1 AND destaque=1 ORDER BY id DESC LIMIT 8')
+    .prepare("SELECT * FROM motos WHERE estado IN ('anunciada','reservada') AND destaque=1 ORDER BY id DESC LIMIT 8")
     .all() as Moto[];
 
   const totalMotos = (
-    db.prepare('SELECT COUNT(*) as c FROM motos WHERE ativo=1').get() as { c: number }
+    db.prepare("SELECT COUNT(*) as c FROM motos WHERE estado IN ('anunciada','reservada')").get() as { c: number }
   ).c;
 
   // Imagens customizadas das categorias (cadastradas em Admin → Configurações)

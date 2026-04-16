@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const destaque = searchParams.get('destaque');
     const q = searchParams.get('q');
 
-    let sql = 'SELECT * FROM motos WHERE ativo=1';
+    let sql = "SELECT * FROM motos WHERE estado IN ('anunciada','reservada')";
     const params: unknown[] = [];
 
     if (categoria) { sql += ' AND categoria=?'; params.push(categoria); }

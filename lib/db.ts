@@ -258,6 +258,23 @@ function initSchema(db: Database.Database): void {
   addCol('valor_venda_final', 'REAL');
   addCol('data_venda', 'TEXT');
 
+  // ----- Fase 1: Estoque — estado e origem -----
+  addCol('estado', "TEXT DEFAULT 'avaliacao'");
+  addCol('origem', "TEXT DEFAULT 'compra_direta'");
+  addCol('troca_venda_id', 'INTEGER');
+  addCol('consignacao_id', 'INTEGER');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_motos_estado ON motos(estado)');
+  // Migrar dados existentes para o campo estado
+  db.exec(`
+    UPDATE motos SET estado='entregue'   WHERE vendida=1 AND (estado='avaliacao' OR estado IS NULL OR estado='');
+    UPDATE motos SET estado='anunciada'  WHERE ativo=1 AND vendida=0 AND (estado='avaliacao' OR estado IS NULL OR estado='');
+    UPDATE motos SET estado='disponivel' WHERE ativo=0 AND vendida=0 AND (estado='avaliacao' OR estado IS NULL OR estado='');
+  `);
+  // Migrar tipo_entrada → origem
+  db.exec(`
+    UPDATE motos SET origem='consignada' WHERE tipo_entrada='consignada' AND (origem='compra_direta' OR origem IS NULL OR origem='');
+  `);
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"
@@ -342,6 +359,10 @@ export const MOTOS_ADMIN_ONLY_COLS = [
   'comprador_nome',
   'valor_venda_final',
   'data_venda',
+  'estado',
+  'origem',
+  'troca_venda_id',
+  'consignacao_id',
 ] as const;
 
 /**
