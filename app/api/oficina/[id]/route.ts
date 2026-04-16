@@ -177,8 +177,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const db = getDb();
     const existing = db
-      .prepare('SELECT id, status FROM oficina_ordens WHERE id=?')
-      .get(numericId) as { id: number; status: string } | undefined;
+      .prepare('SELECT id, status, moto_id FROM oficina_ordens WHERE id=?')
+      .get(numericId) as { id: number; status: string; moto_id: number | null } | undefined;
     if (!existing) return NextResponse.json({ error: 'Ordem não encontrada' }, { status: 404 });
 
     const sets: string[] = [];
@@ -253,6 +253,20 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       }
     });
     tx();
+
+    // Auto-transition: when OS is finalized, update linked moto's estado
+    if (novoStatus === 'finalizada' && existing.moto_id) {
+      const moto = db
+        .prepare('SELECT id, estado FROM motos WHERE id=?')
+        .get(existing.moto_id) as { id: number; estado: string } | undefined;
+      if (moto) {
+        if (moto.estado === 'em_oficina') {
+          db.prepare("UPDATE motos SET estado='disponivel' WHERE id=?").run(moto.id);
+        } else if (moto.estado === 'em_revisao') {
+          db.prepare("UPDATE motos SET estado='entregue' WHERE id=?").run(moto.id);
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
