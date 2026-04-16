@@ -7,3 +7,4 @@ Disallow: /m/
 Disallow: /c/
 Disallow: /v/
 Disallow: /compra/
+Disallow: /checklist/

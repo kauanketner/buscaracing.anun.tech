@@ -403,6 +403,45 @@ function initSchema(db: Database.Database): void {
     db.exec('CREATE INDEX IF NOT EXISTS idx_vendas_token ON vendas(token)');
   }
 
+  // ----- Checklists -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS checklists (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      titulo      TEXT NOT NULL,
+      descricao   TEXT DEFAULT '',
+      token       TEXT NOT NULL,
+      ativo       INTEGER DEFAULT 1,
+      created_at  TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_checklists_token ON checklists(token);
+
+    CREATE TABLE IF NOT EXISTS checklist_itens (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      checklist_id  INTEGER NOT NULL REFERENCES checklists(id) ON DELETE CASCADE,
+      tipo          TEXT NOT NULL DEFAULT 'checkbox',
+      label         TEXT NOT NULL,
+      ordem         INTEGER DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_checklist_itens_checklist ON checklist_itens(checklist_id);
+
+    CREATE TABLE IF NOT EXISTS checklist_respostas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      checklist_id    INTEGER NOT NULL REFERENCES checklists(id),
+      preenchido_por  TEXT NOT NULL,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_checklist_resp_checklist ON checklist_respostas(checklist_id);
+
+    CREATE TABLE IF NOT EXISTS checklist_resposta_itens (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      resposta_id     INTEGER NOT NULL REFERENCES checklist_respostas(id) ON DELETE CASCADE,
+      item_id         INTEGER NOT NULL REFERENCES checklist_itens(id),
+      valor_checkbox  INTEGER DEFAULT 0,
+      valor_texto     TEXT DEFAULT '',
+      valor_foto      TEXT DEFAULT ''
+    );
+  `);
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"
