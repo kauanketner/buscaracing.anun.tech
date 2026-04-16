@@ -7,6 +7,15 @@ import styles from '../../vendas/page.module.css';
 
 type Item = { id: number; tipo: string; label: string; ordem: number };
 type Resposta = { id: number; preenchido_por: string; created_at: string };
+type Agendamento = {
+  id: number;
+  horario: string;
+  dias_semana: string;
+  numeros: string;
+  mensagem: string;
+  ativo: number;
+  ultimo_envio: string | null;
+};
 type ChecklistDetail = {
   id: number;
   titulo: string;
@@ -42,13 +51,23 @@ export default function ChecklistDetailPage() {
   const [itens, setItens] = useState<ItemDraft[]>([]);
   const [saving, setSaving] = useState(false);
 
+  // Agendamentos
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [showAgendForm, setShowAgendForm] = useState(false);
+  const [agHorario, setAgHorario] = useState('08:00');
+  const [agDias, setAgDias] = useState('1,2,3,4,5');
+  const [agNumeros, setAgNumeros] = useState('');
+  const [agMensagem, setAgMensagem] = useState('');
+  const [savingAgend, setSavingAgend] = useState(false);
+
   const load = useCallback(async () => {
     try {
-      const r = await fetch(`/api/checklists/${id}`);
-      if (r.ok) {
-        const d: ChecklistDetail = await r.json();
-        setData(d);
-      }
+      const [r, ar] = await Promise.all([
+        fetch(`/api/checklists/${id}`),
+        fetch(`/api/checklists/${id}/agendamentos`),
+      ]);
+      if (r.ok) setData(await r.json());
+      if (ar.ok) setAgendamentos(await ar.json());
     } catch {
       showToast('Erro ao carregar', 'error');
     } finally {
@@ -261,6 +280,154 @@ export default function ChecklistDetailPage() {
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Agendamentos WhatsApp */}
+      <div style={{ background: '#fff', border: '1px solid #e4e4e0', padding: '1rem 1.25rem', marginTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>
+            Agendamentos WhatsApp ({agendamentos.length})
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAgendForm(!showAgendForm)}
+            style={{
+              background: '#27367D', color: '#fff', border: 'none', padding: '4px 12px',
+              cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+              fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}
+          >
+            {showAgendForm ? 'Fechar' : '+ Agendar'}
+          </button>
+        </div>
+
+        {showAgendForm && (
+          <form
+            onSubmit={async (e: FormEvent) => {
+              e.preventDefault();
+              if (!agNumeros.trim()) { showToast('Informe os números', 'error'); return; }
+              setSavingAgend(true);
+              try {
+                const r = await fetch(`/api/checklists/${id}/agendamentos`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    horario: agHorario,
+                    dias_semana: agDias,
+                    numeros: agNumeros.trim(),
+                    mensagem: agMensagem.trim(),
+                  }),
+                });
+                if (!r.ok) throw new Error('fail');
+                showToast('Agendamento criado!', 'success');
+                setShowAgendForm(false);
+                setAgNumeros(''); setAgMensagem('');
+                await load();
+              } catch {
+                showToast('Erro ao criar agendamento', 'error');
+              } finally {
+                setSavingAgend(false);
+              }
+            }}
+            style={{ background: '#fafaf7', padding: '1rem', border: '1px solid #e4e4e0', marginBottom: '1rem' }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>Horário *</label>
+                <input type="time" value={agHorario} onChange={(e) => setAgHorario(e.target.value)} required
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e4e0', fontSize: '0.88rem' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>Dias da semana</label>
+                <select value={agDias} onChange={(e) => setAgDias(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e4e0', fontSize: '0.88rem' }}>
+                  <option value="1,2,3,4,5">Seg a Sex</option>
+                  <option value="0,1,2,3,4,5,6">Todo dia</option>
+                  <option value="1,3,5">Seg, Qua, Sex</option>
+                  <option value="2,4">Ter, Qui</option>
+                  <option value="6,0">Fim de semana</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>Números (separados por vírgula) *</label>
+              <input type="text" value={agNumeros} onChange={(e) => setAgNumeros(e.target.value)}
+                placeholder="5511999999999, 5511988888888" required
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e4e0', fontSize: '0.88rem' }} />
+            </div>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>Mensagem personalizada (opcional)</label>
+              <input type="text" value={agMensagem} onChange={(e) => setAgMensagem(e.target.value)}
+                placeholder="Bom dia! Hora de preencher o checklist"
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e4e0', fontSize: '0.88rem' }} />
+            </div>
+            <button type="submit" disabled={savingAgend}
+              style={{ padding: '8px 16px', background: '#27367D', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {savingAgend ? 'Salvando...' : 'Criar agendamento'}
+            </button>
+          </form>
+        )}
+
+        {agendamentos.length === 0 && !showAgendForm ? (
+          <p style={{ color: '#999', fontSize: '0.85rem' }}>Nenhum agendamento. Clique em "+ Agendar" para enviar lembretes por WhatsApp.</p>
+        ) : (
+          agendamentos.map((ag) => {
+            const diasLabel: Record<string, string> = {
+              '1,2,3,4,5': 'Seg a Sex',
+              '0,1,2,3,4,5,6': 'Todo dia',
+              '1,3,5': 'Seg, Qua, Sex',
+              '2,4': 'Ter, Qui',
+              '6,0': 'Fim de semana',
+            };
+            return (
+              <div key={ag.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f1ee' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>
+                    {ag.horario} — {diasLabel[ag.dias_semana] || ag.dias_semana}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#777' }}>
+                    {ag.numeros.split(',').length} número{ag.numeros.split(',').length > 1 ? 's' : ''}
+                    {ag.ultimo_envio ? ` · Último envio: ${fmtDateTime(ag.ultimo_envio)}` : ''}
+                  </div>
+                  {ag.mensagem && <div style={{ fontSize: '0.78rem', color: '#555', fontStyle: 'italic' }}>{ag.mensagem}</div>}
+                </div>
+                <span className={styles.badge} style={{
+                  background: ag.ativo ? '#d4edda' : '#e2e3e5',
+                  color: ag.ativo ? '#155724' : '#555',
+                  fontSize: '0.65rem',
+                }}>
+                  {ag.ativo ? 'Ativo' : 'Pausado'}
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch(`/api/checklists/agendamentos/${ag.id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ativo: !ag.ativo }),
+                    });
+                    await load();
+                  }}
+                  style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#555' }}
+                >
+                  {ag.ativo ? 'Pausar' : 'Ativar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!confirm('Remover agendamento?')) return;
+                    await fetch(`/api/checklists/agendamentos/${ag.id}`, { method: 'DELETE' });
+                    showToast('Agendamento removido', 'success');
+                    await load();
+                  }}
+                  style={{ background: 'none', border: '1px solid #f0b4b9', padding: '4px 8px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#dc3545' }}
+                >
+                  Remover
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

@@ -440,6 +440,19 @@ function initSchema(db: Database.Database): void {
       valor_texto     TEXT DEFAULT '',
       valor_foto      TEXT DEFAULT ''
     );
+
+    CREATE TABLE IF NOT EXISTS checklist_agendamentos (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      checklist_id    INTEGER NOT NULL REFERENCES checklists(id) ON DELETE CASCADE,
+      horario         TEXT NOT NULL,
+      dias_semana     TEXT DEFAULT '1,2,3,4,5',
+      numeros         TEXT NOT NULL,
+      mensagem        TEXT DEFAULT '',
+      ativo           INTEGER DEFAULT 1,
+      ultimo_envio    TEXT,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_checklist_agend ON checklist_agendamentos(checklist_id);
   `);
 
   // Seed default configuration keys
