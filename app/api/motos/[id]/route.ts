@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb, stripAdminFields } from '@/lib/db';
 import { parseMotoForm, MOTO_UPSERT_COLUMNS } from '@/lib/motos';
+import { ESTADOS_PUBLICOS, ESTADOS_TERMINAIS, type MotoEstado } from '@/lib/moto-estados';
 
 export const dynamic = 'force-dynamic';
 import { saveFile, UPLOADS_DIR } from '@/lib/upload';
@@ -114,6 +115,39 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     db.prepare('DELETE FROM motos WHERE id=?').run(Number(id));
     return NextResponse.json({ ok: true });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erro interno';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/** PATCH /api/motos/[id] — transition estado */
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+  try {
+    const { id } = await context.params;
+    const db = getDb();
+    const moto = db
+      .prepare('SELECT id, estado, origem FROM motos WHERE id=?')
+      .get(Number(id)) as { id: number; estado: string; origem: string } | undefined;
+    if (!moto) {
+      return NextResponse.json({ error: 'Moto não encontrada' }, { status: 404 });
+    }
+    if (ESTADOS_TERMINAIS.includes(moto.estado as MotoEstado)) {
+      return NextResponse.json({ error: 'Moto em estado terminal' }, { status: 400 });
+    }
+    const body = (await request.json()) as { estado?: string };
+    const novoEstado = body.estado;
+    if (!novoEstado) {
+      return NextResponse.json({ error: 'estado obrigatório' }, { status: 400 });
+    }
+    db.prepare('UPDATE motos SET estado=? WHERE id=?').run(novoEstado, moto.id);
+    // Keep ativo flag in sync for backward compatibility
+    const isPublic = ESTADOS_PUBLICOS.includes(novoEstado as MotoEstado) ? 1 : 0;
+    db.prepare('UPDATE motos SET ativo=? WHERE id=?').run(isPublic, moto.id);
+    return NextResponse.json({ ok: true, estado: novoEstado });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
     return NextResponse.json({ error: message }, { status: 500 });

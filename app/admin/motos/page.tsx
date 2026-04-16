@@ -161,6 +161,21 @@ export default function MotosPage() {
     }
   };
 
+  const transitionEstado = async (id: number, estado: string, label: string) => {
+    try {
+      const r = await fetch(`/api/motos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado }),
+      });
+      if (!r.ok) throw new Error('fail');
+      showToast(label, 'success');
+      await reload();
+    } catch {
+      showToast('Erro ao atualizar estado', 'error');
+    }
+  };
+
   return (
     <>
       <div className={styles.wrap}>
@@ -280,6 +295,44 @@ export default function MotosPage() {
                     </td>
                     <td>
                       <div className={styles.actionsCell}>
+                        {/* Primary action per estado */}
+                        {(m.estado === 'avaliacao' || m.estado === 'disponivel') && (
+                          <button
+                            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                            onClick={() => transitionEstado(m.id, 'anunciada', 'Moto anunciada!')}
+                          >
+                            Anunciar
+                          </button>
+                        )}
+                        {m.estado === 'anunciada' && (
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                            onClick={() =>
+                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                            }
+                          >
+                            Vender
+                          </button>
+                        )}
+                        {m.estado === 'reservada' && (
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                            onClick={() =>
+                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                            }
+                          >
+                            Fechar venda
+                          </button>
+                        )}
+                        {m.estado === 'vendida' && (
+                          <button
+                            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                            onClick={() => transitionEstado(m.id, 'entregue', 'Moto entregue!')}
+                          >
+                            Entregar
+                          </button>
+                        )}
+                        {/* Edit always */}
                         <button
                           className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
                           onClick={() => openEdit(m.id)}
@@ -287,76 +340,24 @@ export default function MotosPage() {
                           aria-label="Editar"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path
-                              d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
-                        {m.vendida ? (
+                        {/* Secondary actions */}
+                        {m.estado === 'anunciada' && (
                           <button
                             className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
-                            onClick={() => undoSale(m.id)}
-                            title="Desmarcar venda"
-                            aria-label="Desmarcar venda"
+                            onClick={() => transitionEstado(m.id, 'disponivel', 'Moto pausada')}
+                            title="Pausar anúncio"
+                            aria-label="Pausar anúncio"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                              <path
-                                d="M3 12a9 9 0 019-9 9 9 0 016.36 2.64L21 8M21 3v5h-5M21 12a9 9 0 01-9 9 9 9 0 01-6.36-2.64L3 16M3 21v-5h5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                        ) : (
-                          <button
-                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm} ${styles.btnIcon}`}
-                            onClick={() =>
-                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
-                            }
-                            title="Registrar venda"
-                            aria-label="Registrar venda"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              <rect x="6" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
+                              <rect x="14" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
                             </svg>
                           </button>
                         )}
-                        <button
-                          className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm} ${styles.btnIcon}`}
-                          onClick={() =>
-                            setDeleteTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
-                          }
-                          title="Excluir"
-                          aria-label="Excluir"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <polyline
-                              points="3 6 5 6 21 6"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </button>
                       </div>
                     </td>
                   </tr>
