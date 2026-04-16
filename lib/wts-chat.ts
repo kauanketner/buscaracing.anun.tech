@@ -3,12 +3,30 @@
  *
  * Docs: https://api.wts.chat/chat/v1/message/send
  * Auth: Bearer token via env WTS_CHAT_TOKEN
+ *
+ * Config (em configuracoes DB):
+ * - wts_from: número do canal (ex: 551151073435)
+ * - wts_template_id: ID do template padrão (ex: 58f53_checklistlembrete)
  */
+
+import { getDb } from './db';
 
 const WTS_BASE = 'https://api.wts.chat/chat';
 
 function getToken(): string {
   return process.env.WTS_CHAT_TOKEN || '';
+}
+
+function getWtsConfig(): { from: string; templateId: string } {
+  const db = getDb();
+  const get = (k: string) => {
+    const r = db.prepare('SELECT valor FROM configuracoes WHERE chave=?').get(k) as { valor: string } | undefined;
+    return r?.valor || '';
+  };
+  return {
+    from: get('wts_from'),
+    templateId: get('wts_template_id'),
+  };
 }
 
 export type WtsSendResult = {
@@ -19,8 +37,8 @@ export type WtsSendResult = {
 };
 
 /**
- * Envia mensagem de texto via WTS Chat API.
- * Se templateId for fornecido, envia como template (necessário para iniciar conversa).
+ * Envia mensagem via WTS Chat API.
+ * Usa template se configurado (obrigatório para iniciar conversa no WhatsApp).
  */
 export async function enviarMensagem(
   to: string,
@@ -37,19 +55,24 @@ export async function enviarMensagem(
     return { ok: false, error: 'WTS_CHAT_TOKEN não configurado' };
   }
 
-  // Normalize phone: remove non-digits, ensure country code
   const phone = to.replace(/\D/g, '');
   if (phone.length < 10) {
     return { ok: false, error: `Número inválido: ${to}` };
   }
 
-  const body: Record<string, unknown> = {
+  const config = getWtsConfig();
+  const from = options?.from || config.from;
+  const templateId = options?.templateId || config.templateId;
+
+  const bodyPayload: Record<string, unknown> = templateId
+    ? { templateId, parameters: options?.parameters || {} }
+    : { text };
+
+  const requestBody: Record<string, unknown> = {
     to: phone,
-    body: options?.templateId
-      ? { templateId: options.templateId, parameters: options.parameters || {} }
-      : { text },
+    body: bodyPayload,
   };
-  if (options?.from) body.from = options.from;
+  if (from) requestBody.from = from;
 
   try {
     const r = await fetch(`${WTS_BASE}/v1/message/send`, {
@@ -58,7 +81,7 @@ export async function enviarMensagem(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
     });
 
     if (!r.ok) {
@@ -79,6 +102,7 @@ export async function enviarMensagem(
 
 /**
  * Envia lembrete de checklist para múltiplos números.
+ * Usa template com parâmetros se disponível, senão texto puro.
  */
 export async function enviarLembreteChecklist(
   numeros: string[],
@@ -86,9 +110,7 @@ export async function enviarLembreteChecklist(
   checklistLink: string,
   mensagemCustom?: string,
 ): Promise<{ enviados: number; falhas: number }> {
-  const texto = mensagemCustom
-    ? `${mensagemCustom}\n\n${checklistLink}`
-    : `Lembrete: preencha o checklist "${checklistTitulo}"\n\n${checklistLink}`;
+  const config = getWtsConfig();
 
   let enviados = 0;
   let falhas = 0;
@@ -96,7 +118,25 @@ export async function enviarLembreteChecklist(
   for (const num of numeros) {
     const trimmed = num.trim();
     if (!trimmed) continue;
-    const result = await enviarMensagem(trimmed, texto);
+
+    let result: WtsSendResult;
+    if (config.templateId) {
+      // Envia via template com parâmetros
+      result = await enviarMensagem(trimmed, '', {
+        templateId: config.templateId,
+        parameters: {
+          '1': checklistTitulo,
+          '2': checklistLink,
+        },
+      });
+    } else {
+      // Fallback: texto puro (só funciona se conversa já está aberta)
+      const texto = mensagemCustom
+        ? `${mensagemCustom}\n\n${checklistLink}`
+        : `Lembrete: preencha o checklist "${checklistTitulo}"\n\n${checklistLink}`;
+      result = await enviarMensagem(trimmed, texto);
+    }
+
     if (result.ok) {
       enviados++;
     } else {

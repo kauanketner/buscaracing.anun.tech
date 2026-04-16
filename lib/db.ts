@@ -462,7 +462,17 @@ function initSchema(db: Database.Database): void {
   const seedKeys = [
     'logo', 'telefone', 'whatsapp', 'email', 'endereco',
     'hero_img', 'cat_rua_img', 'cat_offroad_img', 'cat_quad_img', 'cat_infantil_img',
+    'wts_from', 'wts_template_id',
   ];
+  // Seed WTS defaults if empty
+  const setDefault = (k: string, v: string) => {
+    const existing = db.prepare('SELECT valor FROM configuracoes WHERE chave=?').get(k) as { valor: string } | undefined;
+    if (!existing || !existing.valor) {
+      db.prepare("INSERT INTO configuracoes(chave, valor) VALUES(?, ?) ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor").run(k, v);
+    }
+  };
+  setDefault('wts_from', '551151073435');
+  setDefault('wts_template_id', '58f53_checklistlembrete');
   for (const k of seedKeys) {
     insert.run(k);
   }
