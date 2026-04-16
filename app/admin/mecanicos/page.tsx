@@ -313,7 +313,7 @@ export default function MecanicosPage() {
             <code>{fullLink || '(gerando…)'}</code>
             <button
               type="button"
-              className={styles.btnGhost}
+              className={`${styles.btn} ${styles.btnGhost}`}
               onClick={() => {
                 if (fullLink) {
                   navigator.clipboard.writeText(fullLink);
@@ -321,13 +321,21 @@ export default function MecanicosPage() {
                 }
               }}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="9" width="13" height="13" rx="1" stroke="currentColor" strokeWidth="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               Copiar
             </button>
             <button
               type="button"
-              className={styles.btnDanger}
+              className={`${styles.btn} ${styles.btnGhost} ${styles.btnGhostDanger}`}
               onClick={() => setConfirmRotate(true)}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               Rotacionar
             </button>
           </div>
