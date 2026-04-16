@@ -12,6 +12,9 @@ type Vendedor = {
   telefone: string;
   email: string;
   ativo: number;
+  tipo?: string;
+  pin_ativo?: number;
+  has_pin?: number;
 };
 
 const IMG_KEYS: { key: string; label: string }[] = [
@@ -54,6 +57,7 @@ export default function ConfigPage() {
   const [novoVendedorTelefone, setNovoVendedorTelefone] = useState('');
   const [novoVendedorEmail, setNovoVendedorEmail] = useState('');
   const [savingVendedor, setSavingVendedor] = useState(false);
+  const [vendedorSlug, setVendedorSlug] = useState('');
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,6 +90,10 @@ useEffect(() => {
         setEmail(cfg.email || '');
         setEndereco(cfg.endereco || '');
         await loadVendedores();
+        // Load vendedor slug
+        fetch('/api/admin/vendedores/slug').then(r => r.json()).then(d => {
+          if (!cancelled && d?.slug) setVendedorSlug(d.slug);
+        }).catch(() => {});
       } catch {
         if (!cancelled) showToast('Erro ao carregar configurações', 'error');
       } finally {
@@ -366,9 +374,29 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
       <section className={styles.configSection}>
         <h2 className={styles.configSectionTitle}>Vendedores</h2>
         <p style={{ fontSize: '0.85rem', color: '#777', margin: '0 0 1rem' }}>
-          Cadastre os vendedores da loja. Ao registrar uma venda na tela de motos, você seleciona
-          qual vendedor realizou a venda.
+          Cadastre os vendedores da loja. Vendedores internos com PIN ativo podem acessar o app do vendedor.
         </p>
+        {vendedorSlug && (
+          <div style={{ background: '#fafaf7', border: '1px solid #e4e4e0', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.72rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+              Link do app vendedor:
+            </span>
+            <code style={{ fontSize: '0.82rem', color: '#27367D', flex: 1, minWidth: 200 }}>
+              {typeof window !== 'undefined' ? `${window.location.origin}/v/${vendedorSlug}` : ''}
+            </code>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnGhost}`}
+              style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/v/${vendedorSlug}`);
+                showToast('Link copiado', 'success');
+              }}
+            >
+              Copiar
+            </button>
+          </div>
+        )}
 
         <form onSubmit={addVendedor} style={{ marginBottom: '1.25rem' }}>
           <div className={styles.formRow}>
@@ -462,6 +490,27 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
                       </span>
                     </td>
                     <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right' }}>
+                      {v.ativo && v.tipo !== 'externo' && (
+                        <button
+                          className={`${styles.btn} ${styles.btnPrimary}`}
+                          style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: 4 }}
+                          onClick={async () => {
+                            try {
+                              const r = await fetch(`/api/admin/vendedores/${v.id}/pin`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ gerar: true }),
+                              });
+                              if (!r.ok) throw new Error('fail');
+                              const d = await r.json();
+                              showToast(`PIN gerado: ${d.pin} — compartilhe com ${v.nome}`, 'success');
+                              await loadVendedores();
+                            } catch { showToast('Erro ao gerar PIN', 'error'); }
+                          }}
+                        >
+                          {v.pin_ativo ? 'Trocar PIN' : 'Gerar PIN'}
+                        </button>
+                      )}
                       <button
                         className={`${styles.btn} ${styles.btnGhost}`}
                         style={{ padding: '4px 10px', fontSize: '0.75rem', marginRight: 4 }}

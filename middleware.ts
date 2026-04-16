@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_COOKIE = 'admin_session';
 const MECANICO_COOKIE = 'mecanico_session';
+const VENDEDOR_COOKIE = 'vendedor_session';
 
 function hasAdminCookie(request: NextRequest): boolean {
   const token = request.cookies.get(ADMIN_COOKIE)?.value;
@@ -13,6 +14,11 @@ function hasMecanicoCookie(request: NextRequest): boolean {
   return !!token && token.length > 0;
 }
 
+function hasVendedorCookie(request: NextRequest): boolean {
+  const token = request.cookies.get(VENDEDOR_COOKIE)?.value;
+  return !!token && token.length > 0;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -21,6 +27,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   if (pathname === '/api/mecanico/login' || pathname === '/api/mecanico/logout') {
+    return NextResponse.next();
+  }
+  if (pathname === '/api/vendedor/login' || pathname === '/api/vendedor/logout') {
     return NextResponse.next();
   }
 
@@ -37,8 +46,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // --- Vendedor API: requires vendedor_session ---
+  if (pathname.startsWith('/api/vendedor/')) {
+    if (!hasVendedorCookie(request)) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
   // --- Mechanic UI: /m/* passa direto, a page valida slug e sessão ---
   if (pathname.startsWith('/m/')) {
+    return NextResponse.next();
+  }
+
+  // --- Vendedor UI: /v/* passa direto ---
+  if (pathname.startsWith('/v/')) {
     return NextResponse.next();
   }
 
@@ -64,6 +86,8 @@ export const config = {
     '/api/admin/:path*',
     '/api/auth',
     '/m/:path*',
+    '/v/:path*',
     '/api/mecanico/:path*',
+    '/api/vendedor/:path*',
   ],
 };

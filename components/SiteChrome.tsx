@@ -10,7 +10,8 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   const isBare =
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/m/') || pathname === '/m' ||
-    pathname?.startsWith('/c/') || pathname === '/c';
+    pathname?.startsWith('/c/') || pathname === '/c' ||
+    pathname?.startsWith('/v/') || pathname === '/v';
 
   if (isBare) {
     return <>{children}</>;

@@ -287,6 +287,24 @@ function initSchema(db: Database.Database): void {
   };
   addVendCol('tipo', "TEXT DEFAULT 'interno'");   // interno | externo
   addVendCol('pix_chave', "TEXT DEFAULT ''");
+  // Fase 5: PIN access for vendedor PWA
+  addVendCol('pin_hash', "TEXT DEFAULT ''");
+  addVendCol('pin_ativo', 'INTEGER DEFAULT 0');
+  addVendCol('pin_trocado_em', 'TEXT');
+
+  // ----- Fase 5: vendedor login attempts -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS vendedor_login_attempts (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      ip          TEXT    NOT NULL,
+      vendedor_id INTEGER,
+      success     INTEGER NOT NULL,
+      created_at  TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_vend_login_ip_time
+      ON vendedor_login_attempts(ip, created_at);
+  `);
+  db.exec("DELETE FROM vendedor_login_attempts WHERE created_at < datetime('now','-7 days')");
 
   // ----- Fase 2: vendas, reservas, comissoes, lancamentos -----
   db.exec(`
@@ -412,6 +430,18 @@ function initSchema(db: Database.Database): void {
     const slug = generateMecanicoSlug();
     db.prepare(
       "INSERT INTO configuracoes(chave, valor) VALUES('mecanico_url_slug', ?) " +
+        'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
+    ).run(slug);
+  }
+
+  // Seed slug do módulo /v (vendedor PWA)
+  const vendedorSlug = db
+    .prepare("SELECT valor FROM configuracoes WHERE chave='vendedor_url_slug'")
+    .get() as { valor: string } | undefined;
+  if (!vendedorSlug || !vendedorSlug.valor) {
+    const slug = generateMecanicoSlug(); // reuse same slug generator
+    db.prepare(
+      "INSERT INTO configuracoes(chave, valor) VALUES('vendedor_url_slug', ?) " +
         'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
     ).run(slug);
   }
