@@ -5,6 +5,7 @@ import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
 import MotoModal from './MotoModal';
+import EntradaModal from './EntradaModal';
 import DeleteConfirm from './DeleteConfirm';
 import SellModal from './SellModal';
 import styles from './page.module.css';
@@ -62,6 +63,8 @@ export default function MotosPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  const [entradaOpen, setEntradaOpen] = useState(false);
+
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [sellTarget, setSellTarget] = useState<{ id: number; label: string } | null>(null);
 
@@ -89,16 +92,13 @@ export default function MotosPage() {
     headerCtx.setActions(
       <button
         className={`${styles.btn} ${styles.btnPrimary}`}
-        onClick={() => {
-          setEditingId(null);
-          setModalOpen(true);
-        }}
+        onClick={() => setEntradaOpen(true)}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
-        Nova Moto
+        Chegou moto
       </button>,
     );
     return () => headerCtx.setActions(null);
@@ -391,6 +391,16 @@ export default function MotosPage() {
           </span>
         </div>
       </div>
+
+      {entradaOpen && (
+        <EntradaModal
+          onClose={() => setEntradaOpen(false)}
+          onSaved={async () => {
+            setEntradaOpen(false);
+            await reload();
+          }}
+        />
+      )}
 
       {modalOpen && (
         <MotoModal
