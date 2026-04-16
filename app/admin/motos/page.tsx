@@ -176,6 +176,22 @@ export default function MotosPage() {
     }
   };
 
+  const mandaPraOficina = async (id: number) => {
+    try {
+      const r = await fetch(`/api/motos/${id}/oficina`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!r.ok) throw new Error('fail');
+      const d = await r.json();
+      showToast(`OS #${d.ordem_id} criada — moto em oficina`, 'success');
+      await reload();
+    } catch {
+      showToast('Erro ao enviar pra oficina', 'error');
+    }
+  };
+
   return (
     <>
       <div className={styles.wrap}>
@@ -297,12 +313,20 @@ export default function MotosPage() {
                       <div className={styles.actionsCell}>
                         {/* Primary action per estado */}
                         {(m.estado === 'avaliacao' || m.estado === 'disponivel') && (
-                          <button
-                            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
-                            onClick={() => transitionEstado(m.id, 'anunciada', 'Moto anunciada!')}
-                          >
-                            Anunciar
-                          </button>
+                          <>
+                            <button
+                              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                              onClick={() => mandaPraOficina(m.id)}
+                            >
+                              Oficina
+                            </button>
+                            <button
+                              className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
+                              onClick={() => transitionEstado(m.id, 'anunciada', 'Moto anunciada!')}
+                            >
+                              Anunciar
+                            </button>
+                          </>
                         )}
                         {m.estado === 'anunciada' && (
                           <button
