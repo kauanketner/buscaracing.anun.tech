@@ -275,6 +275,83 @@ function initSchema(db: Database.Database): void {
     UPDATE motos SET origem='consignada' WHERE tipo_entrada='consignada' AND (origem='compra_direta' OR origem IS NULL OR origem='');
   `);
 
+  // ----- Fase 2: vendedores extra columns -----
+  const existingVendCols = new Set(
+    (db.prepare('PRAGMA table_info(vendedores)').all() as { name: string }[]).map((c) => c.name),
+  );
+  const addVendCol = (name: string, definition: string): void => {
+    if (!existingVendCols.has(name)) {
+      db.exec(`ALTER TABLE vendedores ADD COLUMN ${name} ${definition}`);
+      existingVendCols.add(name);
+    }
+  };
+  addVendCol('tipo', "TEXT DEFAULT 'interno'");   // interno | externo
+  addVendCol('pix_chave', "TEXT DEFAULT ''");
+
+  // ----- Fase 2: vendas, reservas, comissoes, lancamentos -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS vendas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      moto_id         INTEGER NOT NULL REFERENCES motos(id),
+      comprador_nome  TEXT NOT NULL,
+      comprador_tel   TEXT DEFAULT '',
+      comprador_email TEXT DEFAULT '',
+      vendedor_id     INTEGER REFERENCES vendedores(id),
+      vendedor_tipo   TEXT DEFAULT 'interno',
+      valor_venda     REAL NOT NULL,
+      valor_sinal     REAL DEFAULT 0,
+      forma_pagamento TEXT DEFAULT '',
+      troca_moto_id   INTEGER,
+      troca_valor     REAL,
+      comissao_valor  REAL DEFAULT 0,
+      observacoes     TEXT DEFAULT '',
+      data_venda      TEXT DEFAULT (date('now','localtime')),
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_vendas_moto ON vendas(moto_id);
+    CREATE INDEX IF NOT EXISTS idx_vendas_data ON vendas(data_venda);
+
+    CREATE TABLE IF NOT EXISTS reservas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      moto_id         INTEGER NOT NULL REFERENCES motos(id),
+      cliente_nome    TEXT NOT NULL,
+      cliente_tel     TEXT DEFAULT '',
+      valor_sinal     REAL DEFAULT 500,
+      dias_prazo      INTEGER DEFAULT 7,
+      data_inicio     TEXT DEFAULT (date('now','localtime')),
+      data_expira     TEXT,
+      status          TEXT DEFAULT 'ativa',
+      venda_id        INTEGER,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reservas_moto ON reservas(moto_id);
+    CREATE INDEX IF NOT EXISTS idx_reservas_status ON reservas(status);
+
+    CREATE TABLE IF NOT EXISTS comissoes (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      venda_id        INTEGER NOT NULL REFERENCES vendas(id),
+      vendedor_id     INTEGER NOT NULL REFERENCES vendedores(id),
+      valor           REAL NOT NULL,
+      pago            INTEGER DEFAULT 0,
+      data_pagamento  TEXT,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS lancamentos (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo            TEXT NOT NULL,
+      categoria       TEXT NOT NULL,
+      valor           REAL NOT NULL,
+      descricao       TEXT DEFAULT '',
+      ref_tipo        TEXT,
+      ref_id          INTEGER,
+      data            TEXT DEFAULT (date('now','localtime')),
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_lanc_data ON lancamentos(data);
+    CREATE INDEX IF NOT EXISTS idx_lanc_ref ON lancamentos(ref_tipo, ref_id);
+  `);
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"
