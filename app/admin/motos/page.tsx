@@ -7,8 +7,8 @@ import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-esta
 import MotoModal from './MotoModal';
 import EntradaModal from './EntradaModal';
 import ReservaModal from './ReservaModal';
+import VendaModal from './VendaModal';
 import DeleteConfirm from './DeleteConfirm';
-import SellModal from './SellModal';
 import styles from './page.module.css';
 
 const CATS: Record<string, string> = {
@@ -68,7 +68,7 @@ export default function MotosPage() {
   const [reservaTarget, setReservaTarget] = useState<{ id: number; label: string } | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
-  const [sellTarget, setSellTarget] = useState<{ id: number; label: string } | null>(null);
+  const [sellTarget, setSellTarget] = useState<{ id: number; label: string; preco: number | null } | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -343,7 +343,7 @@ export default function MotosPage() {
                             <button
                               className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
                               onClick={() =>
-                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
                               }
                             >
                               Vender
@@ -355,7 +355,7 @@ export default function MotosPage() {
                             <button
                               className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
                               onClick={() =>
-                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
+                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
                               }
                             >
                               Fechar venda
@@ -491,12 +491,16 @@ export default function MotosPage() {
       )}
 
       {sellTarget && (
-        <SellModal
+        <VendaModal
           motoId={sellTarget.id}
           motoLabel={sellTarget.label}
+          motoPreco={sellTarget.preco}
           onClose={() => setSellTarget(null)}
-          onSold={onSold}
-          onError={(m) => showToast(m, 'error')}
+          onSaved={async () => {
+            setSellTarget(null);
+            showToast('Venda registrada!', 'success');
+            await reload();
+          }}
         />
       )}
     </>
