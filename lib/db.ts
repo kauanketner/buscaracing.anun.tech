@@ -394,6 +394,15 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_consig_status ON consignacoes(status);
   `);
 
+  // ----- Fase 6: token column on vendas (comprador portal) -----
+  const existingVendasCols = new Set(
+    (db.prepare('PRAGMA table_info(vendas)').all() as { name: string }[]).map((c) => c.name),
+  );
+  if (!existingVendasCols.has('token')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN token TEXT DEFAULT ''");
+    db.exec('CREATE INDEX IF NOT EXISTS idx_vendas_token ON vendas(token)');
+  }
+
   // Seed default configuration keys
   const insert = db.prepare(
     "INSERT OR IGNORE INTO configuracoes(chave, valor) VALUES(?, '')"

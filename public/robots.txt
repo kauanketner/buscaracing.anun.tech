@@ -6,3 +6,4 @@ Disallow: /api/auth/
 Disallow: /m/
 Disallow: /c/
 Disallow: /v/
+Disallow: /compra/

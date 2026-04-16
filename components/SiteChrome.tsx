@@ -11,7 +11,8 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/m/') || pathname === '/m' ||
     pathname?.startsWith('/c/') || pathname === '/c' ||
-    pathname?.startsWith('/v/') || pathname === '/v';
+    pathname?.startsWith('/v/') || pathname === '/v' ||
+    pathname?.startsWith('/compra/') || pathname === '/compra';
 
   if (isBare) {
     return <>{children}</>;

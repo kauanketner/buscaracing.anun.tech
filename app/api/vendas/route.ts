@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { ESTADOS_PUBLICOS, type MotoEstado } from '@/lib/moto-estados';
@@ -116,6 +117,10 @@ export async function POST(request: NextRequest) {
         );
       const vendaId = Number(vendaResult.lastInsertRowid);
 
+      // Generate comprador portal token
+      const compradorToken = crypto.randomBytes(16).toString('hex');
+      db.prepare('UPDATE vendas SET token=? WHERE id=?').run(compradorToken, vendaId);
+
       // 2. Transition moto → vendida (or em_revisao if consignada)
       const newState = moto.origem === 'consignada' ? 'em_revisao' : 'vendida';
       db.prepare('UPDATE motos SET estado=?, ativo=0, vendida=1, vendedor_id=?, comprador_nome=?, valor_venda_final=?, data_venda=date(\'now\',\'localtime\') WHERE id=?')
@@ -203,7 +208,7 @@ export async function POST(request: NextRequest) {
         ).run(body.troca_valor, `Troca (avaliação) — ${trocaNome}`, trocaMotoId);
       }
 
-      return { vendaId, trocaMotoId };
+      return { vendaId, trocaMotoId, compradorToken };
     });
 
     const result = tx();
@@ -211,6 +216,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       venda_id: result.vendaId,
       troca_moto_id: result.trocaMotoId,
+      comprador_token: result.compradorToken,
     });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';

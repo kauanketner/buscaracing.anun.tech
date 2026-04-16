@@ -24,6 +24,7 @@ type Venda = {
   comissao_valor: number;
   observacoes: string;
   data_venda: string;
+  token: string;
 };
 
 const FORMA_LABELS: Record<string, string> = {
@@ -88,6 +89,7 @@ export default function VendasPage() {
               <th>Forma</th>
               <th>Comissão</th>
               <th>Data</th>
+              <th>Link</th>
             </tr>
           </thead>
           <tbody>
@@ -132,6 +134,26 @@ export default function VendasPage() {
                   {v.data_venda
                     ? new Date(v.data_venda + 'T00:00:00').toLocaleDateString('pt-BR')
                     : '—'}
+                </td>
+                <td>
+                  {v.token ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const link = `${window.location.origin}/compra/${v.token}`;
+                        navigator.clipboard.writeText(link);
+                        showToast('Link copiado!', 'success');
+                      }}
+                      style={{
+                        background: 'none', border: '1px solid #e4e4e0', padding: '4px 10px',
+                        fontSize: '0.72rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif",
+                        fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                        color: '#27367D',
+                      }}
+                    >
+                      Copiar link
+                    </button>
+                  ) : '—'}
                 </td>
               </tr>
             ))}
