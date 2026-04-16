@@ -28,9 +28,16 @@ type Stats = {
     acima90: number;
   };
   por_categoria: CatRow[];
-  vendas_periodo: { count: number; receita: number };
+  vendas_periodo: { count: number; receita: number; comissoes: number };
+  margem_bruta: number;
+  comissoes_pendentes: number;
+  repasses_pendentes: number;
+  reservas_ativas: number;
+  consignadas_ativas: number;
   vendas_por_categoria: CatRow[];
   top_vendedores: VendedorRow[];
+  feed: { tipo: string; msg: string; data: string }[];
+  alertas: { tipo: string; msg: string }[];
 };
 
 type Preset = 'mes' | 'mes_anterior' | 'ultimos30' | 'ano' | 'custom';
@@ -133,8 +140,39 @@ export default function DashboardPage() {
   const vendasCats = stats?.vendas_por_categoria ?? [];
   const maxVendaCat = Math.max(1, ...vendasCats.map(getN));
 
+  const feedItems = stats?.feed ?? [];
+  const alertItems = stats?.alertas ?? [];
+
   return (
     <>
+      {/* Alertas */}
+      {alertItems.length > 0 && (
+        <div className={styles.alertsWrap}>
+          {alertItems.map((a, i) => (
+            <div key={i} className={styles.alertItem}>
+              <span className={styles.alertIcon}>
+                {a.tipo === 'reserva' ? '⏰' : '📦'}
+              </span>
+              {a.msg}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Feed de atividade */}
+      {feedItems.length > 0 && (
+        <div className={styles.feedWrap}>
+          <div className={styles.feedTitle}>Atividade recente</div>
+          {feedItems.map((f, i) => (
+            <div key={i} className={styles.feedItem}>
+              <span className={styles.feedDot} data-tipo={f.tipo} />
+              <span className={styles.feedMsg}>{f.msg}</span>
+              <span className={styles.feedDate}>{f.data ? fmtDateBR(f.data) : ''}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Filtro de período */}
       <div className={styles.periodBar}>
         <div className={styles.periodPresets}>
@@ -247,6 +285,37 @@ export default function DashboardPage() {
           <div className={styles.statCardValue}>
             {stats ? stats.top_vendedores.length : '—'}
           </div>
+        </div>
+      </div>
+
+      {/* Financial KPIs */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statCardLabel}>Margem bruta (período)</div>
+          <div className={styles.statCardValue} style={{ color: '#155724' }}>
+            {stats ? fmtBRL(stats.margem_bruta) : '—'}
+          </div>
+          <div className={styles.statCardSub}>vendas próprias (exclui consignadas)</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statCardLabel}>Comissões a pagar</div>
+          <div className={styles.statCardValue} style={{ color: stats && stats.comissoes_pendentes > 0 ? '#856404' : undefined }}>
+            {stats ? fmtBRL(stats.comissoes_pendentes) : '—'}
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statCardLabel}>Repasses pendentes</div>
+          <div className={styles.statCardValue} style={{ color: stats && stats.repasses_pendentes > 0 ? '#856404' : undefined }}>
+            {stats ? fmtBRL(stats.repasses_pendentes) : '—'}
+          </div>
+          <div className={styles.statCardSub}>consignadas vendidas</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statCardLabel}>Reservas / Consignadas</div>
+          <div className={styles.statCardValue}>
+            {stats ? `${stats.reservas_ativas} / ${stats.consignadas_ativas}` : '—'}
+          </div>
+          <div className={styles.statCardSub}>ativas agora</div>
         </div>
       </div>
 
