@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ error: 'PIN incorreto' }, { status: 401 });
     }
-    const res = NextResponse.json({ id: result.tecnico.id, nome: result.tecnico.nome });
+    const res = NextResponse.json({
+      ok: true,
+      tecnico: { id: result.tecnico.id, nome: result.tecnico.nome },
+    });
     res.cookies.set(TECNICO_COOKIE, result.token, {
       httpOnly: true,
       path: '/',
