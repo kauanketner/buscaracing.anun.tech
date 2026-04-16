@@ -1,305 +1,319 @@
 # Busca Racing — Contexto do Projeto
 
-> **Este arquivo é mantido para que qualquer IA (ou humano novo) entenda o projeto em 5 minutos.**
-> Sempre que o projeto mudar de forma estrutural (novo módulo, nova tabela, mudança de deploy, etc.), atualize este README no mesmo commit.
+> **Este arquivo e mantido para que qualquer IA (ou humano novo) entenda o projeto em 5 minutos.**
 
 ---
 
-## 1. O que é
+## 1. O que e
 
-Site e back-office da **Busca Racing**, loja de motos.
+Site + sistema de gestao completo da **Busca Racing**, loja de motos.
 
-- Site público: <https://buscaracing.com>
-- Admin: <https://buscaracing.com/admin> (senha única)
+- Site publico: <https://buscaracing.com>
+- Admin: <https://buscaracing.com/admin> (senha unica)
 
-Domínios funcionais:
-- **Catálogo de motos** (anúncios públicos + controle interno de estoque)
-- **Blog** (posts com editor rich-text)
-- **Oficina** (ordens de serviço, histórico, garantias)
-- **Configuração do site** (logo, hero, banners, contato)
-- **PWA do mecânico** (`/m/<slug>`) — app mobile instalável onde cada mecânico entra por PIN e atualiza as OSs que lhe foram atribuídas
+### Dominios funcionais
+
+| Area | Descricao |
+|------|-----------|
+| **Estoque** | Ciclo de vida completo da moto: entrada (compra/consignada/troca) → oficina → anuncio → reserva → venda → entrega |
+| **Vendas** | Registro de vendas com troca, reservas (R$500/7d), comissoes (R$200 interno / R$400 externo) |
+| **Consignadas** | Motos de terceiros com margem 12%, repasse automatico, portal publico do consignante |
+| **Oficina** | Ordens de servico, historico, garantias, link automatico com estoque |
+| **Financeiro** | Fluxo de caixa automatico (lancamentos gerados por vendas/compras/comissoes/repasses) |
+| **CRM** | Visao unificada de clientes (compradores + oficina + leads + reservas) |
+| **Contratos** | Geracao de PDF: compra, consignacao, venda, OS, reserva, entrega |
+| **Blog** | Posts com editor rich-text |
+| **Config** | Logo, imagens, contatos, vendedores |
+
+### Apps moveis (PWAs)
+
+| App | URL | Auth | Funcao |
+|-----|-----|------|--------|
+| **Mecanico** | `/m/<slug>` | PIN 6 digitos | Ver e atualizar OSs atribuidas |
+| **Vendedor** | `/v/<slug>` | PIN 6 digitos | Ver motos, registrar leads, ver comissoes |
+| **Consignante** | `/c/<token>` | Token unico (sem login) | Acompanhar status da moto consignada |
+| **Comprador** | `/compra/<token>` | Token unico (sem login) | Ver dados da compra, agendar revisao |
 
 ---
 
 ## 2. Stack
 
 | Camada | Tecnologia |
-| --- | --- |
+|--------|-----------|
 | Framework | **Next.js 14.2.29** (App Router, `output: 'standalone'`) |
-| UI | React 18, **CSS Modules** (plain CSS quando precisa de seletor global) |
-| Tipos | TypeScript **strict** (`tsconfig.json` target ES5, módulos ESM) |
+| UI | React 18, **CSS Modules** (plain CSS para seletores globais) |
+| Tipos | TypeScript **strict** (target ES5) |
 | Banco | **SQLite** via `better-sqlite3` (WAL mode) |
+| PDF | **pdfkit** (geracao server-side) |
 | Editor | TipTap (blog) |
-| Imagens | `sharp` (conversão WebP) |
-| Auth | Senha única do admin via cookie HTTP-only (`admin_session`) |
+| Imagens | `sharp` (conversao WebP) |
+| Auth | Cookie HTTP-only: `admin_session`, `mecanico_session`, `vendedor_session` |
 | Deploy | Docker (multi-stage) → VM com `sitectl` + Caddy |
-| CI/CD | **GitHub Actions** (push em `main` → SSH forced-command → `sitectl deploy`) |
+| CI/CD | **GitHub Actions** (push em `main` → deploy automatico) |
 
 ---
 
 ## 3. Estrutura de pastas
 
 ```
-app/                      App Router do Next.js
-  page.tsx                  Home pública
-  layout.tsx                Layout público
-  globals.css               Estilos globais + reset
-  moto/[id]/                Página de anúncio (pública)
-  pecas/ acessorios/ produtos/
-  blog/[slug]/
-  contato/  venda-sua-moto/
+app/
+  page.tsx                    Home publica
+  layout.tsx                  Layout publico (SiteChrome: header/footer)
+  moto/[id]/                  Pagina de anuncio
+  blog/[slug]/ contato/ pecas/ acessorios/ produtos/
   catalogo.xml/ sitemap.ts/ robots.ts
-  admin/                    Back-office (client-side gate via cookie)
-    layout.tsx              Shell com sidebar + header + HeaderActionsContext
-    page.tsx                Dashboard
-    motos/                  CRUD de anúncios + estoque
-    oficina/                OS, status, histórico, garantia
-      page.tsx              Lista
-      [id]/page.tsx         Detalhe da OS (ação primária + kebab ⋯)
-      OrdemModal.tsx        Criar/editar OS (modal)
-      AtualizarStatusModal.tsx
-      FecharModal.tsx       Fluxo de finalização com valor_final
-      GarantiaModal.tsx     Cria OS-garantia a partir de uma finalizada
-    mecanicos/               Gerenciar acesso dos mecânicos ao PWA (PIN + slug)
-    blog/ config/ login/
-  m/[slug]/                 PWA do mecânico (mobile) — valida slug no layout
-    page.tsx                Redirect (tem cookie → ordens, senão → login)
-    login/page.tsx          PIN de 4-8 dígitos
-    ordens/page.tsx         Lista das OSs atribuídas ao mecânico logado
-    os/[id]/page.tsx        Detalhe + mudar status + adicionar nota
-    mecanico.css             Estilos globais do PWA (mobile-first)
-  api/                      Route handlers
-    auth/route.ts             POST login/logout + GET isAdmin
-    motos/  motos/[id]/  motos/selector/
-    oficina/  oficina/[id]/
-    config/  config/mecanicos/ vendedores/ logo/ image/ images/
-    admin/motos/              (rotas sensíveis protegidas pelo matcher)
-    admin/mecanicos/           Lista mecânicos, set/revoke PIN, rotate slug
-    mecanico/                  APIs do PWA (login, me, logout, ordens, manifest)
-    fotos/  upload/  marcas/  stats/  blog/
 
-components/               Compartilhados (public + admin)
-  Header, Footer, SiteChrome, MotoCard, BlogCard,
-  BlogEditor, Toast, JsonLd
+  admin/                      Back-office (cookie gate)
+    layout.tsx                Shell: sidebar + header + HeaderActionsContext
+    page.tsx                  Dashboard (feed + KPIs + alertas)
+    motos/                    ESTOQUE (ciclo de vida da moto)
+      page.tsx                Lista com filtro por estado
+      MotoModal.tsx           Editar moto
+      EntradaModal.tsx        Wizard "Chegou moto" (3 origens)
+      ReservaModal.tsx        Reservar moto (sinal R$500)
+      VendaModal.tsx          Fechar venda (troca + comissao)
+    oficina/                  OFICINA (OS)
+      page.tsx                Lista de OSs
+      [id]/page.tsx           Detalhe (status + kebab + timeline)
+      OrdemModal.tsx          Criar/editar OS
+      AtualizarStatusModal.tsx / FecharModal.tsx / GarantiaModal.tsx
+    vendas/                   VENDAS (historico)
+      page.tsx                Lista + cards resumo + links portal comprador
+    consignacoes/             CONSIGNADAS
+      page.tsx                Lista + repasses + link consignante
+    financeiro/               FINANCEIRO
+      page.tsx                Lancamentos + comissoes + repasses (3 abas)
+    clientes/                 CRM
+      page.tsx                Lista unificada com timeline expandivel
+    mecanicos/                MECANICOS (CRUD + PIN + slug)
+    blog/ config/ login/
+
+  m/[slug]/                   PWA MECANICO
+    login/ ordens/ os/[id]/
+  v/[slug]/                   PWA VENDEDOR
+    login/ motos/ leads/ perfil/ BottomNav.tsx
+  c/[token]/                  PORTAL CONSIGNANTE
+  compra/[token]/             PORTAL COMPRADOR
+
+  api/
+    auth/                     Login/logout admin
+    motos/ motos/[id]/        CRUD motos + PATCH estado + oficina + reserva + venda
+    oficina/ oficina/[id]/    CRUD OS (auto-transicao moto ao finalizar)
+    vendas/                   GET lista + POST criar venda
+    vendas/public/[token]/    Portal comprador (publico) + agendar revisao
+    consignacoes/             CRUD consignacoes
+    consignacoes/public/[token]/  Portal consignante (publico)
+    financeiro/               Lancamentos + comissoes + repasses
+    financeiro/comissao/[id]/ Marcar comissao paga
+    financeiro/repasse/[id]/  Marcar repasse pago
+    contratos/[tipo]/[id]/    Gerar PDF de contrato
+    vendedor/                 APIs do PWA vendedor (login, me, motos, leads)
+    mecanico/                 APIs do PWA mecanico (login, me, ordens, manifest)
+    admin/mecanicos/          CRUD mecanicos + PIN + slug
+    admin/vendedores/         PIN vendedores + slug
+    config/ stats/ fotos/ upload/ marcas/ blog/
+
+components/
+  Header, Footer, SiteChrome  Layout publico
+  Toast                       Sistema de notificacoes
+  ContratoPdfButton            Botao reutilizavel para gerar PDF
+  MotoCard, BlogCard, JsonLd   Cards e SEO
 
 lib/
-  db.ts                   Singleton SQLite + migrations + `generateMecanicoSlug`
-  auth.ts                 verifyPassword / createSession / isAuthenticated
-  mecanico-auth.ts         PIN scrypt + HMAC cookie + rate limit + slug helper
-  motos.ts                Helpers de CRUD de moto
-  oficina-status.ts       Taxonomia de status + validação de transições
-  upload.ts               Upload/conversão WebP via sharp
+  db.ts                       Singleton SQLite + todas as migrations (idempotentes)
+  auth.ts                     Auth admin (senha + cookie)
+  mecanico-auth.ts            PIN scrypt + HMAC cookie + rate limit (mecanico)
+  vendedor-auth.ts            PIN scrypt + HMAC cookie + rate limit (vendedor)
+  moto-estados.ts             Estados da moto + labels + cores + constantes
+  motos.ts                    Helpers CRUD moto
+  oficina-status.ts           Taxonomia de status OS + validacao
+  pdf-contrato.ts             Geracao de 6 tipos de contrato PDF (pdfkit)
+  upload.ts                   Upload/conversao WebP
 
-middleware.ts             Protege /admin/*, /api/admin/*, /api/mecanico/* (só checagem de cookie; HMAC + DB revalidados no handler)
-public/                   Estáticos (favicon, ícones, logos default)
-docs/plans/               Design docs e planos (este projeto usa brainstorming → plano)
-.github/workflows/        deploy.yml (CI/CD)
+middleware.ts                 Protege /admin/*, /api/admin/*, /api/mecanico/*, /api/vendedor/*
 ```
-
-Aliases: `@/*` → raiz (ex.: `@/lib/db`).
 
 ---
 
 ## 4. Banco de dados
 
-Arquivo: `buscaracing.db` (em dev na raiz; em prod em `/data/buscaracing.db` dentro do container). Sempre **WAL** (há `.db-wal` e `.db-shm`).
+Arquivo: `buscaracing.db`. Schema criado/migrado em `lib/db.ts` (sempre idempotente).
 
-Schema é criado/migrado em `lib/db.ts → initSchema()`, **sempre idempotente** (`CREATE TABLE IF NOT EXISTS`, `ALTER TABLE` guardado por `PRAGMA table_info`). Nunca escreva migrations destrutivas.
+### Tabelas
 
-### Tabelas principais
+| Tabela | Funcao |
+|--------|--------|
+| `motos` | Estoque. Campos publicos + admin-only (`MOTOS_ADMIN_ONLY_COLS`). Colunas-chave: `estado` (avaliacao/em_oficina/disponivel/anunciada/reservada/vendida/em_revisao/entregue/retirada), `origem` (compra_direta/consignada/troca) |
+| `fotos` | Galeria de cada moto (`moto_id`, `ordem`) |
+| `vendas` | Registro de vendas: moto_id, comprador, vendedor, valor, forma_pgto, troca, comissao, `token` (portal comprador) |
+| `reservas` | Sinais R$500 com prazo 7d: moto_id, cliente, valor_sinal, data_expira, status (ativa/convertida/expirada/cancelada) |
+| `consignacoes` | Motos de terceiros: dono, margem 12%, custo_revisao, valor_repasse, `token` (portal consignante), status |
+| `comissoes` | Comissao por venda: vendedor_id, valor (200/400), pago flag |
+| `lancamentos` | Livro-caixa automatico: tipo (entrada/saida), categoria, valor, ref_tipo+ref_id |
+| `leads` | Clientes interessados: nome, tel, moto_id, vendedor_id, origem, status |
+| `oficina_ordens` | OS: cliente, moto (vinculada ou manual), servico, status, valores, datas |
+| `oficina_historico` | Timeline de mudancas de status + notas |
+| `vendedores` | Nome, tel, tipo (interno/externo), pin_hash, pin_ativo, pix_chave |
+| `mecanicos` | Nome, tel, especialidade, pin_hash, pin_ativo |
+| `posts` | Blog |
+| `configuracoes` | Chave/valor (logo, contatos, slugs dos PWAs) |
+| `mecanico_login_attempts` | Rate limit mecanico |
+| `vendedor_login_attempts` | Rate limit vendedor |
 
-**`motos`** — anúncios. Mistura campos públicos (preço, modelo, foto) com campos **admin-only** listados em `MOTOS_ADMIN_ONLY_COLS` (placa, chassi, renavam, valor_compra, dados de venda, etc.). Use `stripAdminFields()` antes de expor publicamente.
+### Ciclo de vida da moto (estado)
 
-**`fotos`** — galeria de cada moto (`moto_id FK`, `ordem`).
+```
+ENTRADA                           SAIDA
+  compra_direta ─┐                 ┌─ entregue
+  consignada   ──┼→ avaliacao      ├─ retirada (so consignada)
+  troca        ──┘      │
+                   [em_oficina] ← opcional
+                        │
+                   [disponivel]
+                        │
+                   [anunciada] → site publico
+                        │
+                   [reservada] ← R$500, 7 dias
+                        │
+                    [vendida]
+                        │
+              ┌─────────┴─────────┐
+              │ consignada        │ compra/troca
+              ▼                   ▼
+         [em_revisao]        [entregue]
+         (dono paga)
+              │
+         [entregue]
+```
 
-**`posts`** — blog (slug único, `publicado` flag, HTML rich-text).
-
-**`configuracoes`** — chave/valor (logo, hero, contatos, imagens de categoria).
-
-**`vendedores`** e **`mecanicos`** — cadastros simples (nome, telefone, email, `ativo`). `mecanicos` ganhou colunas `pin_hash` (scrypt, formato `scrypt:<salt_b64>:<hash_b64>`), `pin_ativo` e `pin_trocado_em` para o PWA do mecânico. Um mecânico com PIN ativo é alguém que loga no PWA em `/m/<slug>`.
-
-**`oficina_ordens`** — ordens de serviço.
-- Cliente: `cliente_nome / telefone / email`.
-- Moto: pode vincular do estoque (`moto_id FK → motos`) **ou** preencher manual (`moto_marca / moto_modelo / moto_ano / moto_placa / moto_km`).
-- Serviço: `servico_descricao`, `observacoes`, `mecanico` (texto, legado), `mecanico_id FK → mecanicos.id` (quem vê a OS no PWA), `valor_estimado`, `valor_final`.
-- Status: string validada por `lib/oficina-status.ts` (ver §6).
-- Datas: `data_entrada`, `data_prevista`, `data_conclusao`.
-- **Garantia:** `garantia_de_id` aponta pra uma OS finalizada anterior — quando o cliente retorna pelo mesmo problema, abre-se uma **nova OS** linkada.
-
-**`oficina_historico`** — uma linha por mudança de status (`status_anterior`, `status_novo`, `mensagem`, `autor`, `created_at`). Timeline no detalhe da OS renderiza daqui. Uma **nota** do mecânico usa a mesma tabela com `status_anterior == status_novo`.
-
-**`mecanico_login_attempts`** — auditoria/rate-limit de login do PWA (`ip`, `mecanico_id`, `success`, `created_at`). Limpeza automática de registros >7 dias no bootstrap do DB.
-
-**`configuracoes.mecanico_url_slug`** — chave única que guarda o slug atual do PWA. Rotacionar aqui invalida o link e o PWA instalado.
+Auto-transicoes:
+- OS finalizada + moto `em_oficina` → moto vira `disponivel`
+- OS finalizada + moto `em_revisao` → moto vira `entregue` + calcula custo_revisao no repasse
 
 ---
 
-## 5. Autenticação
+## 5. Autenticacao
 
-Dois modelos independentes, cada um com cookie próprio:
+### Admin (`admin_session`)
+- Senha unica via `ADMIN_PASSWORD` (default `Anuntech@10`)
+- Cookie HTTP-only, 24h
 
-### 5.1 Admin (`admin_session`)
-- Senha única compartilhada via `ADMIN_PASSWORD` (default `Anuntech@10`; em prod está setada).
-- `POST /api/auth { action: 'login', password }` → cookie HTTP-only, 24h, `sameSite=lax`.
-- Middleware bloqueia `/admin/:path*` e `/api/admin/:path*`. APIs de domínio (`/api/oficina`, `/api/motos`, …) revalidam **dentro do handler** via `isAuthenticated()`.
+### Mecanico (`mecanico_session`)
+- PIN 6 digitos (scrypt hash)
+- Cookie HMAC-SHA256, 30 dias
+- Rate limit: 5 falhas/15min por IP
+- URL: `/m/<slug>` (slug rotacionavel em `configuracoes.mecanico_url_slug`)
+- Env: `MECANICO_SESSION_SECRET` (obrigatoria em prod)
 
-### 5.2 Mecânico do PWA (`mecanico_session`)
-- **PIN por mecânico** (4-8 dígitos) armazenado como `scrypt:<salt_b64>:<hash_b64>` em `mecanicos.pin_hash`. Apenas o admin define/troca PINs — nunca ficam gravados em texto.
-- Sessão: cookie HTTP-only de 30 dias, assinado com HMAC-SHA256 do payload `<mecanico_id>.<exp_ms>.<nonce>` usando `MECANICO_SESSION_SECRET` (env; em dev tem fallback inseguro).
-- Rate limit: 5 tentativas falhas em 15 min por IP → 429. Auditado em `mecanico_login_attempts`.
-- Middleware em `/api/mecanico/*` só verifica **presença** do cookie (o middleware roda no runtime Edge, sem acesso ao DB); a validação HMAC + revalidação `mecanicos.ativo && pin_ativo` acontece em cada handler via `getMecanicoFromRequest()`.
-- URL do PWA: `/m/<slug>` onde `slug` é um hash base32 de 12 chars armazenado em `configuracoes.mecanico_url_slug`. Se o slug da URL não bate com o atual, retorna 404. O admin pode rotacionar o slug (invalida o link + o PWA instalado).
-- Defesa em camadas: (1) slug aleatório dificulta descoberta, (2) `robots.txt` + `noindex` no layout, (3) PIN é a barreira real.
+### Vendedor (`vendedor_session`)
+- Mesma arquitetura do mecanico
+- URL: `/v/<slug>` (`configuracoes.vendedor_url_slug`)
+- Env: `VENDEDOR_SESSION_SECRET` (obrigatoria em prod)
+
+### Consignante e Comprador
+- Token unico por registro (sem login)
+- URLs: `/c/<token>` e `/compra/<token>`
 
 ---
 
-## 6. Oficina — regras de negócio
+## 6. Fluxo de dinheiro (automatico)
 
-Taxonomia em `lib/oficina-status.ts`:
+Toda acao gera lancamentos automaticamente:
 
+| Evento | Tipo | Categoria |
+|--------|------|-----------|
+| Compra de moto | saida | compra_moto |
+| Reserva (sinal) | entrada | sinal_reserva |
+| Cancelamento reserva | saida | devolucao_sinal |
+| Venda fechada | entrada | venda_moto |
+| Comissao vendedor | saida | comissao |
+| Repasse consignada | saida | repasse_consignada |
+| Moto de troca (avaliacao) | saida | compra_moto |
+
+---
+
+## 7. Contratos PDF
+
+6 tipos gerados server-side via `pdfkit` em `lib/pdf-contrato.ts`:
+
+| Tipo | API | Conteudo |
+|------|-----|----------|
+| `compra` | `/api/contratos/compra/[motoId]` | Dados veiculo + vendedor + clausulas |
+| `consignacao` | `/api/contratos/consignacao/[consigId]` | Dono + margem + responsabilidades |
+| `venda` | `/api/contratos/venda/[vendaId]` | Comprador + preco + garantia 90d |
+| `os` | `/api/contratos/os/[ordemId]` | Autorizacao de servico |
+| `reserva` | `/api/contratos/reserva/[reservaId]` | Recibo de sinal + condicoes |
+| `entrega` | `/api/contratos/entrega/[vendaId]` | Checklist + assinatura de recebimento |
+
+Todos com: cabecalho Busca Racing, secoes, clausulas, campo de data + 2 assinaturas.
+
+---
+
+## 8. Oficina — regras de negocio
+
+Status em `lib/oficina-status.ts`:
 ```
 aberta → diagnostico → em_servico → [aguardando_peca | aguardando_aprovacao |
                                      aguardando_administrativo | agendar_entrega |
-                                     lavagem] → (fechamento) → finalizada
-                                                             → cancelada
+                                     lavagem] → finalizada | cancelada
+```
+- `finalizada` e `cancelada` sao terminais
+- `finalizada` requer fluxo "Fechar OS" com `valor_final`
+- Garantia: nova OS com `garantia_de_id` apontando pra original
+- Todo cambio de status grava em `oficina_historico`
+
+---
+
+## 9. Nav do admin
+
+```
+Dashboard | Estoque | Oficina | Vendas | Consignadas | Financeiro | Clientes | Mecanicos | Blog | Config
 ```
 
-- Entre status não-terminais, **qualquer transição** é permitida (fluxo não-linear).
-- `finalizada` e `cancelada` são **terminais**: não voltam.
-- `finalizada` só é atingida pelo fluxo **"Fechar OS"** (exige `valor_final`). Não aparece no select genérico do modal de status.
-- Para retomar atendimento de uma OS finalizada, abre-se uma **garantia**: cria uma OS nova com `garantia_de_id` apontando pra original.
-- Todo `POST/PUT` que muda status insere uma linha em `oficina_historico`.
-
-**UX do detalhe da OS** (`app/admin/oficina/[id]/page.tsx`):
-- Ação primária contextual no topo: **Atualizar status** (ativa) ou **Abrir garantia** (finalizada).
-- Menu **⋯** com: Fechar OS, Imprimir, Editar e — separado por divisor — Excluir.
-- Cartões com Cliente, Moto, Serviço, Datas, Valores e a **Timeline** histórica (inclui a timeline da OS original quando é garantia, e lista de garantias filhas).
-
 ---
 
-## 6.1 PWA do Mecânico — fluxo
+## 10. Deploy
 
-Admin:
-1. Vai em **Admin → Mecânicos**, cadastra mecânico (via Configurações → Mecânicos se ainda não existe), define PIN (manual ou "Gerar aleatório", que mostra o PIN uma única vez).
-2. Copia o link exibido no topo (`/m/<slug>`) e manda pro mecânico por canal confiável (WhatsApp). Opcional: "Rotacionar" invalida o link — útil quando um mecânico sai.
-3. No modal de OS, escolhe o mecânico no dropdown "Mecânico" (salva `mecanico_id`).
+- **Dominio:** `buscaracing.com`
+- **VM:** `178.156.255.162`, SSH root
+- Orquestracao: `sitectl` + Caddy (TLS automatico)
+- Volume persistente: `/data` (DB + fotos + uploads)
+- CI/CD: push em `main` → GitHub Actions → SSH → deploy
 
-Mecânico:
-1. Abre o link no celular, instala o PWA ("Adicionar à tela de início").
-2. Digita o PIN → vê só as OSs atribuídas a ele (exceto finalizadas/canceladas).
-3. No detalhe: muda status (com mensagem opcional) ou adiciona nota (não muda status, só entra na timeline). Tudo cai no mesmo `oficina_historico` que o admin vê.
-
-Revogação:
-- "Desativar" no admin zera `pin_ativo` sem deletar histórico. O cookie existente vira 401 no próximo request (revalidação em cada handler).
-- Rotacionar slug: invalida qualquer bookmark antigo + o PWA instalado (o `start_url` do manifest reflete o slug do momento da instalação).
-
-Manifest dinâmico: `/api/mecanico/manifest.webmanifest` lê o slug atual e define `start_url` e `scope` como `/m/<slug>/`.
-
----
-
-## 7. Estilos — convenção importante
-
-**Regra:** usar CSS Modules (`.module.css`) para escopo local. Se precisar de seletor global (ex.: `body`, `@media print { * { … } }`, regras de classe injetada em `window.print()`), usar **plain CSS** (arquivo `.css` sem `.module`) importado diretamente — CSS Modules **reclamam** de seletores globais em build.
-
-Exemplo vivo: `app/admin/oficina/[id]/print.css` (plain) + `detail.module.css` (módulo).
-
-Fontes em uso: **Bebas Neue**, **Barlow**, **Barlow Condensed** (declaradas em `globals.css`).
-
-Cor de marca: `#27367D` (azul) / `#DC2627` (vermelho hover).
-
----
-
-## 8. Deploy
-
-### Produção
-
-- **Domínio:** `buscaracing.com` (NÃO `buscaracing.anun.tech` — esse é só o nome do repo GitHub).
-- **VM:** `178.156.255.162`, acesso root via SSH.
-- Orquestração: `/srv/platform/bin/sitectl` controla o container `site_buscaracing_com` e serve via **Caddy** (TLS automático).
-- Código em `/srv/sites/buscaracing.com`.
-- Volume persistente: `/data` (mantém `buscaracing.db`, `fotos/`, `uploads/`).
-
-### CI/CD (`.github/workflows/deploy.yml`)
-
-Push em `main` **OU** "Run workflow" manual dispara:
-
-1. Monta chave SSH **dedicada** (secret `DEPLOY_SSH_KEY`) + `known_hosts` (`DEPLOY_KNOWN_HOSTS`).
-2. SSH pro host (`DEPLOY_HOST` + `DEPLOY_USER`).
-3. A `authorized_keys` da VM está **pinada com `command="/srv/platform/bin/sitectl deploy --domain buscaracing.com"`** — o comando remoto do SSH é ignorado e só o deploy roda. Isso restringe a chave a apenas deployar.
-4. Após o deploy, job faz `curl https://buscaracing.com/` por até 5 tentativas até receber HTTP 200.
-
-### Deploy local/manual
+### Rodar localmente
 
 ```bash
-ssh root@178.156.255.162 /srv/platform/bin/sitectl deploy --domain buscaracing.com
+npm install
+npm run dev    # http://localhost:3000
 ```
 
----
-
-## 9. Como rodar localmente
-
-```bash
-npm install          # instala (requer Python + build-essentials pra better-sqlite3)
-npm run dev          # Next.js em http://localhost:3000
-```
-
-Variáveis (todas opcionais em dev):
-- `ADMIN_PASSWORD` — default `Anuntech@10`.
-- `MECANICO_SESSION_SECRET` — **obrigatória em prod** para assinar o cookie do PWA. Em dev cai num default inseguro.
-- `DB_PATH` — default `./buscaracing.db`.
-- `DATA_DIR` — base pra uploads/fotos quando diferente da raiz.
-
-Banco é criado/migrado no primeiro acesso.
-
-Typecheck: `./node_modules/.bin/tsc --noEmit`.
+Envs opcionais em dev:
+- `ADMIN_PASSWORD` (default `Anuntech@10`)
+- `MECANICO_SESSION_SECRET`, `VENDEDOR_SESSION_SECRET` (defaults inseguros em dev)
+- `DB_PATH`, `DATA_DIR`
 
 ---
 
-## 10. Convenções de código
+## 11. Convencoes
 
-- **TypeScript strict.** Evitar `any`. Em routes `unknown` + `instanceof Error` pro tratamento de erro.
-- `export const dynamic = 'force-dynamic'` em rotas que mexem no DB (evita cache do App Router).
-- Client components marcam `'use client'` no topo.
-- Rotas sensíveis checam auth **dentro do handler** (`if (!isAuthenticated(request)) return 401`).
-- Idempotência em migrations: `IF NOT EXISTS` + introspecção via `PRAGMA`.
-- Toast de erro/sucesso via `components/Toast.tsx` + `useToast()`.
-- Ações do header (sidebar/topbar admin) injetadas via **`HeaderActionsContext`** (cada página registra seus botões ao montar, limpa ao desmontar).
-
----
-
-## 11. Workflow de design
-
-Projetos novos/features passam por:
-
-1. **Brainstorming** (`superpowers:brainstorming`) — entender ideia, propor alternativas, validar design.
-2. **Design doc** em `docs/plans/YYYY-MM-DD-<topico>-design.md` (commitado).
-3. **Plan doc** (`superpowers:writing-plans`) — plano passo-a-passo.
-4. Implementação com TDD quando aplicável.
-
-Não pular o design, mesmo em features "simples".
+- TypeScript strict, sem `any`
+- `export const dynamic = 'force-dynamic'` em rotas com DB
+- CSS Modules para escopo local; plain CSS para seletores globais
+- Fontes: Bebas Neue, Barlow, Barlow Condensed
+- Cores: `#27367D` (azul), `#DC2627` (vermelho hover), `#FDFDFB` (fundo)
+- Migrations idempotentes: `IF NOT EXISTS` + `PRAGMA table_info`
+- Toast via `useToast()` de `components/Toast.tsx`
+- Header actions via `HeaderActionsContext`
+- Middleware so checa presenca de cookie; validacao real no handler
 
 ---
 
-## 12. Gotchas / coisas que já morderam
+## 12. Gotchas
 
-- **`shell cwd` reseta entre chamadas do Bash tool** neste ambiente — sempre usar `cd <absoluto> && <cmd>` em uma só linha.
-- **CSS Modules não aceitam seletores globais.** Se precisar, mover para plain CSS.
-- O domínio `buscaracing.anun.tech` **não existe em DNS**; é só o nome do repositório.
-- `oficina_ordens.mecanico` é **texto livre legado**; o vínculo real pro PWA é `oficina_ordens.mecanico_id FK → mecanicos.id`. Ao trocar o mecânico no modal da OS, a UI sincroniza os dois (mas a fonte de verdade pro PWA é `mecanico_id`).
-- **Middleware roda no Edge runtime** — nada de `getDb()`, `crypto.scryptSync`, etc. Lá só checa presença de cookie; a validação completa (HMAC + DB) acontece nos route handlers Node.
-- `better-sqlite3` é **síncrono** — OK porque o SQLite é local e rápido, mas não bloquear em operações longas.
-- `_backup/` é o código antigo (Express); **ignorado** no `tsconfig`. Nunca referenciar.
-
----
-
-## 13. Como atualizar este README
-
-Trate como código. Sempre que:
-
-- Adicionar módulo (`app/admin/xxx`)
-- Criar tabela nova
-- Trocar modelo de auth
-- Mudar infra de deploy
-- Introduzir nova convenção
-
-…atualize as seções relevantes **no mesmo commit** da mudança. A seção 1 ("em projeto") lista o que está em design e deve migrar pras seções 4–6 quando entregue.
+- `oficina_ordens.mecanico` e texto legado; fonte de verdade e `mecanico_id FK → mecanicos.id`
+- Middleware roda no Edge — nada de `getDb()` ou `scryptSync` la
+- `better-sqlite3` e sincrono — OK porque SQLite e local
+- `_backup/` e codigo antigo (Express), ignorado no tsconfig
+- `buscaracing.anun.tech` e so nome do repo; dominio real e `buscaracing.com`
+- O site publico filtra motos por `estado IN ('anunciada','reservada')`, NAO mais por `ativo=1`
+- `motos.ativo` e mantido em sync pelo PATCH handler para backward compat
