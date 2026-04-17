@@ -71,6 +71,9 @@ export async function enviarMensagem(
   const requestBody: Record<string, unknown> = {
     to: phone,
     body: bodyPayload,
+    // Oculta o atendimento criado pelo disparo — só aparece se o contato responder.
+    // Evita poluir a tela de atendimentos com mensagens de lembrete automáticas.
+    options: { hiddenSession: true },
   };
   if (from) requestBody.from = from;
 
