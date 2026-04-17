@@ -2,25 +2,10 @@
 
 import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
+import { MOTO_MARCAS } from '@/lib/moto-marcas';
 import styles from './page.module.css';
 
-const BRANDS = [
-  'Honda',
-  'Yamaha',
-  'Kawasaki',
-  'Suzuki',
-  'KTM',
-  'BMW Motorrad',
-  'MXF',
-  'Ducati',
-  'Triumph',
-  'CF Moto',
-  'Royal Enfield',
-  'Dafra',
-  'Haojue',
-  'Shineray',
-  'Husqvarna',
-];
+const BRANDS = MOTO_MARCAS;
 
 export type Moto = {
   id?: number;

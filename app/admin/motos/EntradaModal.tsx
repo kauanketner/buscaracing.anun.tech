@@ -3,6 +3,7 @@
 import { useState, useRef, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
 import { MOTO_ORIGEM_LABELS, type MotoOrigem } from '@/lib/moto-estados';
+import { MOTO_MARCAS } from '@/lib/moto-marcas';
 import styles from './page.module.css';
 
 type Props = {
@@ -10,10 +11,7 @@ type Props = {
   onSaved: () => void;
 };
 
-const MARCAS = [
-  'Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'BMW', 'Ducati', 'Harley-Davidson',
-  'Triumph', 'KTM', 'Royal Enfield', 'Shineray', 'Dafra', 'Haojue', 'Outra',
-];
+const MARCAS = MOTO_MARCAS;
 
 const CATEGORIAS = [
   { value: 'motos-rua', label: 'Motos de Rua' },
