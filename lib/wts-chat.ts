@@ -130,14 +130,17 @@ export async function enviarLembreteChecklist(
 
     let result: WtsSendResult;
     if (config.templateId) {
-      // Template "checklist lembrete" tem 3 parâmetros:
-      //   {{1}} = data, {{2}} = hora, {{3}} = link do botão
+      // Template "checklist_lembrete" usa parâmetros NOMEADOS (não numerados):
+      //   data    = ex: "17/04/2026"
+      //   horario = ex: "12h30"
+      // O botão "Acessar" tem URL configurada no próprio template (via WTS).
+      // Se o botão tiver variável, também passamos "link" como fallback.
       result = await enviarMensagem(trimmed, '', {
         templateId: config.templateId,
         parameters: {
-          '1': dataBR,
-          '2': horaBR,
-          '3': checklistLink,
+          data: dataBR,
+          horario: horaBR,
+          link: checklistLink,
         },
       });
     } else {
