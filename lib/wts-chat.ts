@@ -112,6 +112,12 @@ export async function enviarLembreteChecklist(
 ): Promise<{ enviados: number; falhas: number }> {
   const config = getWtsConfig();
 
+  // Data e hora atuais em BRT (formato brasileiro)
+  const TZ = 'America/Sao_Paulo';
+  const now = new Date();
+  const dataBR = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
+  const horaBR = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+
   let enviados = 0;
   let falhas = 0;
 
@@ -121,12 +127,14 @@ export async function enviarLembreteChecklist(
 
     let result: WtsSendResult;
     if (config.templateId) {
-      // Envia via template com parâmetros
+      // Template "checklist lembrete" tem 3 parâmetros:
+      //   {{1}} = data, {{2}} = hora, {{3}} = link do botão
       result = await enviarMensagem(trimmed, '', {
         templateId: config.templateId,
         parameters: {
-          '1': checklistTitulo,
-          '2': checklistLink,
+          '1': dataBR,
+          '2': horaBR,
+          '3': checklistLink,
         },
       });
     } else {

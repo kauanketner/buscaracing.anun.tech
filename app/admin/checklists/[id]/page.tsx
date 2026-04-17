@@ -402,6 +402,23 @@ export default function ChecklistDetailPage() {
                 <button
                   type="button"
                   onClick={async () => {
+                    if (!confirm(`Enviar agora o lembrete para ${ag.numeros.split(',').length} número(s)?`)) return;
+                    try {
+                      const r = await fetch(`/api/checklists/agendamentos/${ag.id}/enviar-agora`, { method: 'POST' });
+                      if (!r.ok) throw new Error('fail');
+                      const d = await r.json();
+                      showToast(`Enviados: ${d.enviados} / ${d.total}${d.falhas ? ` — ${d.falhas} falha(s)` : ''}`, d.falhas ? 'error' : 'success');
+                    } catch {
+                      showToast('Erro ao enviar', 'error');
+                    }
+                  }}
+                  style={{ background: '#27367D', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                >
+                  Enviar agora
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
                     await fetch(`/api/checklists/agendamentos/${ag.id}`, {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json' },

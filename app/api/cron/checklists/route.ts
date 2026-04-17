@@ -32,10 +32,23 @@ export async function GET(request: NextRequest) {
   }
 
   const db = getDb();
+
+  // Usa sempre America/Sao_Paulo (BRT) pra comparar com agendamentos cadastrados
+  // pelo admin (que pensa no horário local do Brasil).
+  const TZ = 'America/Sao_Paulo';
+  const fmtHour = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false });
+  const fmtDay = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' });
+  const fmtDate = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+
   const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const currentDay = DIAS_MAP[now.getDay()];
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  // fmtHour produces e.g. "10:06"
+  const currentTime = fmtHour.format(now);
+  // Map weekday short name to 0-6 (Sun-Sat)
+  const weekdayShort = fmtDay.format(now).toLowerCase();
+  const weekdayMap: Record<string, string> = { sun: '0', mon: '1', tue: '2', wed: '3', thu: '4', fri: '5', sat: '6' };
+  const currentDay = weekdayMap[weekdayShort] || DIAS_MAP[now.getDay()];
+  // fmtDate produces "YYYY-MM-DD" in BRT
+  const today = fmtDate.format(now);
 
   // Find schedules due now
   const agendamentos = db
