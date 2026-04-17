@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import styles from '../../vendas/page.module.css';
+import btn from '../../mecanicos/page.module.css';
 
 type Item = { id: number; tipo: string; label: string; ordem: number };
 type Resposta = { id: number; preenchido_por: string; created_at: string };
@@ -381,26 +382,23 @@ export default function ChecklistDetailPage() {
               '6,0': 'Fim de semana',
             };
             return (
-              <div key={ag.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f1ee' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>
-                    {ag.horario} — {diasLabel[ag.dias_semana] || ag.dias_semana}
+              <div key={ag.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f1ee', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', color: '#222' }}>
+                    {ag.horario} <span style={{ color: '#999', fontWeight: 400 }}>— {diasLabel[ag.dias_semana] || ag.dias_semana}</span>
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#777' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#777', marginTop: 2 }}>
                     {ag.numeros.split(',').length} número{ag.numeros.split(',').length > 1 ? 's' : ''}
                     {ag.ultimo_envio ? ` · Último envio: ${fmtDateTime(ag.ultimo_envio)}` : ''}
                   </div>
-                  {ag.mensagem && <div style={{ fontSize: '0.78rem', color: '#555', fontStyle: 'italic' }}>{ag.mensagem}</div>}
+                  {ag.mensagem && <div style={{ fontSize: '0.78rem', color: '#555', fontStyle: 'italic', marginTop: 2 }}>{ag.mensagem}</div>}
                 </div>
-                <span className={styles.badge} style={{
-                  background: ag.ativo ? '#d4edda' : '#e2e3e5',
-                  color: ag.ativo ? '#155724' : '#555',
-                  fontSize: '0.65rem',
-                }}>
+                <span className={`${btn.badge} ${ag.ativo ? btn.bgGreen : btn.bgGray}`}>
                   {ag.ativo ? 'Ativo' : 'Pausado'}
                 </span>
                 <button
                   type="button"
+                  className={`${btn.btn} ${btn.btnPrimary} ${btn.btnSm}`}
                   onClick={async () => {
                     if (!confirm(`Enviar agora o lembrete para ${ag.numeros.split(',').length} número(s)?`)) return;
                     try {
@@ -412,12 +410,12 @@ export default function ChecklistDetailPage() {
                       showToast('Erro ao enviar', 'error');
                     }
                   }}
-                  style={{ background: '#27367D', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}
                 >
                   Enviar agora
                 </button>
                 <button
                   type="button"
+                  className={`${btn.btn} ${btn.btnGhost} ${btn.btnSm}`}
                   onClick={async () => {
                     await fetch(`/api/checklists/agendamentos/${ag.id}`, {
                       method: 'PUT',
@@ -426,19 +424,18 @@ export default function ChecklistDetailPage() {
                     });
                     await load();
                   }}
-                  style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#555' }}
                 >
                   {ag.ativo ? 'Pausar' : 'Ativar'}
                 </button>
                 <button
                   type="button"
+                  className={`${btn.btn} ${btn.btnGhost} ${btn.btnSm} ${btn.btnGhostDanger}`}
                   onClick={async () => {
                     if (!confirm('Remover agendamento?')) return;
                     await fetch(`/api/checklists/agendamentos/${ag.id}`, { method: 'DELETE' });
                     showToast('Agendamento removido', 'success');
                     await load();
                   }}
-                  style={{ background: 'none', border: '1px solid #f0b4b9', padding: '4px 8px', fontSize: '0.68rem', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#dc3545' }}
                 >
                   Remover
                 </button>
