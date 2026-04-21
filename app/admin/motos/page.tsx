@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
@@ -8,9 +8,9 @@ import MotoModal from './MotoModal';
 import EntradaModal from './EntradaModal';
 import ReservaModal from './ReservaModal';
 import VendaModal from './VendaModal';
-import ContratoPdfButton from '@/components/ContratoPdfButton';
 import DeleteConfirm from './DeleteConfirm';
 import styles from './page.module.css';
+import kebabStyles from '../mecanicos/page.module.css';
 
 const CATS: Record<string, string> = {
   'motos-rua': 'Motos de Rua',
@@ -70,6 +70,26 @@ export default function MotosPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [sellTarget, setSellTarget] = useState<{ id: number; label: string; preco: number | null } | null>(null);
+
+  // Kebab menu (1 aberto por vez — chave = id da moto)
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const menuWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (menuOpenId == null) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!menuWrapRef.current) return;
+      if (!menuWrapRef.current.contains(e.target as Node)) setMenuOpenId(null);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpenId(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [menuOpenId]);
 
   const reload = async () => {
     setLoading(true);
@@ -195,6 +215,22 @@ export default function MotosPage() {
     }
   };
 
+  const cancelarReserva = async (id: number) => {
+    if (!confirm('Cancelar a reserva e devolver o sinal?')) return;
+    try {
+      const r = await fetch(`/api/motos/${id}/reserva`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('fail');
+      showToast('Reserva cancelada, sinal devolvido', 'success');
+      await reload();
+    } catch {
+      showToast('Erro ao cancelar reserva', 'error');
+    }
+  };
+
+  const abrirPdfContrato = (id: number) => {
+    window.open(`/api/contratos/compra/${id}`, '_blank');
+  };
+
   return (
     <>
       <div className={styles.wrap}>
@@ -236,7 +272,7 @@ export default function MotosPage() {
           </select>
         </div>
 
-        <div className={styles.tableWrap}>
+        <div className={styles.tableWrap} ref={menuWrapRef}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -316,68 +352,32 @@ export default function MotosPage() {
                       <div className={styles.actionsCell}>
                         {/* Primary action per estado */}
                         {(m.estado === 'avaliacao' || m.estado === 'disponivel') && (
-                          <>
-                            <button
-                              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
-                              onClick={() => mandaPraOficina(m.id)}
-                            >
-                              Oficina
-                            </button>
-                            <button
-                              className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                              onClick={() => transitionEstado(m.id, 'anunciada', 'Moto anunciada!')}
-                            >
-                              Anunciar
-                            </button>
-                          </>
+                          <button
+                            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                            onClick={() => transitionEstado(m.id, 'anunciada', 'Moto anunciada!')}
+                          >
+                            Anunciar
+                          </button>
                         )}
                         {m.estado === 'anunciada' && (
-                          <>
-                            <button
-                              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
-                              onClick={() =>
-                                setReservaTarget({ id: m.id, label: `${m.nome} – ${m.marca}` })
-                              }
-                            >
-                              Reservar
-                            </button>
-                            <button
-                              className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                              onClick={() =>
-                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
-                              }
-                            >
-                              Vender
-                            </button>
-                          </>
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                            onClick={() =>
+                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
+                            }
+                          >
+                            Vender
+                          </button>
                         )}
                         {m.estado === 'reservada' && (
-                          <>
-                            <button
-                              className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
-                              onClick={() =>
-                                setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
-                              }
-                            >
-                              Fechar venda
-                            </button>
-                            <button
-                              className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                              onClick={async () => {
-                                if (!confirm('Cancelar a reserva e devolver o sinal?')) return;
-                                try {
-                                  const r = await fetch(`/api/motos/${m.id}/reserva`, { method: 'DELETE' });
-                                  if (!r.ok) throw new Error('fail');
-                                  showToast('Reserva cancelada, sinal devolvido', 'success');
-                                  await reload();
-                                } catch {
-                                  showToast('Erro ao cancelar reserva', 'error');
-                                }
-                              }}
-                            >
-                              Cancelar reserva
-                            </button>
-                          </>
+                          <button
+                            className={`${styles.btn} ${styles.btnSuccess} ${styles.btnSm}`}
+                            onClick={() =>
+                              setSellTarget({ id: m.id, label: `${m.nome} – ${m.marca}`, preco: m.preco ?? null })
+                            }
+                          >
+                            Fechar venda
+                          </button>
                         )}
                         {m.estado === 'vendida' && (
                           <button
@@ -387,36 +387,143 @@ export default function MotosPage() {
                             Entregar
                           </button>
                         )}
-                        {/* Edit always */}
-                        <button
-                          className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
-                          onClick={() => openEdit(m.id)}
-                          title="Editar"
-                          aria-label="Editar"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                        {/* PDF contracts */}
-                        {(m.estado === 'avaliacao' || m.estado === 'em_oficina' || m.estado === 'disponivel') && m.origem !== 'consignada' && (
-                          <ContratoPdfButton tipo="compra" id={m.id} label="PDF" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`} />
-                        )}
-                        {/* Secondary actions */}
-                        {m.estado === 'anunciada' && (
+
+                        {/* Kebab menu com ações secundárias */}
+                        <div className={kebabStyles.kebabWrap}>
                           <button
-                            className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.btnIcon}`}
-                            onClick={() => transitionEstado(m.id, 'disponivel', 'Moto pausada')}
-                            title="Pausar anúncio"
-                            aria-label="Pausar anúncio"
+                            type="button"
+                            className={`${kebabStyles.kebabBtn} ${menuOpenId === m.id ? kebabStyles.kebabActive : ''}`}
+                            onClick={() => setMenuOpenId((cur) => (cur === m.id ? null : m.id))}
+                            aria-label="Mais ações"
+                            aria-haspopup="menu"
+                            aria-expanded={menuOpenId === m.id}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                              <rect x="6" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
-                              <rect x="14" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="5" r="1.6" fill="currentColor" />
+                              <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+                              <circle cx="12" cy="19" r="1.6" fill="currentColor" />
                             </svg>
                           </button>
-                        )}
+                          {menuOpenId === m.id && (
+                            <ul className={kebabStyles.menu} role="menu">
+                              <li role="none">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={kebabStyles.menuItem}
+                                  onClick={() => { setMenuOpenId(null); openEdit(m.id); }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  Editar
+                                </button>
+                              </li>
+
+                              {(m.estado === 'avaliacao' || m.estado === 'disponivel') && (
+                                <li role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className={kebabStyles.menuItem}
+                                    onClick={() => { setMenuOpenId(null); mandaPraOficina(m.id); }}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Enviar pra oficina
+                                  </button>
+                                </li>
+                              )}
+
+                              {m.estado === 'anunciada' && (
+                                <>
+                                  <li role="none">
+                                    <button
+                                      type="button"
+                                      role="menuitem"
+                                      className={kebabStyles.menuItem}
+                                      onClick={() => { setMenuOpenId(null); setReservaTarget({ id: m.id, label: `${m.nome} – ${m.marca}` }); }}
+                                    >
+                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
+                                        <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2" />
+                                      </svg>
+                                      Reservar
+                                    </button>
+                                  </li>
+                                  <li role="none">
+                                    <button
+                                      type="button"
+                                      role="menuitem"
+                                      className={kebabStyles.menuItem}
+                                      onClick={() => { setMenuOpenId(null); transitionEstado(m.id, 'disponivel', 'Moto pausada'); }}
+                                    >
+                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                        <rect x="6" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
+                                        <rect x="14" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
+                                      </svg>
+                                      Pausar anúncio
+                                    </button>
+                                  </li>
+                                </>
+                              )}
+
+                              {m.estado === 'reservada' && (
+                                <li role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className={kebabStyles.menuItem}
+                                    onClick={() => { setMenuOpenId(null); cancelarReserva(m.id); }}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    </svg>
+                                    Cancelar reserva
+                                  </button>
+                                </li>
+                              )}
+
+                              {(m.estado === 'avaliacao' || m.estado === 'em_oficina' || m.estado === 'disponivel') && m.origem !== 'consignada' && (
+                                <li role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className={kebabStyles.menuItem}
+                                    onClick={() => { setMenuOpenId(null); abrirPdfContrato(m.id); }}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                      <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                    </svg>
+                                    Contrato de compra (PDF)
+                                  </button>
+                                </li>
+                              )}
+
+                              <li role="none" className={kebabStyles.menuDivider} aria-hidden="true" />
+                              <li role="none">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={`${kebabStyles.menuItem} ${kebabStyles.menuItemDanger}`}
+                                  onClick={() => { setMenuOpenId(null); setDeleteTarget({ id: m.id, label: `${m.nome} – ${m.marca}` }); }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  Excluir
+                                </button>
+                              </li>
+                            </ul>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
