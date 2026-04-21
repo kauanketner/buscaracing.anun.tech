@@ -292,8 +292,38 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const db = getDb();
-    const r = db.prepare('DELETE FROM oficina_ordens WHERE id=?').run(Number(id));
-    if (r.changes === 0) {
+
+    // Antes de deletar, captura a moto vinculada (se houver) pra decidir
+    // se precisa resetar o estado dela.
+    const ordem = db
+      .prepare('SELECT moto_id FROM oficina_ordens WHERE id=?')
+      .get(Number(id)) as { moto_id: number | null } | undefined;
+
+    const tx = db.transaction(() => {
+      db.prepare('DELETE FROM oficina_historico WHERE ordem_id=?').run(Number(id));
+      const r = db.prepare('DELETE FROM oficina_ordens WHERE id=?').run(Number(id));
+      if (r.changes === 0) return 'notfound';
+
+      // Se a moto estava presa em em_oficina/em_revisao sem outra OS aberta,
+      // libera pra voltar pro fluxo normal do estoque.
+      if (ordem?.moto_id) {
+        const moto = db
+          .prepare('SELECT id, estado FROM motos WHERE id=?')
+          .get(ordem.moto_id) as { id: number; estado: string } | undefined;
+        if (moto && (moto.estado === 'em_oficina' || moto.estado === 'em_revisao')) {
+          const outras = (db
+            .prepare("SELECT COUNT(*) AS c FROM oficina_ordens WHERE moto_id=? AND status NOT IN ('finalizada','cancelada')")
+            .get(moto.id) as { c: number }).c;
+          if (outras === 0) {
+            const novo = moto.estado === 'em_revisao' ? 'entregue' : 'disponivel';
+            db.prepare('UPDATE motos SET estado=? WHERE id=?').run(novo, moto.id);
+          }
+        }
+      }
+      return 'ok';
+    });
+    const result = tx();
+    if (result === 'notfound') {
       return NextResponse.json({ error: 'Ordem não encontrada' }, { status: 404 });
     }
     return NextResponse.json({ ok: true });
