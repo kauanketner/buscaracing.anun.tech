@@ -72,6 +72,24 @@ function initSchema(db: Database.Database): void {
       updated_at  TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS pecas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome            TEXT    NOT NULL,
+      categoria       TEXT    NOT NULL DEFAULT 'outros',
+      descricao       TEXT    DEFAULT '',
+      preco           REAL,
+      preco_original  REAL,
+      imagem          TEXT,
+      marca_moto      TEXT    DEFAULT '',
+      modelo_compat   TEXT    DEFAULT '',
+      codigo          TEXT    DEFAULT '',
+      destaque        INTEGER DEFAULT 0,
+      ativo           INTEGER DEFAULT 1,
+      created_at      TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pecas_categoria ON pecas(categoria);
+    CREATE INDEX IF NOT EXISTS idx_pecas_ativo ON pecas(ativo);
+
     CREATE TABLE IF NOT EXISTS vendedores (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       nome       TEXT    NOT NULL,

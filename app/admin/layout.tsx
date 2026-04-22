@@ -10,6 +10,7 @@ import styles from './layout.module.css';
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin': { title: 'Dashboard', subtitle: 'Visão geral da loja' },
   '/admin/motos': { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' },
+  '/admin/pecas': { title: 'Peças', subtitle: 'Cadastre e publique peças no site' },
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Histórico de vendas, comissões e faturamento' },
   '/admin/consignacoes': { title: 'Consignadas', subtitle: 'Motos de terceiros, repasses e links' },
@@ -42,7 +43,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'pecas' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -60,6 +61,14 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
         <circle cx="17" cy="17" r="3" stroke="currentColor" strokeWidth="2" />
         <path d="M10 17h4M3 14 L7 8 L13 9 L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M13 9 L16 5 L19 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (name === 'pecas') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
@@ -146,13 +155,14 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'oficina' | 'vendas' 
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'pecas' | 'oficina' | 'vendas' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config';
   exact?: boolean;
 };
 
 const NAV_LINKS: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
   { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
+  { href: '/admin/pecas', label: 'Peças', icon: 'pecas' },
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
   { href: '/admin/consignacoes', label: 'Consignadas', icon: 'consignacoes' },

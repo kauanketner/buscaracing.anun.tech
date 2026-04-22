@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 const PECAS = [
   {
+    slug: 'motor',
     name: 'Motor e Transmissão',
     desc: 'Pistões, anéis, juntas, correntes, kit relação, embreagem e mais.',
     icon: (
@@ -21,6 +22,7 @@ const PECAS = [
     ),
   },
   {
+    slug: 'freios',
     name: 'Freios',
     desc: 'Pastilhas, discos, manetes, cabos e fluidos de freio para todas as motos.',
     icon: (
@@ -32,6 +34,7 @@ const PECAS = [
     ),
   },
   {
+    slug: 'suspensao',
     name: 'Suspensão',
     desc: 'Amortecedores, molas, bengalas, retentores e kits de reparo.',
     icon: (
@@ -41,6 +44,7 @@ const PECAS = [
     ),
   },
   {
+    slug: 'eletrica',
     name: 'Elétrica',
     desc: 'Baterias, velas, CDI, reguladores, chicotes e lâmpadas.',
     icon: (
@@ -50,6 +54,7 @@ const PECAS = [
     ),
   },
   {
+    slug: 'carenagem',
     name: 'Carenagem e Plásticos',
     desc: 'Carenagens, para-lamas, laterais e peças plásticas originais e alternativas.',
     icon: (
@@ -60,6 +65,7 @@ const PECAS = [
     ),
   },
   {
+    slug: 'pneus-rodas',
     name: 'Pneus e Rodas',
     desc: 'Pneus de rua, trilha e misto. Câmaras, aros e cubos completos.',
     icon: (
@@ -102,19 +108,19 @@ export default function PecasPage() {
 
           <div className={styles.pecasGrid}>
             {PECAS.map((p) => (
-              <div key={p.name} className={styles.pecaCard}>
+              <Link key={p.name} href={`/pecas/${p.slug}`} className={styles.pecaCard}>
                 <div className={styles.pecaIconWrap}>{p.icon}</div>
                 <div className={styles.pecaBody}>
                   <h3 className={styles.pecaName}>{p.name}</h3>
                   <p className={styles.pecaDesc}>{p.desc}</p>
                   <span className={styles.pecaCta}>
-                    Consultar disponibilidade
+                    Ver peças
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
