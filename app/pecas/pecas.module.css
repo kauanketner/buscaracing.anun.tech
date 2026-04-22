@@ -133,12 +133,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  /* importante: é um <a>, remove sublinhado e herda cor */
+  text-decoration: none;
+  color: inherit;
 }
 
 .pecaCard:hover {
   transform: translateY(-5px);
   box-shadow: 0 14px 36px rgba(39, 54, 125, 0.13);
+  border-color: var(--blue);
 }
 
 .pecaIconWrap {
@@ -180,6 +184,13 @@
   font-size: 1.6rem;
   color: var(--blue);
   margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  transition: color 0.2s;
+}
+
+.pecaCard:hover .pecaName {
+  color: var(--red);
 }
 
 .pecaDesc {

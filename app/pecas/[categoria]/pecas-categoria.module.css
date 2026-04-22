@@ -123,6 +123,12 @@
   letter-spacing: 0.02em;
   margin: 0;
   line-height: 1.2;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.card:hover .cardName {
+  color: #27367D;
 }
 .cardCompat {
   font-size: 0.78rem;
