@@ -104,16 +104,91 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   try {
     const { id } = await context.params;
+    const motoId = Number(id);
     const db = getDb();
 
-    // Delete photo files from disk
-    const fotos = db.prepare('SELECT filename FROM fotos WHERE moto_id=?').all(Number(id)) as { filename: string }[];
+    const existe = db.prepare('SELECT id FROM motos WHERE id=?').get(motoId);
+    if (!existe) return NextResponse.json({ error: 'Moto não encontrada' }, { status: 404 });
+
+    // ── Arquivos físicos (apaga FORA da transaction) ──
+
+    // 1. Fotos de galeria (/fotos/<filename>)
+    const fotos = db.prepare('SELECT filename FROM fotos WHERE moto_id=?').all(motoId) as { filename: string }[];
     for (const f of fotos) {
       const fp = path.join(FOTOS_DIR, f.filename);
-      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+      try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch { /* silencioso */ }
     }
 
-    db.prepare('DELETE FROM motos WHERE id=?').run(Number(id));
+    // 2. Comprovantes de venda (em /uploads/) — coleta as URLs antes do DELETE
+    const comprovUrls = db
+      .prepare(
+        `SELECT vc.url FROM venda_comprovantes vc
+         JOIN vendas v ON v.id = vc.venda_id
+         WHERE v.moto_id = ?`,
+      )
+      .all(motoId) as { url: string }[];
+    for (const c of comprovUrls) {
+      if (c.url && c.url.startsWith('/uploads/')) {
+        const fp = path.join(UPLOADS_DIR, path.basename(c.url));
+        try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch { /* silencioso */ }
+      }
+    }
+
+    // ── Delete em cascade manual dentro de transaction ──
+    const tx = db.transaction(() => {
+      // IDs de entidades filhas (precisamos deles pra deletar lancamentos)
+      const vendasIds = db.prepare('SELECT id FROM vendas WHERE moto_id=?').all(motoId) as { id: number }[];
+      const reservasIds = db.prepare('SELECT id FROM reservas WHERE moto_id=?').all(motoId) as { id: number }[];
+      const consigIds = db.prepare('SELECT id FROM consignacoes WHERE moto_id=?').all(motoId) as { id: number }[];
+      const aluguelIds = db.prepare('SELECT id FROM alugueis WHERE moto_id=?').all(motoId) as { id: number }[];
+
+      // 1. Comissões (FK sem cascade) — preciso deletar ANTES de vendas
+      if (vendasIds.length > 0) {
+        const placeholders = vendasIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM comissoes WHERE venda_id IN (${placeholders})`).run(...vendasIds.map((v) => v.id));
+      }
+
+      // 2. Lancamentos das vendas (ref_tipo='venda')
+      if (vendasIds.length > 0) {
+        const placeholders = vendasIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM lancamentos WHERE ref_tipo='venda' AND ref_id IN (${placeholders})`).run(...vendasIds.map((v) => v.id));
+      }
+
+      // 3. Vendas (cascateia venda_comprovantes)
+      db.prepare('DELETE FROM vendas WHERE moto_id=?').run(motoId);
+
+      // 4. Reservas + lancamentos
+      if (reservasIds.length > 0) {
+        const placeholders = reservasIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM lancamentos WHERE ref_tipo='reserva' AND ref_id IN (${placeholders})`).run(...reservasIds.map((r) => r.id));
+      }
+      db.prepare('DELETE FROM reservas WHERE moto_id=?').run(motoId);
+
+      // 5. Consignações + lancamentos
+      if (consigIds.length > 0) {
+        const placeholders = consigIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM lancamentos WHERE ref_tipo='consignacao' AND ref_id IN (${placeholders})`).run(...consigIds.map((c) => c.id));
+      }
+      db.prepare('DELETE FROM consignacoes WHERE moto_id=?').run(motoId);
+
+      // 6. Aluguéis + lancamentos
+      if (aluguelIds.length > 0) {
+        const placeholders = aluguelIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM lancamentos WHERE ref_tipo='aluguel' AND ref_id IN (${placeholders})`).run(...aluguelIds.map((a) => a.id));
+      }
+      db.prepare('DELETE FROM alugueis WHERE moto_id=?').run(motoId);
+
+      // 7. Oficina (cascateia os_pecas e oficina_historico)
+      db.prepare('DELETE FROM oficina_ordens WHERE moto_id=?').run(motoId);
+
+      // 8. Lancamentos com ref_tipo='moto'
+      db.prepare("DELETE FROM lancamentos WHERE ref_tipo='moto' AND ref_id=?").run(motoId);
+
+      // 9. Finalmente a moto (fotos cascateia)
+      db.prepare('DELETE FROM motos WHERE id=?').run(motoId);
+    });
+
+    tx();
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
