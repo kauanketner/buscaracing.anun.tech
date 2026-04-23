@@ -210,14 +210,35 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
         </div>
         <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <div className={styles.modalBody}>
-            <p style={{ fontSize: '0.85rem', color: '#27367D', fontWeight: 600, marginBottom: '1rem' }}>
-              {motoLabel}{motoPreco ? ` — R$ ${Number(motoPreco).toLocaleString('pt-BR')}` : ''}
-            </p>
+            {/* Cabeçalho da moto */}
+            <div
+              style={{
+                background: '#f8f8f5',
+                border: '1px solid #e4e4e0',
+                padding: '0.85rem 1rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ fontWeight: 600, color: '#222', fontSize: '0.95rem' }}>{motoLabel}</div>
+              {motoPreco ? (
+                <div style={{ color: '#27367D', fontWeight: 700, fontSize: '1rem' }}>
+                  R$ {Number(motoPreco).toLocaleString('pt-BR')}
+                </div>
+              ) : null}
+            </div>
 
-            {/* Comprador */}
+            {/* ───── DADOS DO COMPRADOR ───── */}
+            <p className={styles.formSectionTitle} style={{ marginBottom: '0.75rem' }}>
+              Dados do comprador
+            </p>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Comprador *</label>
+                <label>Nome *</label>
                 <input type="text" value={compradorNome} onChange={(e) => setCompradorNome(e.target.value)} placeholder="Maria Santos" required autoFocus />
               </div>
               <div className={styles.formGroup}>
@@ -232,7 +253,6 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                   type="text"
                   value={compradorCpf}
                   onChange={(e) => {
-                    // Máscara 000.000.000-00
                     const d = e.target.value.replace(/\D/g, '').slice(0, 11);
                     let masked = d;
                     if (d.length > 3) masked = `${d.slice(0, 3)}.${d.slice(3)}`;
@@ -244,10 +264,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                   inputMode="numeric"
                 />
               </div>
-              <div className={styles.formGroup} />
-            </div>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup} style={{ maxWidth: 160 }}>
+              <div className={styles.formGroup}>
                 <label>CEP</label>
                 <input
                   type="text"
@@ -255,7 +272,6 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                   maxLength={9}
                   value={compradorCep}
                   onChange={(e) => {
-                    // máscara 00000-000
                     const d = e.target.value.replace(/\D/g, '').slice(0, 8);
                     const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
                     setCompradorCep(masked);
@@ -264,29 +280,34 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                   placeholder="00000-000"
                   disabled={cepLoading}
                 />
-                {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando...</span>}
+                {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando endereço...</span>}
                 {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
               </div>
-              <div className={styles.formGroup} style={{ flex: 2 }}>
-                <label>Endereço (rua + bairro + cidade/UF)</label>
-                <input type="text" value={compradorEndereco} onChange={(e) => setCompradorEndereco(e.target.value)}
-                  placeholder="Preencha CEP acima ou digite" />
-              </div>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Endereço</label>
+              <input
+                type="text"
+                value={compradorEndereco}
+                onChange={(e) => setCompradorEndereco(e.target.value)}
+                placeholder="Rua, bairro, cidade/UF — preenchido pelo CEP"
+              />
             </div>
             <div className={styles.formRow}>
-              <div className={styles.formGroup} style={{ maxWidth: 140 }}>
+              <div className={styles.formGroup}>
                 <label>Número</label>
-                <input type="text" value={compradorNumero} onChange={(e) => setCompradorNumero(e.target.value)}
-                  placeholder="123" />
+                <input type="text" value={compradorNumero} onChange={(e) => setCompradorNumero(e.target.value)} placeholder="123" />
               </div>
-              <div className={styles.formGroup} style={{ flex: 2 }}>
+              <div className={styles.formGroup}>
                 <label>Complemento</label>
-                <input type="text" value={compradorComplemento} onChange={(e) => setCompradorComplemento(e.target.value)}
-                  placeholder="Apto, bloco, referência..." />
+                <input type="text" value={compradorComplemento} onChange={(e) => setCompradorComplemento(e.target.value)} placeholder="Apto, bloco, referência..." />
               </div>
             </div>
 
-            {/* Valores */}
+            {/* ───── DADOS DA VENDA ───── */}
+            <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+              Dados da venda
+            </p>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label>Valor de venda (R$) *</label>
@@ -303,8 +324,6 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                 </select>
               </div>
             </div>
-
-            {/* Vendedor */}
             <div className={styles.formGroup}>
               <label>Vendedor</label>
               <select value={vendedorId} onChange={(e) => setVendedorId(e.target.value)}>
@@ -322,23 +341,23 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
               )}
             </div>
 
-            {/* Troca */}
-            <div className={styles.formGroup}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            {/* ───── TROCA ───── */}
+            <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>
+              Moto de troca
+            </p>
+            <div className={styles.formGroup} style={{ marginBottom: temTroca ? '0.75rem' : '1.25rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontSize: '0.88rem', color: '#333', fontWeight: 400 }}>
                 <input
                   type="checkbox"
                   checked={temTroca}
                   onChange={(e) => setTemTroca(e.target.checked)}
-                  style={{ width: 'auto' }}
+                  style={{ width: 'auto', margin: 0 }}
                 />
-                Tem moto de troca
+                O comprador deu uma moto de entrada
               </label>
             </div>
             {temTroca && (
-              <div style={{ background: '#f8f8f5', padding: '1rem', border: '1px solid #e4e4e0', marginBottom: '1rem' }}>
-                <p style={{ fontSize: '0.78rem', color: '#777', marginBottom: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  Moto de troca (entra no estoque)
-                </p>
+              <div style={{ background: '#f8f8f5', padding: '1rem', border: '1px solid #e4e4e0', marginBottom: '1.25rem' }}>
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Marca</label>
@@ -359,22 +378,35 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                     <input type="text" value={trocaPlaca} onChange={(e) => setTrocaPlaca(e.target.value)} placeholder="ABC1D23" style={{ textTransform: 'uppercase' }} />
                   </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Valor de avaliação (R$) *</label>
-                  <input type="number" step="0.01" value={trocaValor} onChange={(e) => setTrocaValor(e.target.value)} placeholder="4000" />
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>KM</label>
+                    <input type="number" value={trocaKm} onChange={(e) => setTrocaKm(e.target.value)} placeholder="15000" />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Valor de avaliação (R$) *</label>
+                    <input type="number" step="0.01" value={trocaValor} onChange={(e) => setTrocaValor(e.target.value)} placeholder="4000" />
+                  </div>
                 </div>
+                <span style={{ fontSize: '0.72rem', color: '#777', display: 'block' }}>
+                  A moto de troca entra automaticamente no estoque em estado de avaliação.
+                </span>
               </div>
             )}
 
-            <div className={styles.formGroup}>
-              <label>Observações</label>
-              <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Notas sobre a venda..." rows={2} />
-            </div>
+            {/* ───── COMPROVANTES E OBSERVAÇÕES ───── */}
+            <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+              Anexos e observações
+            </p>
 
-            {/* Comprovantes */}
             <div className={styles.formGroup}>
-              <label>Comprovantes ({comprovantes.length}/{MAX_COMPROVANTES})</label>
-              <div style={{ border: '1.5px dashed #e4e4e0', padding: 10, background: '#fafaf8' }}>
+              <label>
+                Comprovantes{' '}
+                <span style={{ fontWeight: 400, color: '#999', textTransform: 'none', letterSpacing: 0, fontSize: '0.75rem' }}>
+                  ({comprovantes.length}/{MAX_COMPROVANTES})
+                </span>
+              </label>
+              <div style={{ border: '1.5px dashed #e4e4e0', padding: 12, background: '#fafaf8' }}>
                 <input
                   ref={comprovanteInputRef}
                   type="file"
@@ -383,23 +415,25 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                   onChange={(e) => onAddComprovantes(e.target.files)}
                   style={{ display: 'none' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => comprovanteInputRef.current?.click()}
-                  disabled={comprovantes.length >= MAX_COMPROVANTES}
-                  style={{
-                    background: '#fff', border: '1.5px solid #e4e4e0', padding: '8px 14px',
-                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem',
-                    letterSpacing: '0.08em', textTransform: 'uppercase', color: '#27367D',
-                    cursor: comprovantes.length >= MAX_COMPROVANTES ? 'not-allowed' : 'pointer',
-                    opacity: comprovantes.length >= MAX_COMPROVANTES ? 0.5 : 1,
-                  }}
-                >
-                  + Adicionar comprovantes
-                </button>
-                <span style={{ fontSize: '0.75rem', color: '#777', marginLeft: 8 }}>
-                  Imagens (PIX, print, foto) ou PDF. Máximo 10.
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => comprovanteInputRef.current?.click()}
+                    disabled={comprovantes.length >= MAX_COMPROVANTES}
+                    style={{
+                      background: '#fff', border: '1.5px solid #e4e4e0', padding: '8px 14px',
+                      fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem',
+                      letterSpacing: '0.08em', textTransform: 'uppercase', color: '#27367D',
+                      cursor: comprovantes.length >= MAX_COMPROVANTES ? 'not-allowed' : 'pointer',
+                      opacity: comprovantes.length >= MAX_COMPROVANTES ? 0.5 : 1,
+                    }}
+                  >
+                    + Adicionar
+                  </button>
+                  <span style={{ fontSize: '0.75rem', color: '#777' }}>
+                    Imagens (PIX, print, foto) ou PDF · Máximo 10
+                  </span>
+                </div>
 
                 {comprovantes.length > 0 && (
                   <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -431,8 +465,16 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
               </div>
             </div>
 
-            {/* Resumo */}
-            <div style={{ background: '#f0f7f0', padding: '1rem', border: '1px solid #d4edda', fontSize: '0.88rem' }}>
+            <div className={styles.formGroup}>
+              <label>Observações</label>
+              <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Notas internas sobre a venda..." rows={2} />
+            </div>
+
+            {/* ───── RESUMO ───── */}
+            <div style={{ background: '#f0f7f0', padding: '1rem 1.1rem', border: '1px solid #d4edda', fontSize: '0.88rem', marginTop: '0.5rem' }}>
+              <p className={styles.formSectionTitle} style={{ color: '#155724', marginBottom: '0.6rem' }}>
+                Resumo financeiro
+              </p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span>Valor da venda</span>
                 <strong>R$ {valorFinal.toLocaleString('pt-BR')}</strong>
@@ -440,13 +482,13 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
               {valorTroca > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, color: '#666' }}>
                   <span>Troca (abate)</span>
-                  <span>- R$ {valorTroca.toLocaleString('pt-BR')}</span>
+                  <span>− R$ {valorTroca.toLocaleString('pt-BR')}</span>
                 </div>
               )}
               {comissao > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, color: '#666' }}>
                   <span>Comissão vendedor</span>
-                  <span>- R$ {comissao}</span>
+                  <span>− R$ {comissao}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #b8dabb', paddingTop: 6, marginTop: 6 }}>
