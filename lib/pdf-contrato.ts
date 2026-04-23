@@ -376,3 +376,54 @@ export async function gerarTermoEntrega(vendaId: number): Promise<Buffer> {
   signatures(doc, 'Busca Racing (Entregador)', String(v.comprador_nome || 'Comprador'));
   return collectPdf(doc);
 }
+
+// ---------------------------------------------------------------------------
+// CONTRATO DE LOCAÇÃO (ALUGUEL)
+// ---------------------------------------------------------------------------
+
+export async function gerarContratoAluguel(aluguelId: number): Promise<Buffer> {
+  const db = getDb();
+  const row = db.prepare(
+    `SELECT a.*, m.nome AS moto_nome, m.marca, m.modelo, m.ano, m.placa, m.chassi, m.renavam, m.km
+     FROM alugueis a LEFT JOIN motos m ON m.id=a.moto_id WHERE a.id=?`,
+  ).get(aluguelId) as Record<string, unknown>;
+  if (!row) throw new Error('Aluguel não encontrado');
+
+  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  header(doc, 'CONTRATO DE LOCAÇÃO DE VEÍCULO');
+
+  sectionTitle(doc, 'Dados do veículo');
+  fieldRow(doc, [['Marca', String(row.marca || '')], ['Modelo', String(row.modelo || row.moto_nome || '')]]);
+  fieldRow(doc, [['Ano', String(row.ano || '')], ['Placa', String(row.placa || '')]]);
+  field(doc, 'Chassi', String(row.chassi || ''));
+  field(doc, 'RENAVAM', String(row.renavam || ''));
+  field(doc, 'KM na retirada', row.km ? `${Number(row.km).toLocaleString('pt-BR')} km` : '________________');
+
+  sectionTitle(doc, 'Locatário');
+  field(doc, 'Nome', String(row.cliente_nome || ''));
+  field(doc, 'CPF', String(row.cpf || ''));
+  field(doc, 'CNH', String(row.cnh || ''));
+  field(doc, 'Telefone', String(row.telefone || ''));
+  field(doc, 'E-mail', String(row.email || ''));
+
+  sectionTitle(doc, 'Período e valores');
+  fieldRow(doc, [['Início', fmtDate(row.data_inicio as string)], ['Fim', fmtDate(row.data_fim as string)]]);
+  field(doc, 'Dias', String(row.dias || ''));
+  field(doc, 'Valor da diária', fmtBRL(row.valor_diaria as number));
+  field(doc, 'Valor total', fmtBRL(row.valor_total as number));
+  field(doc, 'Caução', fmtBRL(row.valor_caucao as number));
+
+  sectionTitle(doc, 'Cláusulas');
+  clausulas(doc, [
+    'O LOCATÁRIO recebe o veículo acima em perfeitas condições de uso e se compromete a devolvê-lo nas mesmas condições, salvo desgaste natural.',
+    'A LOCADORA recebe caução conforme valor indicado, que será integralmente devolvida após conferência do veículo na data de devolução.',
+    'Em caso de danos, multas de trânsito, furto ou extravio ocorridos durante o período de locação, a responsabilidade é integral do LOCATÁRIO.',
+    'O combustível é de responsabilidade do LOCATÁRIO. O veículo deve ser devolvido com o mesmo nível de combustível da retirada.',
+    'Atrasos na devolução serão cobrados em dobro por dia de atraso.',
+    'É vedado o uso do veículo por terceiros não cadastrados neste contrato.',
+    'Fica eleito o foro da comarca de Franco da Rocha - SP para dirimir quaisquer questões oriundas do presente contrato.',
+  ]);
+
+  signatures(doc, 'Busca Racing (Locadora)', String(row.cliente_nome || 'Locatário'));
+  return collectPdf(doc);
+}

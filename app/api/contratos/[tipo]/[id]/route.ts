@@ -7,6 +7,7 @@ import {
   gerarContratoOS,
   gerarReciboReserva,
   gerarTermoEntrega,
+  gerarContratoAluguel,
 } from '@/lib/pdf-contrato';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ const GENERATORS: Record<string, (id: number) => Promise<Buffer>> = {
   os: gerarContratoOS,
   reserva: gerarReciboReserva,
   entrega: gerarTermoEntrega,
+  aluguel: gerarContratoAluguel,
 };
 
 const FILENAMES: Record<string, string> = {
@@ -29,6 +31,7 @@ const FILENAMES: Record<string, string> = {
   os: 'ordem-servico',
   reserva: 'recibo-reserva',
   entrega: 'termo-entrega',
+  aluguel: 'contrato-aluguel',
 };
 
 /** GET /api/contratos/[tipo]/[id] — generate and return PDF */
