@@ -20,6 +20,8 @@ type Peca = {
   codigo: string;
   destaque: number;
   ativo: number;
+  estoque_qtd: number;
+  estoque_min: number;
   created_at: string;
 };
 
@@ -38,6 +40,12 @@ export default function PecasAdminPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Modal de entrada/saída de estoque
+  const [movTarget, setMovTarget] = useState<{ peca: Peca; tipo: 'entrada' | 'saida' } | null>(null);
+  const [movQtd, setMovQtd] = useState('1');
+  const [movDesc, setMovDesc] = useState('');
+  const [movSaving, setMovSaving] = useState(false);
 
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
@@ -163,6 +171,7 @@ export default function PecasAdminPage() {
                 <th>Foto</th>
                 <th>Nome</th>
                 <th>Categoria</th>
+                <th>Estoque</th>
                 <th>Preço</th>
                 <th>Destaque</th>
                 <th>Status</th>
@@ -196,6 +205,19 @@ export default function PecasAdminPage() {
                     <span className={`${styles.badge} ${styles.bgBlue}`}>
                       {CATEGORIA_LABEL[p.categoria] || p.categoria}
                     </span>
+                  </td>
+                  <td>
+                    {(() => {
+                      const q = Number(p.estoque_qtd) || 0;
+                      const min = Number(p.estoque_min) || 0;
+                      const bg = q === 0 ? '#fcdcdc' : q <= min ? '#fff3cd' : '#d4edda';
+                      const color = q === 0 ? '#8b1820' : q <= min ? '#856404' : '#155724';
+                      return (
+                        <span className={styles.badge} style={{ background: bg, color }}>
+                          {q} {q === 1 ? 'un' : 'un'}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className={styles.tdPreco}>
                     {p.preco ? `R$ ${Number(p.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}
@@ -231,6 +253,41 @@ export default function PecasAdminPage() {
                         </button>
                         {menuOpenId === p.id && (
                           <ul className={kebabStyles.menu} role="menu">
+                            <li role="none">
+                              <button
+                                type="button" role="menuitem" className={kebabStyles.menuItem}
+                                onClick={() => {
+                                  setMenuOpenId(null);
+                                  setMovTarget({ peca: p, tipo: 'entrada' });
+                                  setMovQtd('1');
+                                  setMovDesc('');
+                                }}
+                              >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                  <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                  <polyline points="19 12 12 19 5 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                Entrada de estoque
+                              </button>
+                            </li>
+                            <li role="none">
+                              <button
+                                type="button" role="menuitem" className={kebabStyles.menuItem}
+                                onClick={() => {
+                                  setMenuOpenId(null);
+                                  setMovTarget({ peca: p, tipo: 'saida' });
+                                  setMovQtd('1');
+                                  setMovDesc('');
+                                }}
+                              >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                  <line x1="12" y1="19" x2="12" y2="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                  <polyline points="5 12 12 5 19 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                Saída de estoque
+                              </button>
+                            </li>
+                            <li role="none" className={kebabStyles.menuDivider} aria-hidden="true" />
                             <li role="none">
                               <button
                                 type="button" role="menuitem" className={kebabStyles.menuItem}
@@ -293,6 +350,100 @@ export default function PecasAdminPage() {
             await reload();
           }}
         />
+      )}
+
+      {movTarget && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget && !movSaving) setMovTarget(null); }}
+        >
+          <div style={{ background: '#fff', width: '100%', maxWidth: 440 }}>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e4e4e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.4rem', color: movTarget.tipo === 'entrada' ? '#155724' : '#856404' }}>
+                {movTarget.tipo === 'entrada' ? '▼ Entrada de estoque' : '▲ Saída de estoque'}
+              </h3>
+              <button type="button" onClick={() => setMovTarget(null)} disabled={movSaving}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', padding: 4 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const qtd = Math.floor(Number(movQtd) || 0);
+              if (qtd < 1) { showToast('Quantidade deve ser >= 1', 'error'); return; }
+              setMovSaving(true);
+              try {
+                const r = await fetch(`/api/pecas/${movTarget.peca.id}/movimentacoes`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    tipo: movTarget.tipo,
+                    quantidade: qtd,
+                    descricao: movDesc.trim(),
+                  }),
+                });
+                if (!r.ok) {
+                  const d = await r.json().catch(() => ({}));
+                  throw new Error(d.error || 'fail');
+                }
+                showToast(movTarget.tipo === 'entrada' ? 'Entrada registrada' : 'Saída registrada', 'success');
+                setMovTarget(null);
+                await reload();
+              } catch (err) {
+                showToast(err instanceof Error ? err.message : 'Erro ao salvar', 'error');
+              } finally {
+                setMovSaving(false);
+              }
+            }}>
+              <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: '#777', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>
+                    Peça
+                  </div>
+                  <div style={{ fontWeight: 600 }}>{movTarget.peca.nome}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#777' }}>
+                    Estoque atual: <strong>{Number(movTarget.peca.estoque_qtd) || 0}</strong> un
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#777', marginBottom: 4 }}>
+                    Quantidade *
+                  </label>
+                  <input type="number" min="1" value={movQtd} onChange={(e) => setMovQtd(e.target.value)} required
+                    style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #e4e4e0', fontSize: '0.92rem' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#777', marginBottom: 4 }}>
+                    Descrição / motivo
+                  </label>
+                  <textarea value={movDesc} onChange={(e) => setMovDesc(e.target.value)} rows={3}
+                    placeholder={movTarget.tipo === 'entrada' ? 'Ex: NF 12345, fornecedor X' : 'Ex: aplicada na OS #42'}
+                    style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #e4e4e0', fontSize: '0.92rem', resize: 'vertical' }} />
+                </div>
+              </div>
+              <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #e4e4e0', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setMovTarget(null)} disabled={movSaving}
+                  style={{ padding: '8px 16px', background: 'transparent', border: '1.5px solid #e4e4e0', cursor: 'pointer', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={movSaving}
+                  style={{
+                    padding: '8px 16px',
+                    background: movTarget.tipo === 'entrada' ? '#155724' : '#856404',
+                    color: '#fff', border: 'none', cursor: 'pointer',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+                  }}>
+                  {movSaving ? 'Salvando...' : `Registrar ${movTarget.tipo}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );

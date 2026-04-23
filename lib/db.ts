@@ -458,7 +458,78 @@ function initSchema(db: Database.Database): void {
       created_at      TEXT    DEFAULT (datetime('now','localtime'))
     );
     CREATE INDEX IF NOT EXISTS idx_os_pecas_ordem ON os_pecas(ordem_id);
+
+    -- Movimentações de estoque de peças (entrada/saida)
+    CREATE TABLE IF NOT EXISTS pecas_movimentacoes (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      peca_id       INTEGER NOT NULL REFERENCES pecas(id) ON DELETE CASCADE,
+      tipo          TEXT NOT NULL,            -- 'entrada' | 'saida'
+      quantidade    INTEGER NOT NULL,
+      descricao     TEXT DEFAULT '',
+      ref_tipo      TEXT DEFAULT 'manual',    -- 'manual' | 'os'
+      ref_id        INTEGER,                  -- id da OS se for 'os'
+      created_at    TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pecas_mov_peca ON pecas_movimentacoes(peca_id);
+    CREATE INDEX IF NOT EXISTS idx_pecas_mov_created ON pecas_movimentacoes(created_at);
+
+    -- Categorias gerenciáveis (motos + peças em tabela única por tipo)
+    CREATE TABLE IF NOT EXISTS categorias (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo        TEXT NOT NULL,             -- 'moto' | 'peca'
+      slug        TEXT NOT NULL,
+      label       TEXT NOT NULL,
+      descricao   TEXT DEFAULT '',
+      ordem       INTEGER DEFAULT 0,
+      ativo       INTEGER DEFAULT 1,
+      created_at  TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(tipo, slug)
+    );
+    CREATE INDEX IF NOT EXISTS idx_categorias_tipo ON categorias(tipo);
   `);
+
+  // ----- Pecas: coluna estoque_qtd (migration idempotente) -----
+  const existingPecasCols = new Set(
+    (db.prepare('PRAGMA table_info(pecas)').all() as { name: string }[]).map((c) => c.name),
+  );
+  if (!existingPecasCols.has('estoque_qtd')) {
+    db.exec('ALTER TABLE pecas ADD COLUMN estoque_qtd INTEGER DEFAULT 0');
+  }
+  if (!existingPecasCols.has('estoque_min')) {
+    db.exec('ALTER TABLE pecas ADD COLUMN estoque_min INTEGER DEFAULT 0');
+  }
+
+  // ----- Seed categorias (idempotente) -----
+  const catCount = (db.prepare('SELECT COUNT(*) AS c FROM categorias').get() as { c: number }).c;
+  if (catCount === 0) {
+    const insertCat = db.prepare(
+      'INSERT OR IGNORE INTO categorias (tipo, slug, label, descricao, ordem) VALUES (?, ?, ?, ?, ?)',
+    );
+    // Motos
+    const motos = [
+      ['motos-rua', 'Motos de Rua', 'Motos de uso urbano e estrada', 1],
+      ['offroad', 'Offroad', 'Motos para trilha, enduro e motocross', 2],
+      ['quadriciclos', 'Quadriciclos', 'ATVs e quadriciclos', 3],
+      ['infantil', 'Infantil', 'Motos infantis e elétricas', 4],
+      ['outros', 'Outros', 'Outras categorias', 99],
+    ];
+    for (const [slug, label, desc, ordem] of motos) {
+      insertCat.run('moto', slug, label, desc, ordem);
+    }
+    // Peças
+    const pecasCat = [
+      ['motor', 'Motor e Transmissão', 'Pistões, anéis, juntas, correntes, kit relação, embreagem e mais.', 1],
+      ['freios', 'Freios', 'Pastilhas, discos, manetes, cabos e fluidos de freio.', 2],
+      ['suspensao', 'Suspensão', 'Amortecedores, molas, bengalas, retentores e kits de reparo.', 3],
+      ['eletrica', 'Elétrica', 'Baterias, velas, CDI, reguladores, chicotes e lâmpadas.', 4],
+      ['carenagem', 'Carenagem e Plásticos', 'Carenagens, para-lamas, laterais e peças plásticas.', 5],
+      ['pneus-rodas', 'Pneus e Rodas', 'Pneus de rua, trilha e misto. Câmaras, aros e cubos.', 6],
+      ['outros', 'Outros', 'Outras peças e acessórios diversos.', 99],
+    ];
+    for (const [slug, label, desc, ordem] of pecasCat) {
+      insertCat.run('peca', slug, label, desc, ordem);
+    }
+  }
 
   // ----- Fase 6: token column on vendas (comprador portal) -----
   const existingVendasCols = new Set(

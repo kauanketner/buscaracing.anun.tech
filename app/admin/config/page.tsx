@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, ChangeEvent, FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
+import CategoriasManager from './CategoriasManager';
 import styles from './page.module.css';
 
 type ConfigMap = Record<string, string>;
@@ -550,6 +551,9 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
           </div>
         )}
       </section>
+
+      <CategoriasManager tipo="moto" titulo="Categorias de Motos" />
+      <CategoriasManager tipo="peca" titulo="Categorias de Peças" />
 
     </div>
   );

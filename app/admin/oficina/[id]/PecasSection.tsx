@@ -23,6 +23,7 @@ type Peca = {
   imagem: string | null;
   marca_moto: string;
   modelo_compat: string;
+  estoque_qtd: number;
 };
 
 type Props = {
@@ -353,8 +354,16 @@ function PecaPickerModal({ onClose, onPick }: { onClose: () => void; onPick: (p:
                   {p.modelo_compat && ` · ${p.modelo_compat}`}
                 </div>
               </div>
-              <div style={{ fontWeight: 700, color: '#27367D', fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.1rem', whiteSpace: 'nowrap' }}>
-                {p.preco ? fmtBRL(p.preco) : '—'}
+              <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                <div style={{ fontWeight: 700, color: '#27367D', fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.1rem' }}>
+                  {p.preco ? fmtBRL(p.preco) : '—'}
+                </div>
+                <div style={{
+                  fontSize: '0.7rem', fontWeight: 700,
+                  color: (p.estoque_qtd || 0) === 0 ? '#8b1820' : (p.estoque_qtd || 0) <= 2 ? '#856404' : '#155724',
+                }}>
+                  {(p.estoque_qtd || 0) === 0 ? 'Sem estoque' : `${p.estoque_qtd} em estoque`}
+                </div>
               </div>
             </button>
           ))}

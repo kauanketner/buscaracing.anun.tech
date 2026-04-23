@@ -53,9 +53,15 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     // Se recebeu peca_id, busca do catálogo pra completar snapshot
     if (body.peca_id) {
       const p = db
-        .prepare('SELECT id, nome, codigo, preco FROM pecas WHERE id=?')
-        .get(Number(body.peca_id)) as { id: number; nome: string; codigo: string; preco: number | null } | undefined;
+        .prepare('SELECT id, nome, codigo, preco, estoque_qtd FROM pecas WHERE id=?')
+        .get(Number(body.peca_id)) as { id: number; nome: string; codigo: string; preco: number | null; estoque_qtd: number | null } | undefined;
       if (!p) return NextResponse.json({ error: 'Peça não encontrada' }, { status: 404 });
+      const estoque = Number(p.estoque_qtd) || 0;
+      if (estoque < quantidade) {
+        return NextResponse.json({
+          error: `Estoque insuficiente (disponível: ${estoque}, solicitado: ${quantidade})`,
+        }, { status: 400 });
+      }
       pecaId = p.id;
       if (!nome) nome = p.nome;
       if (!codigo) codigo = p.codigo || '';
@@ -65,14 +71,29 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     if (!nome) return NextResponse.json({ error: 'Nome da peça obrigatório' }, { status: 400 });
     if (Number.isNaN(preco) || preco < 0) preco = 0;
 
-    const result = db
-      .prepare(
-        `INSERT INTO os_pecas (ordem_id, peca_id, nome_snapshot, codigo_snapshot, quantidade, preco_unitario)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-      .run(Number(id), pecaId, nome, codigo, quantidade, preco);
+    const tx = db.transaction(() => {
+      const result = db
+        .prepare(
+          `INSERT INTO os_pecas (ordem_id, peca_id, nome_snapshot, codigo_snapshot, quantidade, preco_unitario)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run(Number(id), pecaId, nome, codigo, quantidade, preco);
+      const osPecaId = Number(result.lastInsertRowid);
 
-    return NextResponse.json({ ok: true, id: Number(result.lastInsertRowid) });
+      // Deduz estoque se vier do catálogo
+      if (pecaId) {
+        db.prepare('UPDATE pecas SET estoque_qtd = COALESCE(estoque_qtd, 0) - ? WHERE id=?')
+          .run(quantidade, pecaId);
+        db.prepare(
+          `INSERT INTO pecas_movimentacoes (peca_id, tipo, quantidade, descricao, ref_tipo, ref_id)
+           VALUES (?, 'saida', ?, ?, 'os', ?)`,
+        ).run(pecaId, quantidade, `Aplicada na OS #${id}`, Number(id));
+      }
+
+      return osPecaId;
+    });
+    const newId = tx();
+    return NextResponse.json({ ok: true, id: newId });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erro interno';
     return NextResponse.json({ error: message }, { status: 500 });
