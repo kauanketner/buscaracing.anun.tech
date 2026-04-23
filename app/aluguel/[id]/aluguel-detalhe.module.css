@@ -1,0 +1,340 @@
+.section {
+  padding: 3rem 0 5rem;
+  background: #FDFDFB;
+}
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 3vw;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+/* ── GALLERY ── */
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.heroImg {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  background: #f0f0ec;
+  border: 1px solid #e4e4e0;
+  display: block;
+}
+.fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.6rem;
+}
+.thumb {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  background: #f0f0ec;
+  border: 1px solid #e4e4e0;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+  display: block;
+}
+.thumb:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+
+.descricao {
+  margin-top: 0.5rem;
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  padding: 1.25rem 1.35rem;
+}
+.descricaoTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.35rem;
+  color: var(--blue);
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.02em;
+}
+.descricao p {
+  color: #444;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  padding: 1rem 1.2rem;
+}
+.specItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.specLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+}
+.specVal {
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95rem;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 88px;
+}
+
+.priceCard {
+  background: var(--blue);
+  color: #fff;
+  padding: 1.5rem;
+}
+.priceLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 0.35rem;
+}
+.priceValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.priceValue {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: #fff;
+}
+.priceUnit {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.caucaoInfo {
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* ── FORM ── */
+.form {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.formTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.45rem;
+  color: var(--blue);
+  margin: 0 0 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #555;
+}
+.field input,
+.field textarea {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border: 1.5px solid #e0e0dc;
+  background: #fff;
+  color: #222;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--blue);
+}
+.field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: 'Barlow', sans-serif;
+}
+
+.resumo {
+  background: #f6f6f3;
+  border: 1px solid #ececea;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.resumoLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: #333;
+  font-size: 0.95rem;
+}
+.resumoLine strong {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--blue);
+  letter-spacing: 0.02em;
+}
+.resumoLineSmall {
+  font-size: 0.78rem;
+  color: #777;
+}
+
+.conflito {
+  background: #fdecec;
+  border: 1px solid #f5b9b9;
+  color: #8b1e1e;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.err {
+  background: #fdecec;
+  border: 1px solid #f5b9b9;
+  color: #8b1e1e;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.btnSubmit {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 14px 24px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  margin-top: 0.25rem;
+}
+.btnSubmit:hover:not(:disabled) {
+  background: var(--deep);
+}
+.btnSubmit:disabled {
+  background: #9da4bf;
+  cursor: not-allowed;
+}
+
+.disclaimer {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── SUCCESS ── */
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
+}
+.successIcon {
+  color: #1ebe5a;
+}
+.successTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  color: var(--blue);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+.successMsg {
+  color: #555;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 360px;
+}
+.successWa {
+  display: inline-flex;
+  align-items: center;
+  background: #25d366;
+  color: #fff;
+  padding: 12px 24px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-size: 0.88rem;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+.successWa:hover {
+  background: #1ebe5a;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  .sidebar {
+    position: static;
+  }
+  .priceValue {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .section {
+    padding: 2rem 0 3.5rem;
+  }
+  .priceCard,
+  .form {
+    padding: 1.25rem;
+  }
+}
