@@ -41,6 +41,10 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
   const [valorCompra, setValorCompra] = useState('');
   const [nomeCliente, setNomeCliente] = useState('');
   const [cor, setCor] = useState('');
+  // Controle interno (não obrigatórios)
+  const [chassi, setChassi] = useState('');
+  const [numeroMotor, setNumeroMotor] = useState('');
+  const [renavam, setRenavam] = useState('');
 
   // Consignada-specific
   const [donoNome, setDonoNome] = useState('');
@@ -65,10 +69,9 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
       return;
     }
 
-    // Validação: todos os campos obrigatórios
+    // Validação: campos obrigatórios (placa, chassi, renavam, n.motor ficam opcionais)
     if (!modelo.trim()) { showToast('Modelo é obrigatório', 'error'); return; }
     if (!ano.trim()) { showToast('Ano é obrigatório', 'error'); return; }
-    if (!placa.trim()) { showToast('Placa é obrigatória', 'error'); return; }
     if (!km.trim()) { showToast('KM é obrigatório', 'error'); return; }
     if (!cor.trim()) { showToast('Cor é obrigatória', 'error'); return; }
 
@@ -113,6 +116,9 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
       fd.append('km', km);
       fd.append('placa', placa.toUpperCase().trim());
       fd.append('cor', cor.trim());
+      fd.append('chassi', chassi.toUpperCase().trim());
+      fd.append('numero_motor', numeroMotor.trim());
+      fd.append('renavam', renavam.replace(/\D/g, ''));
       fd.append('tipo_entrada', origem === 'consignada' ? 'consignada' : 'compra');
       fd.append('valor_compra', valorCompra);
       fd.append('nome_cliente', origem === 'consignada' ? donoNome.trim() : nomeCliente.trim());
@@ -246,9 +252,44 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
                 <input type="number" value={ano} onChange={(e) => setAno(e.target.value)} placeholder="2022" required />
               </div>
               <div className={styles.formGroup}>
-                <label>Placa *</label>
-                <input type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" style={{ textTransform: 'uppercase' }} required />
+                <label>Placa</label>
+                <input type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" style={{ textTransform: 'uppercase' }} />
               </div>
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Chassi</label>
+                <input
+                  type="text"
+                  value={chassi}
+                  onChange={(e) => setChassi(e.target.value.toUpperCase())}
+                  placeholder="17 caracteres"
+                  maxLength={17}
+                  style={{ textTransform: 'uppercase' }}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Número do motor</label>
+                <input
+                  type="text"
+                  value={numeroMotor}
+                  onChange={(e) => setNumeroMotor(e.target.value)}
+                  placeholder="Ex: ABC1234567"
+                />
+              </div>
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Renavam</label>
+                <input
+                  type="text"
+                  value={renavam}
+                  onChange={(e) => setRenavam(e.target.value.replace(/\D/g, ''))}
+                  placeholder="00000000000"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className={styles.formGroup} />
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
