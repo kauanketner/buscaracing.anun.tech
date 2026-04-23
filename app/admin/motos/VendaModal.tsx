@@ -19,6 +19,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
 
   const [compradorNome, setCompradorNome] = useState('');
   const [compradorTel, setCompradorTel] = useState('');
+  const [compradorCpf, setCompradorCpf] = useState('');
   const [compradorCep, setCompradorCep] = useState('');
   const [compradorEndereco, setCompradorEndereco] = useState('');
   const [compradorNumero, setCompradorNumero] = useState('');
@@ -123,6 +124,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
           moto_id: motoId,
           comprador_nome: compradorNome.trim(),
           comprador_tel: compradorTel.trim(),
+          comprador_cpf: compradorCpf.trim(),
           comprador_endereco: montarEndereco(compradorEndereco, compradorNumero, compradorComplemento),
           valor_venda: Number(valorVenda),
           forma_pagamento: formaPagamento,
@@ -146,7 +148,6 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
 
       // Upload dos comprovantes anexados (se houver) — não bloqueia msg de sucesso
       if (comprovantes.length > 0 && d.venda_id) {
-        let ok = 0;
         let fail = 0;
         for (const file of comprovantes) {
           const fd = new FormData();
@@ -156,12 +157,17 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
               method: 'POST',
               body: fd,
             });
-            if (up.ok) ok++; else fail++;
+            if (!up.ok) fail++;
           } catch { fail++; }
         }
         if (fail > 0) {
           showToast(`Venda registrada, mas ${fail} comprovante(s) falharam.`, 'error');
         }
+      }
+
+      // Dispara notificação WhatsApp DEPOIS dos uploads (pra {{10}} ter o count real)
+      if (d.venda_id) {
+        fetch(`/api/vendas/${d.venda_id}/notify`, { method: 'POST' }).catch(() => {});
       }
 
       let msg = 'Venda registrada!';
@@ -218,6 +224,27 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                 <label>Telefone</label>
                 <input type="text" value={compradorTel} onChange={(e) => setCompradorTel(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>CPF</label>
+                <input
+                  type="text"
+                  value={compradorCpf}
+                  onChange={(e) => {
+                    // Máscara 000.000.000-00
+                    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    let masked = d;
+                    if (d.length > 3) masked = `${d.slice(0, 3)}.${d.slice(3)}`;
+                    if (d.length > 6) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+                    if (d.length > 9) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+                    setCompradorCpf(masked);
+                  }}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className={styles.formGroup} />
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup} style={{ maxWidth: 160 }}>

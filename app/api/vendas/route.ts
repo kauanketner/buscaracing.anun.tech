@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { ESTADOS_PUBLICOS, type MotoEstado } from '@/lib/moto-estados';
-import { enviarNotificacaoVenda } from '@/lib/wts-chat';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +40,7 @@ export async function POST(request: NextRequest) {
       comprador_nome: string;
       comprador_tel?: string;
       comprador_email?: string;
+      comprador_cpf?: string;
       comprador_endereco?: string;
       vendedor_id?: number | null;
       valor_venda: number;
@@ -111,16 +111,17 @@ export async function POST(request: NextRequest) {
       // 1. Create venda
       const vendaResult = db
         .prepare(
-          `INSERT INTO vendas (moto_id, comprador_nome, comprador_tel, comprador_email, comprador_endereco,
+          `INSERT INTO vendas (moto_id, comprador_nome, comprador_tel, comprador_email, comprador_cpf, comprador_endereco,
              vendedor_id, vendedor_tipo, valor_venda, valor_sinal, forma_pagamento,
              troca_moto_id, troca_valor, comissao_valor, observacoes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           body.moto_id,
           compradorNome,
           (body.comprador_tel || '').trim(),
           (body.comprador_email || '').trim(),
+          (body.comprador_cpf || '').trim(),
           (body.comprador_endereco || '').trim(),
           body.vendedor_id || null,
           vendedorTipo,
@@ -239,64 +240,8 @@ export async function POST(request: NextRequest) {
 
     const result = tx();
 
-    // Disparar notificação WhatsApp (async, não bloqueia resposta)
-    try {
-      const notifData = db
-        .prepare(
-          `SELECT v.valor_venda, v.forma_pagamento, v.comprador_nome, v.comprador_endereco,
-                  m.nome AS moto_nome, m.chassi AS moto_chassi, m.numero_motor AS moto_numero_motor,
-                  ve.nome AS vendedor_nome
-           FROM vendas v
-           LEFT JOIN motos m ON v.moto_id = m.id
-           LEFT JOIN vendedores ve ON v.vendedor_id = ve.id
-           WHERE v.id = ?`,
-        )
-        .get(result.vendaId) as
-        | {
-            valor_venda: number;
-            forma_pagamento: string;
-            comprador_nome: string;
-            comprador_endereco: string;
-            moto_nome: string;
-            moto_chassi: string;
-            moto_numero_motor: string;
-            vendedor_nome: string | null;
-          }
-        | undefined;
-
-      if (notifData) {
-        const fmtValor = Number(notifData.valor_venda).toLocaleString('pt-BR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        // Formata forma de pagamento pra leitura humana
-        const FORMA_LABELS: Record<string, string> = {
-          pix: 'PIX',
-          dinheiro: 'Dinheiro',
-          financiamento: 'Financiamento',
-          cartao: 'Cartão',
-          misto: 'Misto',
-        };
-        const pagamento = FORMA_LABELS[notifData.forma_pagamento] || notifData.forma_pagamento || '—';
-
-        // Não bloqueia resposta — dispara em background
-        enviarNotificacaoVenda({
-          vendedor: notifData.vendedor_nome || 'Loja',
-          moto: notifData.moto_nome || '—',
-          chassi: notifData.moto_chassi || '—',
-          motor: notifData.moto_numero_motor || '—',
-          cliente: notifData.comprador_nome || '—',
-          endereco: notifData.comprador_endereco || '—',
-          valor: fmtValor,
-          pagamento,
-        }).catch((err) => {
-          console.error('[venda-notif] falha ao enviar:', err);
-        });
-      }
-    } catch (err) {
-      // Falha na notificação NÃO deve impedir a venda
-      console.error('[venda-notif] erro ao preparar:', err);
-    }
+    // Obs.: notificação WhatsApp é disparada pelo frontend via POST /api/vendas/[id]/notify
+    // depois que os comprovantes são uploaded (pra que o {{10}} do template mostre o número real).
 
     return NextResponse.json({
       ok: true,

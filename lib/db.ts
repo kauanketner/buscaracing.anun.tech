@@ -542,6 +542,9 @@ function initSchema(db: Database.Database): void {
   if (!existingVendasCols.has('comprador_endereco')) {
     db.exec("ALTER TABLE vendas ADD COLUMN comprador_endereco TEXT DEFAULT ''");
   }
+  if (!existingVendasCols.has('comprador_cpf')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN comprador_cpf TEXT DEFAULT ''");
+  }
 
   // Comprovantes de venda (PIX, transferência, nota assinada, etc.)
   db.exec(`

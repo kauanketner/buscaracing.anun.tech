@@ -189,13 +189,16 @@ export type VendaNotifData = {
   endereco: string;
   valor: string;   // já formatado ex: "12.000,00"
   pagamento: string;
+  cpf: string;          // {{9}}
+  comprovantes: string; // {{10}} — ex: "3 anexados" ou "Nenhum"
 };
 
 /**
  * Envia notificação de venda realizada para os números configurados.
- * Template usa parâmetros numerados {{1}}..{{8}}:
+ * Template usa parâmetros numerados {{1}}..{{10}}:
  *   1=vendedor, 2=moto, 3=chassi, 4=motor, 5=cliente,
- *   6=endereço, 7=valor, 8=forma de pagamento
+ *   6=endereço, 7=valor, 8=forma de pagamento,
+ *   9=CPF, 10=comprovantes
  */
 export async function enviarNotificacaoVenda(
   data: VendaNotifData,
@@ -205,7 +208,7 @@ export async function enviarNotificacaoVenda(
     return { enviados: 0, falhas: 0, total: 0 };
   }
 
-  // Template `venda_realizada` da WTS usa chaves p1..p8 (não numeração nua)
+  // Template `venda_realizada` da WTS usa chaves p1..p10
   const params: Record<string, string> = {
     p1: data.vendedor || '—',
     p2: data.moto || '—',
@@ -215,6 +218,8 @@ export async function enviarNotificacaoVenda(
     p6: data.endereco || '—',
     p7: data.valor || '—',
     p8: data.pagamento || '—',
+    p9: data.cpf || '—',
+    p10: data.comprovantes || '—',
   };
 
   let enviados = 0;
