@@ -1,0 +1,94 @@
+.wrap {
+  background: #ffffff;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.card {
+  border: 1px solid #e4e4e0;
+  padding: 1rem 1.25rem;
+  background: #fafaf7;
+}
+.cardLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 4px;
+}
+.cardValue {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  color: #27367D;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+
+.tableWrap {
+  border: 1px solid #e4e4e0;
+  background: #ffffff;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.table thead th {
+  text-align: left;
+  padding: 11px 14px;
+  background: #f8f8f5;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #27367D;
+  border-bottom: 1px solid #e4e4e0;
+}
+.table tbody td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f1f1ee;
+  vertical-align: middle;
+}
+.tdId {
+  color: #777;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+}
+.tdName {
+  font-weight: 600;
+  color: #222;
+}
+.tdSub {
+  color: #777;
+  font-size: 0.82rem;
+}
+.tdPreco {
+  font-weight: 600;
+  color: #155724;
+  white-space: nowrap;
+}
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: #e2e3e5;
+  color: #383d41;
+}
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #777;
+  font-size: 0.88rem;
+}
