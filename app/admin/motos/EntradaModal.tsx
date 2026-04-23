@@ -4,6 +4,7 @@ import { useState, useRef, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
 import { MOTO_ORIGEM_LABELS, type MotoOrigem } from '@/lib/moto-estados';
 import { MOTO_MARCAS } from '@/lib/moto-marcas';
+import CurrencyInput, { centsToDecimal } from '@/components/CurrencyInput';
 import styles from './page.module.css';
 
 type Props = {
@@ -44,7 +45,7 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
   // Consignada-specific
   const [donoNome, setDonoNome] = useState('');
   const [donoTel, setDonoTel] = useState('');
-  const [margemPct, setMargemPct] = useState('12');
+  const [valorRepasse, setValorRepasse] = useState(''); // centavos (consignada)
 
   const [saving, setSaving] = useState(false);
   const [fotos, setFotos] = useState<File[]>([]);
@@ -107,7 +108,7 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
             moto_id: motoId,
             dono_nome: donoNome.trim(),
             dono_telefone: donoTel.trim(),
-            margem_pct: Number(margemPct) || 12,
+            valor_repasse: valorRepasse ? Number(centsToDecimal(valorRepasse)) : null,
           }),
         });
       }
@@ -266,9 +267,12 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
                     <input type="text" value={donoTel} onChange={(e) => setDonoTel(e.target.value)} placeholder="(11) 99999-9999" />
                   </div>
                 </div>
-                <div className={styles.formGroup} style={{ maxWidth: 200 }}>
-                  <label>Margem da loja (%)</label>
-                  <input type="number" value={margemPct} onChange={(e) => setMargemPct(e.target.value)} />
+                <div className={styles.formGroup} style={{ maxWidth: 280 }}>
+                  <label>Valor de repasse acordado</label>
+                  <CurrencyInput value={valorRepasse} onChange={setValorRepasse} placeholder="R$ 0,00" />
+                  <span style={{ fontSize: '0.72rem', color: '#777', marginTop: 4, display: 'block' }}>
+                    Quanto você vai repassar ao dono quando a moto vender. Custo da revisão pós-venda será descontado.
+                  </span>
                 </div>
               </>
             )}

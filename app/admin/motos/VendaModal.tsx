@@ -19,7 +19,12 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
 
   const [compradorNome, setCompradorNome] = useState('');
   const [compradorTel, setCompradorTel] = useState('');
+  const [compradorCep, setCompradorCep] = useState('');
   const [compradorEndereco, setCompradorEndereco] = useState('');
+  const [compradorNumero, setCompradorNumero] = useState('');
+  const [compradorComplemento, setCompradorComplemento] = useState('');
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepErr, setCepErr] = useState<string | null>(null);
   const [valorVenda, setValorVenda] = useState(motoPreco ? String(motoPreco) : '');
   const [formaPagamento, setFormaPagamento] = useState('pix');
   const [vendedorId, setVendedorId] = useState('');
@@ -53,6 +58,48 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
   const valorFinal = (Number(valorVenda) || 0);
   const aReceber = valorFinal - sinalAbate - valorTroca;
 
+  // Monta string completa de endereço a partir dos campos separados
+  const montarEndereco = (rua: string, numero: string, complemento: string): string => {
+    const partes = [rua, numero && `nº ${numero}`, complemento].filter(Boolean).map((s) => String(s).trim()).filter(Boolean);
+    return partes.join(', ');
+  };
+
+  // CEP lookup via ViaCEP
+  const buscarCep = async (cepRaw: string) => {
+    const cep = cepRaw.replace(/\D/g, '');
+    if (cep.length !== 8) {
+      setCepErr(cep.length > 0 ? 'CEP precisa ter 8 dígitos' : null);
+      return;
+    }
+    setCepErr(null);
+    setCepLoading(true);
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      if (!r.ok) throw new Error('fail');
+      const d = await r.json();
+      if (d.erro) {
+        setCepErr('CEP não encontrado');
+        return;
+      }
+      // Monta o endereço: "Rua X, Bairro, Cidade - UF, CEP"
+      const rua = String(d.logradouro || '');
+      const bairro = String(d.bairro || '');
+      const cidade = String(d.localidade || '');
+      const uf = String(d.uf || '');
+      const cepFmt = String(d.cep || cepRaw);
+      const partes: string[] = [];
+      if (rua) partes.push(rua);
+      if (bairro) partes.push(bairro);
+      if (cidade || uf) partes.push(`${cidade}${uf ? ` - ${uf}` : ''}`);
+      if (cepFmt) partes.push(`CEP ${cepFmt}`);
+      setCompradorEndereco(partes.join(', '));
+    } catch {
+      setCepErr('Falha ao consultar CEP');
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!compradorNome.trim()) {
@@ -72,7 +119,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
           moto_id: motoId,
           comprador_nome: compradorNome.trim(),
           comprador_tel: compradorTel.trim(),
-          comprador_endereco: compradorEndereco.trim(),
+          comprador_endereco: montarEndereco(compradorEndereco, compradorNumero, compradorComplemento),
           valor_venda: Number(valorVenda),
           forma_pagamento: formaPagamento,
           vendedor_id: vendedorId ? Number(vendedorId) : null,
@@ -131,10 +178,44 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                 <input type="text" value={compradorTel} onChange={(e) => setCompradorTel(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
             </div>
-            <div className={styles.formGroup}>
-              <label>Endereço completo</label>
-              <input type="text" value={compradorEndereco} onChange={(e) => setCompradorEndereco(e.target.value)}
-                placeholder="Rua, número, bairro, cidade - UF, CEP" />
+            <div className={styles.formRow}>
+              <div className={styles.formGroup} style={{ maxWidth: 160 }}>
+                <label>CEP</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={9}
+                  value={compradorCep}
+                  onChange={(e) => {
+                    // máscara 00000-000
+                    const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+                    const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+                    setCompradorCep(masked);
+                    if (d.length === 8) buscarCep(d);
+                  }}
+                  placeholder="00000-000"
+                  disabled={cepLoading}
+                />
+                {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando...</span>}
+                {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
+              </div>
+              <div className={styles.formGroup} style={{ flex: 2 }}>
+                <label>Endereço (rua + bairro + cidade/UF)</label>
+                <input type="text" value={compradorEndereco} onChange={(e) => setCompradorEndereco(e.target.value)}
+                  placeholder="Preencha CEP acima ou digite" />
+              </div>
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup} style={{ maxWidth: 140 }}>
+                <label>Número</label>
+                <input type="text" value={compradorNumero} onChange={(e) => setCompradorNumero(e.target.value)}
+                  placeholder="123" />
+              </div>
+              <div className={styles.formGroup} style={{ flex: 2 }}>
+                <label>Complemento</label>
+                <input type="text" value={compradorComplemento} onChange={(e) => setCompradorComplemento(e.target.value)}
+                  placeholder="Apto, bloco, referência..." />
+              </div>
             </div>
 
             {/* Valores */}

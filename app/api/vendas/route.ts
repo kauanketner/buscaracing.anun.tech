@@ -149,14 +149,23 @@ export async function POST(request: NextRequest) {
            VALUES (?, ?, ?, ?, 'Revisão pós-venda (consignada)', 'aberta')`,
         ).run(compradorNome, body.moto_id, moto.marca || '', moto.nome || '');
 
-        // Calculate and record repasse pendente
+        // Record repasse pendente.
+        // valor_repasse é o valor ACORDADO na entrada (preenchido no form).
+        // Se não foi informado, cai no modelo antigo com margem_pct (retrocompat).
         const consig = db
-          .prepare("SELECT id, margem_pct, dono_nome FROM consignacoes WHERE moto_id=? AND status='ativa' ORDER BY id DESC LIMIT 1")
-          .get(body.moto_id) as { id: number; margem_pct: number; dono_nome: string } | undefined;
+          .prepare("SELECT id, margem_pct, valor_repasse, dono_nome FROM consignacoes WHERE moto_id=? AND status='ativa' ORDER BY id DESC LIMIT 1")
+          .get(body.moto_id) as { id: number; margem_pct: number; valor_repasse: number | null; dono_nome: string } | undefined;
         if (consig) {
-          const margemPct = consig.margem_pct || 12;
-          const repasseBase = body.valor_venda * (1 - margemPct / 100);
-          // custo_revisao will be filled when OS closes (Phase 3 auto-transition)
+          let repasseBase: number;
+          if (consig.valor_repasse != null && consig.valor_repasse > 0) {
+            // Modelo novo: valor fixo acordado com o dono
+            repasseBase = consig.valor_repasse;
+          } else {
+            // Modelo antigo: margem % calculada sobre o preço de venda
+            const margemPct = consig.margem_pct || 12;
+            repasseBase = body.valor_venda * (1 - margemPct / 100);
+          }
+          // custo_revisao será descontado quando a OS pós-venda fechar
           db.prepare("UPDATE consignacoes SET valor_repasse=?, status='vendida' WHERE id=?")
             .run(repasseBase, consig.id);
 

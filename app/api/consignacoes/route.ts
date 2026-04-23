@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       dono_email?: string;
       dono_pix?: string;
       margem_pct?: number;
+      valor_repasse?: number | null;
     };
 
     if (!body.moto_id || !(body.dono_nome || '').trim()) {
@@ -49,8 +50,8 @@ export async function POST(request: NextRequest) {
 
     const result = db
       .prepare(
-        `INSERT INTO consignacoes (moto_id, dono_nome, dono_telefone, dono_email, dono_pix, margem_pct, token)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO consignacoes (moto_id, dono_nome, dono_telefone, dono_email, dono_pix, margem_pct, valor_repasse, token)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         body.moto_id,
@@ -58,7 +59,8 @@ export async function POST(request: NextRequest) {
         (body.dono_telefone || '').trim(),
         (body.dono_email || '').trim(),
         (body.dono_pix || '').trim(),
-        body.margem_pct ?? 12,
+        body.margem_pct ?? 0,
+        body.valor_repasse ?? null,
         token,
       );
 

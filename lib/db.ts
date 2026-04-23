@@ -615,6 +615,7 @@ function initSchema(db: Database.Database): void {
   setDefault('wts_from', '551151073435');
   setDefault('wts_template_id', '58f53_checklistlembrete');
   setDefault('aluguel_caucao_padrao', '500');
+  setDefault('venda_notif_template_id', 'venda_realizada');
   for (const k of seedKeys) {
     insert.run(k);
   }
