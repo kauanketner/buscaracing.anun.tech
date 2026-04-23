@@ -17,6 +17,7 @@ import AtualizarStatusModal from '../AtualizarStatusModal';
 import FecharModal from '../FecharModal';
 import GarantiaModal from '../GarantiaModal';
 import OrdemModal from '../OrdemModal';
+import PecasSection from './PecasSection';
 import styles from './detail.module.css';
 import './print.css';
 
@@ -533,6 +534,10 @@ export default function OficinaDetailPage() {
               <dd className={styles.big}>{formatBRL(ordem.valor_final)}</dd>
             </div>
           </dl>
+        </div>
+
+        <div className={`${styles.gridFull} os-no-print`}>
+          <PecasSection ordemId={ordem.id} />
         </div>
 
         <div className={`${styles.card} ${styles.gridFull} os-print-card`}>

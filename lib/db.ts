@@ -444,6 +444,20 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_alugueis_moto ON alugueis(moto_id);
     CREATE INDEX IF NOT EXISTS idx_alugueis_status ON alugueis(status);
     CREATE INDEX IF NOT EXISTS idx_alugueis_datas ON alugueis(data_inicio, data_fim);
+
+    -- Peças usadas em cada OS (snapshot de nome/preço para histórico mesmo
+    -- se a peça for editada ou removida do catálogo)
+    CREATE TABLE IF NOT EXISTS os_pecas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      ordem_id        INTEGER NOT NULL REFERENCES oficina_ordens(id) ON DELETE CASCADE,
+      peca_id         INTEGER REFERENCES pecas(id) ON DELETE SET NULL,
+      nome_snapshot   TEXT    NOT NULL,
+      codigo_snapshot TEXT    DEFAULT '',
+      quantidade      INTEGER NOT NULL DEFAULT 1,
+      preco_unitario  REAL    NOT NULL DEFAULT 0,
+      created_at      TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_os_pecas_ordem ON os_pecas(ordem_id);
   `);
 
   // ----- Fase 6: token column on vendas (comprador portal) -----
