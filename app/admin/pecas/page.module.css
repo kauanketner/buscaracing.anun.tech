@@ -1,6 +1,5 @@
 .wrap {
   background: #ffffff;
-  overflow: hidden;
 }
 
 /* Toolbar */
@@ -55,7 +54,7 @@
 
 /* Table */
 .tableWrap {
-  overflow-x: auto;
+  min-height: 420px;
 }
 .table {
   width: 100%;

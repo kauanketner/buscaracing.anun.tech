@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
 import { MOTO_MARCAS } from '@/lib/moto-marcas';
+import CurrencyInput, { centsToDecimal } from '@/components/CurrencyInput';
 import styles from './page.module.css';
 
 const BRANDS = MOTO_MARCAS;
@@ -147,20 +148,20 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         setCombustivel(m.combustivel || '');
         setTransmissao(m.transmissao || '');
         setKm(m.km != null ? String(m.km) : '');
-        setPreco(m.preco != null ? String(m.preco) : '');
-        setPrecoOriginal(m.preco_original != null ? String(m.preco_original) : '');
+        setPreco(m.preco != null ? String(Math.round(Number(m.preco) * 100)) : '');
+        setPrecoOriginal(m.preco_original != null ? String(Math.round(Number(m.preco_original) * 100)) : '');
         setDescricao(m.descricao || '');
         setDestaque(!!m.destaque);
         setAtivo(!!m.ativo);
         setDisponivelAluguel(!!(m as Record<string, unknown>).disponivel_aluguel);
-        setValorDiaria((m as Record<string, unknown>).valor_diaria != null ? String((m as Record<string, unknown>).valor_diaria) : '');
+        setValorDiaria((m as Record<string, unknown>).valor_diaria != null ? String(Math.round(Number((m as Record<string, unknown>).valor_diaria) * 100)) : '');
         setEstado(m.estado || '');
         setTipoEntrada(m.tipo_entrada || '');
         setPlaca(m.placa || '');
         setChassi(m.chassi || '');
         setRenavam(m.renavam || '');
         setNumeroMotor(m.numero_motor || '');
-        setValorCompra(m.valor_compra != null ? String(m.valor_compra) : '');
+        setValorCompra(m.valor_compra != null ? String(Math.round(Number(m.valor_compra) * 100)) : '');
         setNomeCliente(m.nome_cliente || '');
         setResponsavelCompra(m.responsavel_compra || '');
         setDataCadastro(m.created_at || '');
@@ -291,9 +292,9 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     fd.append('combustivel', combustivel);
     fd.append('transmissao', transmissao);
     fd.append('km', km);
-    // Preços
-    fd.append('preco', preco);
-    fd.append('preco_original', precoOriginal);
+    // Preços (convertidos de centavos pra decimal)
+    fd.append('preco', centsToDecimal(preco));
+    fd.append('preco_original', centsToDecimal(precoOriginal));
     // Descrição & flags
     fd.append('descricao', descricao);
     fd.append('destaque', destaque ? '1' : '0');
@@ -304,12 +305,12 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     fd.append('chassi', chassi.trim().toUpperCase());
     fd.append('renavam', renavam.trim());
     fd.append('numero_motor', numeroMotor.trim());
-    fd.append('valor_compra', valorCompra);
+    fd.append('valor_compra', centsToDecimal(valorCompra));
     fd.append('nome_cliente', nomeCliente.trim());
     fd.append('responsavel_compra', responsavelCompra.trim());
     // Aluguel
     fd.append('disponivel_aluguel', disponivelAluguel ? '1' : '0');
-    fd.append('valor_diaria', valorDiaria);
+    fd.append('valor_diaria', centsToDecimal(valorDiaria));
     // Imagem capa
     // - Edição: mantém capa atual (imagemAtual) a menos que usuário tenha escolhido outra via "Definir como capa"
     // - Criação: se há fotos pendentes, a PRIMEIRA vira a capa (imagem) e o restante vai pra galeria
@@ -543,29 +544,15 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Valor de Venda (R$)</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  value={preco}
-                  onChange={(e) => setPreco(e.target.value)}
-                />
+                <label>Valor de Venda</label>
+                <CurrencyInput value={preco} onChange={setPreco} placeholder="R$ 0,00" />
               </div>
               <div className={styles.formGroup}>
                 <label>
-                  Preço Original (R$){' '}
+                  Preço Original{' '}
                   <small style={{ fontWeight: 400, textTransform: 'none' }}>(opcional)</small>
                 </label>
-                <input
-                  type="number"
-                  placeholder="Para mostrar desconto"
-                  min="0"
-                  step="0.01"
-                  value={precoOriginal}
-                  onChange={(e) => setPrecoOriginal(e.target.value)}
-                />
+                <CurrencyInput value={precoOriginal} onChange={setPrecoOriginal} placeholder="R$ 0,00" />
               </div>
             </div>
           </div>
@@ -663,15 +650,8 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Valor de Compra (R$)</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  value={valorCompra}
-                  onChange={(e) => setValorCompra(e.target.value)}
-                />
+                <label>Valor de Compra</label>
+                <CurrencyInput value={valorCompra} onChange={setValorCompra} placeholder="R$ 0,00" />
               </div>
               <div className={styles.formGroup}>
                 <label>
@@ -697,8 +677,8 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             )}
 
             {isEditing && (() => {
-              const compraNum = Number(valorCompra) || 0;
-              const precoNum = Number(preco) || 0;
+              const compraNum = Number(centsToDecimal(valorCompra)) || 0;
+              const precoNum = Number(centsToDecimal(preco)) || 0;
               const venda = valorVendaFinal != null ? valorVendaFinal : precoNum;
               const hasVenda = venda > 0;
               const hasCompra = compraNum > 0;
@@ -794,12 +774,8 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
             </label>
             {disponivelAluguel && (
               <div className={styles.formGroup}>
-                <label>Valor da diária (R$) *</label>
-                <input type="number" step="0.01" min="0"
-                  value={valorDiaria}
-                  onChange={(e) => setValorDiaria(e.target.value)}
-                  placeholder="150.00"
-                  required />
+                <label>Valor da diária *</label>
+                <CurrencyInput value={valorDiaria} onChange={setValorDiaria} placeholder="R$ 150,00" required />
               </div>
             )}
           </div>

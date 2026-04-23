@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { useToast } from '@/components/Toast';
 import { PECAS_CATEGORIAS } from '@/lib/pecas-categorias';
 import { MOTO_MARCAS } from '@/lib/moto-marcas';
+import CurrencyInput, { centsToDecimal } from '@/components/CurrencyInput';
 import styles from './page.module.css';
 
 type Peca = {
@@ -61,8 +62,8 @@ export default function PecaModal({ editingId, onClose, onSaved }: Props) {
         setNome(p.nome || '');
         setCategoria(p.categoria || 'motor');
         setDescricao(p.descricao || '');
-        setPreco(p.preco != null ? String(p.preco) : '');
-        setPrecoOriginal(p.preco_original != null ? String(p.preco_original) : '');
+        setPreco(p.preco != null ? String(Math.round(Number(p.preco) * 100)) : '');
+        setPrecoOriginal(p.preco_original != null ? String(Math.round(Number(p.preco_original) * 100)) : '');
         setImagem(p.imagem || '');
         setMarcaMoto(p.marca_moto || '');
         setModeloCompat(p.modelo_compat || '');
@@ -106,8 +107,8 @@ export default function PecaModal({ editingId, onClose, onSaved }: Props) {
         nome: nome.trim(),
         categoria,
         descricao: descricao.trim(),
-        preco: preco ? Number(preco) : null,
-        preco_original: precoOriginal ? Number(precoOriginal) : null,
+        preco: preco ? Number(centsToDecimal(preco)) : null,
+        preco_original: precoOriginal ? Number(centsToDecimal(precoOriginal)) : null,
         imagem: imagem || null,
         marca_moto: marcaMoto.trim(),
         modelo_compat: modeloCompat.trim(),
@@ -214,12 +215,12 @@ export default function PecaModal({ editingId, onClose, onSaved }: Props) {
             {/* Preço */}
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Preço (R$)</label>
-                <input type="number" step="0.01" value={preco} onChange={(e) => setPreco(e.target.value)} placeholder="89.90" />
+                <label>Preço</label>
+                <CurrencyInput value={preco} onChange={setPreco} placeholder="R$ 0,00" />
               </div>
               <div className={styles.formGroup}>
                 <label>Preço original (riscado)</label>
-                <input type="number" step="0.01" value={precoOriginal} onChange={(e) => setPrecoOriginal(e.target.value)} placeholder="Opcional" />
+                <CurrencyInput value={precoOriginal} onChange={setPrecoOriginal} placeholder="Opcional" />
               </div>
             </div>
 

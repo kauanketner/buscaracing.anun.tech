@@ -1,6 +1,6 @@
 .wrap {
   background: #ffffff;
-  overflow: hidden;
+  /* overflow: visible pra não cortar o dropdown do kebab */
 }
 
 /* Toolbar */
@@ -55,7 +55,9 @@
 
 /* Table */
 .tableWrap {
-  overflow-x: auto;
+  /* Sem overflow: deixar dropdowns escaparem quando a tabela é curta.
+     Em telas estreitas, a página inteira escorrega — comportamento aceitável. */
+  min-height: 420px;
 }
 .table {
   width: 100%;
