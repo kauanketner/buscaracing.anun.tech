@@ -215,6 +215,13 @@ export async function GET(request: NextRequest) {
     for (const c of consigParadas) {
       alertas.push({ tipo: 'consignada', msg: `${c.moto_nome} (consignada de ${c.dono_nome}) há mais de 30 dias sem venda` });
     }
+    const pendentesAluguel = (db.prepare("SELECT COUNT(*) AS c FROM alugueis WHERE status='pendente'").get() as { c: number }).c;
+    if (pendentesAluguel > 0) {
+      alertas.push({
+        tipo: 'aluguel',
+        msg: `${pendentesAluguel} reserva${pendentesAluguel > 1 ? 's' : ''} de aluguel aguardando aprovação`,
+      });
+    }
 
     return NextResponse.json({
       periodo: { from, to },

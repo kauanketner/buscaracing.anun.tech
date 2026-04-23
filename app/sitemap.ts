@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/contato`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
     { url: `${baseUrl}/venda-sua-moto`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${baseUrl}/aluguel`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
   ];
 
   const motos = db.prepare('SELECT id, created_at FROM motos WHERE ativo=1').all() as any[];
@@ -25,6 +26,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  const aluguelRows = db
+    .prepare('SELECT id FROM motos WHERE disponivel_aluguel=1 AND valor_diaria IS NOT NULL')
+    .all() as { id: number }[];
+  const aluguelUrls = aluguelRows.map((m) => ({
+    url: `${baseUrl}/aluguel/${m.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
   const posts = db.prepare('SELECT slug, updated_at, created_at FROM posts WHERE publicado=1').all() as any[];
   const blogPages = posts.map((p) => ({
     url: `${baseUrl}/blog/${p.slug}`,
@@ -33,5 +44,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...motoPages, ...blogPages];
+  return [...staticPages, ...motoPages, ...aluguelUrls, ...blogPages];
 }

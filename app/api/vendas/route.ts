@@ -64,6 +64,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Moto não está em estado vendável' }, { status: 400 });
     }
 
+    const futurasRow = db
+      .prepare(
+        `SELECT COUNT(*) AS c FROM alugueis
+         WHERE moto_id=? AND status IN ('aprovada','ativa')
+           AND data_fim >= date('now','localtime')`,
+      )
+      .get(body.moto_id) as { c: number };
+    if (futurasRow.c > 0) {
+      return NextResponse.json({
+        error: `Moto tem ${futurasRow.c} reserva(s) de aluguel futura(s). Cancele antes de vender.`,
+      }, { status: 409 });
+    }
+
     const compradorNome = (body.comprador_nome || '').trim();
     if (!compradorNome) {
       return NextResponse.json({ error: 'Nome do comprador obrigatório' }, { status: 400 });

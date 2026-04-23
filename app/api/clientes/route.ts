@@ -54,8 +54,18 @@ export async function GET(request: NextRequest) {
     )
     .all() as Record<string, unknown>[];
 
+  const alugueis = db
+    .prepare(
+      `SELECT cliente_nome AS nome, telefone, email, 'aluguel' AS tipo,
+              a.id AS ref_id, a.valor_total AS valor,
+              a.created_at AS data,
+              COALESCE(m.nome, '') AS moto_nome
+       FROM alugueis a LEFT JOIN motos m ON m.id = a.moto_id`,
+    )
+    .all() as Record<string, unknown>[];
+
   // Merge all into touchpoints
-  const allTouchpoints = [...compradores, ...oficina, ...leadsRows, ...reservasRows];
+  const allTouchpoints = [...compradores, ...oficina, ...leadsRows, ...reservasRows, ...alugueis];
 
   // Group by normalized key (lowercase name + phone digits)
   const normalize = (nome: string, tel: string): string => {
@@ -110,6 +120,7 @@ export async function GET(request: NextRequest) {
     const os = c.touchpoints.filter((t) => t.tipo === 'oficina').length;
     const leads = c.touchpoints.filter((t) => t.tipo === 'lead').length;
     const reservas = c.touchpoints.filter((t) => t.tipo === 'reserva').length;
+    const alugueis = c.touchpoints.filter((t) => t.tipo === 'aluguel').length;
     const totalGasto = c.touchpoints
       .filter((t) => t.tipo === 'compra' && t.valor)
       .reduce((s, t) => s + (t.valor || 0), 0);
@@ -121,6 +132,7 @@ export async function GET(request: NextRequest) {
       os,
       leads,
       reservas,
+      alugueis,
       total_gasto: totalGasto,
       ultima_interacao: ultimaInteracao,
       total_interacoes: c.touchpoints.length,
