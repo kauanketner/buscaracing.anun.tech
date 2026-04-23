@@ -1,6 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { DayPicker, type DateRange } from 'react-day-picker';
+import { ptBR } from 'date-fns/locale';
+import 'react-day-picker/dist/style.css';
 import styles from './aluguel-detalhe.module.css';
 
 type Props = {
@@ -9,10 +12,6 @@ type Props = {
   valorCaucao: number;
   bloqueadas: string[];
 };
-
-function hojeISO() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function diasEntre(inicio: string, fim: string): number {
   if (!inicio || !fim) return 0;
@@ -44,9 +43,33 @@ export default function ReservaForm({
   valorCaucao,
   bloqueadas,
 }: Props) {
-  const today = hojeISO();
-  const [inicio, setInicio] = useState('');
-  const [fim, setFim] = useState('');
+  const [range, setRange] = useState<DateRange | undefined>(undefined);
+
+  // Converte Date -> "YYYY-MM-DD" em BRT (local)
+  const toISO = (d?: Date) => {
+    if (!d) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const inicio = toISO(range?.from);
+  const fim = toISO(range?.to);
+
+  // Converte "YYYY-MM-DD" bloqueadas -> Date[] pra passar ao DayPicker
+  const bloqueadasDates = useMemo(
+    () => bloqueadas.map((s) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }),
+    [bloqueadas],
+  );
+
+  const hojeDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
@@ -151,32 +174,47 @@ export default function ReservaForm({
     <form className={styles.form} onSubmit={onSubmit} noValidate>
       <h2 className={styles.formTitle}>Reservar esta moto</h2>
 
-      <div className={styles.row}>
-        <div className={styles.field}>
-          <label htmlFor="data_inicio">Início</label>
-          <input
-            id="data_inicio"
-            type="date"
-            min={today}
-            value={inicio}
-            onChange={(e) => {
-              setInicio(e.target.value);
-              if (fim && fim < e.target.value) setFim('');
-            }}
-            required
+      <div className={styles.datesField}>
+        <label className={styles.datesLabel}>Selecione o período</label>
+        <div className={styles.datesSummary}>
+          <div className={styles.dateBox}>
+            <span className={styles.dateBoxLabel}>Retirada</span>
+            <span className={styles.dateBoxValue}>
+              {range?.from
+                ? range.from.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                : '—'}
+            </span>
+          </div>
+          <span className={styles.dateArrow}>→</span>
+          <div className={styles.dateBox}>
+            <span className={styles.dateBoxLabel}>Devolução</span>
+            <span className={styles.dateBoxValue}>
+              {range?.to
+                ? range.to.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                : '—'}
+            </span>
+          </div>
+        </div>
+        <div className={styles.calendarWrap}>
+          <DayPicker
+            mode="range"
+            selected={range}
+            onSelect={setRange}
+            locale={ptBR}
+            disabled={[{ before: hojeDate }, ...bloqueadasDates]}
+            numberOfMonths={1}
+            fixedWeeks
+            showOutsideDays
+            ISOWeek={false}
+            weekStartsOn={0}
           />
         </div>
-        <div className={styles.field}>
-          <label htmlFor="data_fim">Fim</label>
-          <input
-            id="data_fim"
-            type="date"
-            min={inicio || today}
-            value={fim}
-            onChange={(e) => setFim(e.target.value)}
-            required
-          />
-        </div>
+        {(range?.from && !range?.to) && (
+          <p className={styles.datesHint}>Agora selecione a data de devolução.</p>
+        )}
+        {!range?.from && (
+          <p className={styles.datesHint}>Clique no dia da retirada no calendário.</p>
+        )}
       </div>
 
       {conflito && (

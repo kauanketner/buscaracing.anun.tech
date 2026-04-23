@@ -338,3 +338,145 @@
     padding: 1.25rem;
   }
 }
+
+/* ── DATE RANGE PICKER ── */
+.datesField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.datesLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #555;
+}
+.datesSummary {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  background: #fafaf7;
+  border: 1.5px solid #e4e4e0;
+  padding: 10px 12px;
+}
+.dateBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dateBoxLabel {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #777;
+}
+.dateBoxValue {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: #27367D;
+  letter-spacing: 0.02em;
+}
+.dateArrow {
+  color: #999;
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+.calendarWrap {
+  background: #fff;
+  border: 1.5px solid #e4e4e0;
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+}
+.datesHint {
+  font-size: 0.78rem;
+  color: #777;
+  margin: 0;
+  font-style: italic;
+}
+
+/* react-day-picker overrides (global via :global) */
+.calendarWrap :global(.rdp-root) {
+  --rdp-accent-color: #27367D;
+  --rdp-accent-background-color: rgba(39, 54, 125, 0.08);
+  --rdp-day_button-width: 38px;
+  --rdp-day_button-height: 38px;
+  --rdp-day_button-border-radius: 6px;
+  --rdp-today-color: #DC2627;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.88rem;
+  margin: 0;
+}
+.calendarWrap :global(.rdp-month_caption) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: #27367D;
+  text-transform: capitalize;
+  letter-spacing: 0.03em;
+  justify-content: center;
+}
+.calendarWrap :global(.rdp-weekday) {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #999;
+}
+.calendarWrap :global(.rdp-day_button) {
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.calendarWrap :global(.rdp-day_button:hover:not([disabled])) {
+  background: rgba(39, 54, 125, 0.1);
+  color: #27367D;
+}
+.calendarWrap :global(.rdp-day_disabled .rdp-day_button) {
+  color: #d0d0d0;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.calendarWrap :global(.rdp-selected .rdp-day_button) {
+  background: #27367D;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 6px;
+}
+.calendarWrap :global(.rdp-selected .rdp-day_button:hover) {
+  background: #DC2627;
+  color: #fff;
+}
+.calendarWrap :global(.rdp-range_middle .rdp-day_button) {
+  background: rgba(39, 54, 125, 0.15);
+  color: #27367D;
+  border-radius: 0;
+  font-weight: 500;
+}
+.calendarWrap :global(.rdp-range_start .rdp-day_button),
+.calendarWrap :global(.rdp-range_end .rdp-day_button) {
+  background: #27367D;
+  color: #fff;
+  border-radius: 6px;
+}
+.calendarWrap :global(.rdp-today .rdp-day_button) {
+  color: #DC2627;
+  font-weight: 700;
+}
+.calendarWrap :global(.rdp-today.rdp-selected .rdp-day_button) {
+  color: #fff;
+}
+.calendarWrap :global(.rdp-chevron) {
+  fill: #27367D;
+}
+.calendarWrap :global(.rdp-button_previous:hover),
+.calendarWrap :global(.rdp-button_next:hover) {
+  background: rgba(39, 54, 125, 0.1);
+}
