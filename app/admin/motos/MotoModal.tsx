@@ -41,6 +41,9 @@ export type Moto = {
   created_at?: string | null;
   estado?: string | null;
   origem?: string | null;
+  // Aluguel
+  disponivel_aluguel?: number | null;
+  valor_diaria?: number | null;
   // Agregados anexados pelo GET /api/motos/[id] (admin)
   oficina_total?: number;
   oficina_count?: number;
@@ -105,6 +108,10 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
   const [oficinaCount, setOficinaCount] = useState(0);
   const [valorVendaFinal, setValorVendaFinal] = useState<number | null>(null);
 
+  // Aluguel
+  const [disponivelAluguel, setDisponivelAluguel] = useState(false);
+  const [valorDiaria, setValorDiaria] = useState('');
+
   // Imagem capa (URL pública da capa atual salva no banco)
   const [imagemAtual, setImagemAtual] = useState('');
 
@@ -145,6 +152,8 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
         setDescricao(m.descricao || '');
         setDestaque(!!m.destaque);
         setAtivo(!!m.ativo);
+        setDisponivelAluguel(!!(m as Record<string, unknown>).disponivel_aluguel);
+        setValorDiaria((m as Record<string, unknown>).valor_diaria != null ? String((m as Record<string, unknown>).valor_diaria) : '');
         setEstado(m.estado || '');
         setTipoEntrada(m.tipo_entrada || '');
         setPlaca(m.placa || '');
@@ -298,6 +307,9 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
     fd.append('valor_compra', valorCompra);
     fd.append('nome_cliente', nomeCliente.trim());
     fd.append('responsavel_compra', responsavelCompra.trim());
+    // Aluguel
+    fd.append('disponivel_aluguel', disponivelAluguel ? '1' : '0');
+    fd.append('valor_diaria', valorDiaria);
     // Imagem capa
     // - Edição: mantém capa atual (imagemAtual) a menos que usuário tenha escolhido outra via "Definir como capa"
     // - Criação: se há fotos pendentes, a PRIMEIRA vira a capa (imagem) e o restante vai pra galeria
@@ -763,6 +775,33 @@ export default function MotoModal({ editingId, onClose, onSaved, onToast }: Prop
                 </div>
               );
             })()}
+          </div>
+
+          {/* ============== ALUGUEL ============== */}
+          <div style={{ padding: '1.25rem 0', borderTop: '1px solid #e4e4e0', marginTop: '1rem' }}>
+            <h3 style={{
+              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+              fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase',
+              color: '#27367D', margin: '0 0 0.75rem'
+            }}>
+              Aluguel
+            </h3>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: '0.75rem' }}>
+              <input type="checkbox" checked={disponivelAluguel}
+                onChange={(e) => setDisponivelAluguel(e.target.checked)}
+                style={{ width: 'auto' }} />
+              <span>Disponível para aluguel no site</span>
+            </label>
+            {disponivelAluguel && (
+              <div className={styles.formGroup}>
+                <label>Valor da diária (R$) *</label>
+                <input type="number" step="0.01" min="0"
+                  value={valorDiaria}
+                  onChange={(e) => setValorDiaria(e.target.value)}
+                  placeholder="150.00"
+                  required />
+              </div>
+            )}
           </div>
 
           <div className={styles.fotosSection}>

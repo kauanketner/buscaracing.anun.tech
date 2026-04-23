@@ -36,6 +36,9 @@ export type MotoUpsertFields = {
   valor_compra: Num;
   nome_cliente: string;
   responsavel_compra: string;
+  // Aluguel
+  disponivel_aluguel: 0 | 1;
+  valor_diaria: number | null;
 };
 
 /**
@@ -68,6 +71,8 @@ export const MOTO_UPSERT_COLUMNS = [
   'valor_compra',
   'nome_cliente',
   'responsavel_compra',
+  'disponivel_aluguel',
+  'valor_diaria',
 ] as const;
 
 function str(fd: FormData, key: string, fallback = ''): string {
@@ -110,5 +115,7 @@ export function parseMotoForm(fd: FormData): MotoUpsertFields {
     valor_compra: numOrNull(fd, 'valor_compra'),
     nome_cliente: str(fd, 'nome_cliente'),
     responsavel_compra: str(fd, 'responsavel_compra'),
+    disponivel_aluguel: fd.get('disponivel_aluguel') === '1' ? 1 : 0,
+    valor_diaria: numOrNull(fd, 'valor_diaria'),
   };
 }
