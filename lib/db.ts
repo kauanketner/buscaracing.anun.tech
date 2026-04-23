@@ -281,6 +281,9 @@ function initSchema(db: Database.Database): void {
   addCol('origem', "TEXT DEFAULT 'compra_direta'");
   addCol('troca_venda_id', 'INTEGER');
   addCol('consignacao_id', 'INTEGER');
+  // ----- Aluguel: disponibilidade e valor de diária -----
+  addCol('disponivel_aluguel', 'INTEGER DEFAULT 0');
+  addCol('valor_diaria', 'REAL');
   db.exec('CREATE INDEX IF NOT EXISTS idx_motos_estado ON motos(estado)');
   // Migrar dados existentes para o campo estado
   db.exec(`
@@ -412,6 +415,37 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_consig_status ON consignacoes(status);
   `);
 
+  // ----- Aluguel: solicitações de aluguel de motos -----
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS alugueis (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      moto_id         INTEGER NOT NULL REFERENCES motos(id),
+      status          TEXT    NOT NULL DEFAULT 'pendente',
+      data_inicio     TEXT    NOT NULL,
+      data_fim        TEXT    NOT NULL,
+      dias            INTEGER NOT NULL,
+      valor_diaria    REAL    NOT NULL,
+      valor_total     REAL    NOT NULL,
+      valor_caucao    REAL    NOT NULL DEFAULT 0,
+      cliente_nome    TEXT    NOT NULL,
+      telefone        TEXT    NOT NULL,
+      email           TEXT    DEFAULT '',
+      cpf             TEXT    NOT NULL,
+      cnh             TEXT    NOT NULL,
+      observacoes     TEXT    DEFAULT '',
+      admin_notas     TEXT    DEFAULT '',
+      motivo_recusa   TEXT    DEFAULT '',
+      valor_dano      REAL    DEFAULT 0,
+      created_at      TEXT    DEFAULT (datetime('now','localtime')),
+      aprovada_em     TEXT,
+      retirada_em     TEXT,
+      devolvida_em    TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_alugueis_moto ON alugueis(moto_id);
+    CREATE INDEX IF NOT EXISTS idx_alugueis_status ON alugueis(status);
+    CREATE INDEX IF NOT EXISTS idx_alugueis_datas ON alugueis(data_inicio, data_fim);
+  `);
+
   // ----- Fase 6: token column on vendas (comprador portal) -----
   const existingVendasCols = new Set(
     (db.prepare('PRAGMA table_info(vendas)').all() as { name: string }[]).map((c) => c.name),
@@ -491,6 +525,7 @@ function initSchema(db: Database.Database): void {
   };
   setDefault('wts_from', '551151073435');
   setDefault('wts_template_id', '58f53_checklistlembrete');
+  setDefault('aluguel_caucao_padrao', '500');
   for (const k of seedKeys) {
     insert.run(k);
   }
