@@ -25,9 +25,15 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       return NextResponse.json({ error: 'Moto não encontrada' }, { status: 404 });
     }
 
-    const fotos = db
-      .prepare('SELECT id, url, ordem FROM fotos WHERE moto_id=? ORDER BY ordem ASC, id ASC')
-      .all(motoId);
+    const fotosRaw = db
+      .prepare('SELECT id, filename, ordem FROM fotos WHERE moto_id=? ORDER BY ordem ASC, id ASC')
+      .all(motoId) as { id: number; filename: string; ordem: number }[];
+    const fotos = fotosRaw.map((f) => ({
+      id: f.id,
+      ordem: f.ordem,
+      // filename pode já vir com path absoluto ("/uploads/...") ou só o nome do arquivo
+      url: f.filename && f.filename.startsWith('/') ? f.filename : `/fotos/${f.filename}`,
+    }));
 
     // OSs + total de peças de cada uma
     const ordens = db
