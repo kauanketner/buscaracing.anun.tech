@@ -1,6 +1,7 @@
 'use client';
 
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { HeaderActionsContext } from '../HeaderActionsContext';
 import { useToast } from '@/components/Toast';
 import { MOTO_ESTADO_LABELS, ESTADO_COR, type MotoEstado } from '@/lib/moto-estados';
@@ -308,7 +309,13 @@ export default function MotosPage() {
                       )}
                     </td>
                     <td>
-                      <div className={styles.tdName}>{m.nome}</div>
+                      <Link
+                        href={`/admin/motos/${m.id}`}
+                        className={styles.tdName}
+                        style={{ color: '#27367D', textDecoration: 'none', cursor: 'pointer' }}
+                      >
+                        {m.nome}
+                      </Link>
                       <div className={styles.tdBrand}>{m.marca}</div>
                     </td>
                     <td>

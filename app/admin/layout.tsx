@@ -29,8 +29,11 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   if (/^\/admin\/blog\/\d+$/.test(pathname)) {
     return { title: 'Editar Post', subtitle: 'Atualize o conteúdo do post' };
   }
+  if (/^\/admin\/motos\/\d+$/.test(pathname)) {
+    return { title: 'Detalhes da moto', subtitle: 'Histórico completo, manutenções, vendas, aluguéis e financeiro' };
+  }
   if (pathname.startsWith('/admin/motos')) {
-    return { title: 'Anúncios', subtitle: 'Cadastre, edite e organize os anúncios de motos' };
+    return { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' };
   }
   if (pathname.startsWith('/admin/oficina')) {
     return { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' };
