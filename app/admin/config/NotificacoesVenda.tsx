@@ -54,11 +54,12 @@ export default function NotificacoesVenda() {
         Quando uma venda for registrada no sistema, dispara uma mensagem por WhatsApp
         (via WTS Chat) para os números abaixo, com os dados da venda preenchidos no template.
         <br />
-        Template usa 8 variáveis numeradas: <strong>{`{{1}}`}</strong>=vendedor,{' '}
-        <strong>{`{{2}}`}</strong>=moto, <strong>{`{{3}}`}</strong>=chassi,{' '}
-        <strong>{`{{4}}`}</strong>=motor, <strong>{`{{5}}`}</strong>=cliente,{' '}
-        <strong>{`{{6}}`}</strong>=endereço, <strong>{`{{7}}`}</strong>=valor,{' '}
-        <strong>{`{{8}}`}</strong>=forma de pagamento.
+        Template usa 8 variáveis nomeadas (<code>p1</code>–<code>p8</code>):
+        {' '}<strong>p1</strong>=vendedor,{' '}
+        <strong>p2</strong>=moto, <strong>p3</strong>=chassi,{' '}
+        <strong>p4</strong>=motor, <strong>p5</strong>=cliente,{' '}
+        <strong>p6</strong>=endereço, <strong>p7</strong>=valor,{' '}
+        <strong>p8</strong>=forma de pagamento.
       </p>
 
       {loading ? (

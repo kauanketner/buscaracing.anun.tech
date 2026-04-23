@@ -205,15 +205,16 @@ export async function enviarNotificacaoVenda(
     return { enviados: 0, falhas: 0, total: 0 };
   }
 
+  // Template `venda_realizada` da WTS usa chaves p1..p8 (não numeração nua)
   const params: Record<string, string> = {
-    '1': data.vendedor || '—',
-    '2': data.moto || '—',
-    '3': data.chassi || '—',
-    '4': data.motor || '—',
-    '5': data.cliente || '—',
-    '6': data.endereco || '—',
-    '7': data.valor || '—',
-    '8': data.pagamento || '—',
+    p1: data.vendedor || '—',
+    p2: data.moto || '—',
+    p3: data.chassi || '—',
+    p4: data.motor || '—',
+    p5: data.cliente || '—',
+    p6: data.endereco || '—',
+    p7: data.valor || '—',
+    p8: data.pagamento || '—',
   };
 
   let enviados = 0;
