@@ -64,6 +64,42 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
       showToast('Informe marca e modelo', 'error');
       return;
     }
+
+    // Validação: todos os campos obrigatórios
+    if (!modelo.trim()) { showToast('Modelo é obrigatório', 'error'); return; }
+    if (!ano.trim()) { showToast('Ano é obrigatório', 'error'); return; }
+    if (!placa.trim()) { showToast('Placa é obrigatória', 'error'); return; }
+    if (!km.trim()) { showToast('KM é obrigatório', 'error'); return; }
+    if (!cor.trim()) { showToast('Cor é obrigatória', 'error'); return; }
+
+    if (origem === 'compra_direta') {
+      if (!valorCompra.trim() || Number(valorCompra) <= 0) {
+        showToast('Valor de compra é obrigatório', 'error'); return;
+      }
+      if (!nomeCliente.trim()) {
+        showToast('Informe de quem você comprou', 'error'); return;
+      }
+    }
+    if (origem === 'consignada') {
+      if (!donoNome.trim()) { showToast('Nome do dono é obrigatório', 'error'); return; }
+      if (!donoTel.trim()) { showToast('Telefone do dono é obrigatório', 'error'); return; }
+      if (!valorRepasse || Number(centsToDecimal(valorRepasse)) <= 0) {
+        showToast('Valor de repasse é obrigatório', 'error'); return;
+      }
+    }
+    if (origem === 'troca') {
+      if (!valorCompra.trim() || Number(valorCompra) <= 0) {
+        showToast('Valor de avaliação é obrigatório', 'error'); return;
+      }
+      if (!nomeCliente.trim()) {
+        showToast('Nome do cliente que trocou é obrigatório', 'error'); return;
+      }
+    }
+
+    if (fotos.length === 0) {
+      showToast('Adicione pelo menos 1 foto', 'error'); return;
+    }
+
     setSaving(true);
     try {
       const fd = new FormData();
@@ -206,34 +242,34 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Ano</label>
-                <input type="number" value={ano} onChange={(e) => setAno(e.target.value)} placeholder="2022" />
+                <label>Ano *</label>
+                <input type="number" value={ano} onChange={(e) => setAno(e.target.value)} placeholder="2022" required />
               </div>
               <div className={styles.formGroup}>
-                <label>Placa</label>
-                <input type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" style={{ textTransform: 'uppercase' }} />
-              </div>
-            </div>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>KM</label>
-                <input type="number" value={km} onChange={(e) => setKm(e.target.value)} placeholder="15000" />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Cor</label>
-                <input type="text" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Vermelha" />
+                <label>Placa *</label>
+                <input type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="ABC1D23" style={{ textTransform: 'uppercase' }} required />
               </div>
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Categoria</label>
-                <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+                <label>KM *</label>
+                <input type="number" value={km} onChange={(e) => setKm(e.target.value)} placeholder="15000" required />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Cor *</label>
+                <input type="text" value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Vermelha" required />
+              </div>
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Categoria *</label>
+                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} required>
                   {CATEGORIAS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Condição</label>
-                <select value={condicao} onChange={(e) => setCondicao(e.target.value)}>
+                <label>Condição *</label>
+                <select value={condicao} onChange={(e) => setCondicao(e.target.value)} required>
                   <option value="usada">Usada</option>
                   <option value="nova">Nova</option>
                 </select>
@@ -245,12 +281,12 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
               <>
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Valor de compra (R$)</label>
-                    <input type="number" step="0.01" value={valorCompra} onChange={(e) => setValorCompra(e.target.value)} placeholder="8000" />
+                    <label>Valor de compra (R$) *</label>
+                    <input type="number" step="0.01" value={valorCompra} onChange={(e) => setValorCompra(e.target.value)} placeholder="8000" required />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Comprado de quem</label>
-                    <input type="text" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} placeholder="Nome do vendedor" />
+                    <label>Comprado de quem *</label>
+                    <input type="text" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} placeholder="Nome do vendedor" required />
                   </div>
                 </div>
               </>
@@ -263,12 +299,12 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
                     <input type="text" value={donoNome} onChange={(e) => setDonoNome(e.target.value)} placeholder="João Silva" required />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Telefone do dono</label>
-                    <input type="text" value={donoTel} onChange={(e) => setDonoTel(e.target.value)} placeholder="(11) 99999-9999" />
+                    <label>Telefone do dono *</label>
+                    <input type="text" value={donoTel} onChange={(e) => setDonoTel(e.target.value)} placeholder="(11) 99999-9999" required />
                   </div>
                 </div>
                 <div className={styles.formGroup} style={{ maxWidth: 280 }}>
-                  <label>Valor de repasse acordado</label>
+                  <label>Valor de repasse acordado *</label>
                   <CurrencyInput value={valorRepasse} onChange={setValorRepasse} placeholder="R$ 0,00" />
                   <span style={{ fontSize: '0.72rem', color: '#777', marginTop: 4, display: 'block' }}>
                     Quanto você vai repassar ao dono quando a moto vender. Custo da revisão pós-venda será descontado.
@@ -284,8 +320,8 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
                     <input type="number" step="0.01" value={valorCompra} onChange={(e) => setValorCompra(e.target.value)} placeholder="4000" required />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Cliente que trocou</label>
-                    <input type="text" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} placeholder="Nome do cliente" />
+                    <label>Cliente que trocou *</label>
+                    <input type="text" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} placeholder="Nome do cliente" required />
                   </div>
                 </div>
                 <p style={{ fontSize: '0.78rem', color: '#777', marginBottom: '1rem' }}>
@@ -296,10 +332,11 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
 
             {/* Fotos */}
             <div className={styles.formGroup}>
-              <label>Fotos</label>
+              <label>Fotos *</label>
               <div
                 className={styles.imgUploadArea}
                 onClick={() => fotoInputRef.current?.click()}
+                style={fotos.length === 0 ? { borderColor: '#e4e4e0' } : undefined}
               >
                 {fotos.length > 0 ? (
                   <span style={{ fontSize: '0.88rem', color: '#27367D' }}>
@@ -310,7 +347,7 @@ export default function EntradaModal({ onClose, onSaved }: Props) {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#aaa" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                    <span style={{ fontSize: '0.82rem', color: '#999' }}>Clique para selecionar fotos</span>
+                    <span style={{ fontSize: '0.82rem', color: '#999' }}>Clique para selecionar fotos (obrigatório)</span>
                   </>
                 )}
                 <input
