@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import ContratoPdfButton from '@/components/ContratoPdfButton';
+import ComprovantesVendaModal from './ComprovantesVendaModal';
 import styles from './page.module.css';
 
 type Venda = {
@@ -26,6 +27,7 @@ type Venda = {
   observacoes: string;
   data_venda: string;
   token: string;
+  comprovantes_count: number;
 };
 
 const FORMA_LABELS: Record<string, string> = {
@@ -40,21 +42,22 @@ export default function VendasPage() {
   const { showToast } = useToast();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(true);
+  const [compModal, setCompModal] = useState<Venda | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/vendas');
-        if (!r.ok) throw new Error('fail');
-        const d = await r.json();
-        setVendas(Array.isArray(d) ? d : []);
-      } catch {
-        showToast('Erro ao carregar vendas', 'error');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch('/api/vendas');
+      if (!r.ok) throw new Error('fail');
+      const d = await r.json();
+      setVendas(Array.isArray(d) ? d : []);
+    } catch {
+      showToast('Erro ao carregar vendas', 'error');
+    } finally {
+      setLoading(false);
+    }
   }, [showToast]);
+
+  useEffect(() => { load(); }, [load]);
 
   const totalVendas = vendas.reduce((s, v) => s + v.valor_venda, 0);
   const totalComissoes = vendas.reduce((s, v) => s + v.comissao_valor, 0);
@@ -91,6 +94,7 @@ export default function VendasPage() {
               <th>Comissão</th>
               <th>Data</th>
               <th>Link</th>
+              <th>Comprovantes</th>
               <th>Contratos</th>
             </tr>
           </thead>
@@ -158,6 +162,19 @@ export default function VendasPage() {
                   ) : '—'}
                 </td>
                 <td>
+                  <button
+                    type="button"
+                    onClick={() => setCompModal(v)}
+                    className={`${styles.compBtn} ${v.comprovantes_count > 0 ? styles.compBtnHas : ''}`}
+                    title="Gerenciar comprovantes desta venda"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {v.comprovantes_count > 0 ? `${v.comprovantes_count} anexo${v.comprovantes_count > 1 ? 's' : ''}` : 'Anexar'}
+                  </button>
+                </td>
+                <td>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                     <ContratoPdfButton tipo="venda" id={v.id} label="Venda"
                       style={{ background: 'none', border: '1px solid #e4e4e0', padding: '4px 8px', fontSize: '0.68rem', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#27367D' }} />
@@ -176,6 +193,15 @@ export default function VendasPage() {
         )}
         {loading && <div className={styles.empty}>Carregando...</div>}
       </div>
+
+      {compModal && (
+        <ComprovantesVendaModal
+          vendaId={compModal.id}
+          vendaLabel={`${compModal.moto_nome || 'Moto'} — ${compModal.comprador_nome}`}
+          onClose={() => setCompModal(null)}
+          onChanged={load}
+        />
+      )}
     </div>
   );
 }

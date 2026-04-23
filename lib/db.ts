@@ -543,6 +543,20 @@ function initSchema(db: Database.Database): void {
     db.exec("ALTER TABLE vendas ADD COLUMN comprador_endereco TEXT DEFAULT ''");
   }
 
+  // Comprovantes de venda (PIX, transferência, nota assinada, etc.)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS venda_comprovantes (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      venda_id     INTEGER NOT NULL REFERENCES vendas(id) ON DELETE CASCADE,
+      url          TEXT NOT NULL,
+      nome_arquivo TEXT DEFAULT '',
+      tipo_mime    TEXT DEFAULT '',
+      descricao    TEXT DEFAULT '',
+      created_at   TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_venda_comprov_venda ON venda_comprovantes(venda_id);
+  `);
+
   // ----- Checklists -----
   db.exec(`
     CREATE TABLE IF NOT EXISTS checklists (

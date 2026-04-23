@@ -92,3 +92,130 @@
   color: #777;
   font-size: 0.88rem;
 }
+
+/* ── Comprovantes button on each row ── */
+.compBtn {
+  background: none;
+  border: 1px solid #e4e4e0;
+  padding: 4px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #27367D;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.compBtn:hover {
+  border-color: #27367D;
+  background: #f3f4f8;
+}
+.compBtnHas {
+  background: #fff3cd;
+  border-color: #ffecb5;
+  color: #856404;
+}
+
+/* ── Modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal {
+  background: #FDFDFB;
+  width: 100%;
+  max-width: 680px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modalHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e4e4e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.modalHeader h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: #27367D;
+  font-weight: 400;
+  margin: 0;
+}
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+  padding: 4px;
+}
+.modalClose:hover {
+  color: #DC2627;
+}
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+.modalFooter {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e4e4e0;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btnPrimary {
+  background: #27367D;
+  color: #FDFDFB;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+.btnPrimary:hover {
+  background: #DC2627;
+}
+.btnGhost {
+  background: transparent;
+  color: #777;
+  border: 1.5px solid #e4e4e0;
+}
+.btnGhost:hover {
+  border-color: #27367D;
+  color: #27367D;
+}

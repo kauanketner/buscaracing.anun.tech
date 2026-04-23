@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
       `SELECT v.*,
               m.nome AS moto_nome, m.marca AS moto_marca, m.imagem AS moto_imagem,
               m.origem AS moto_origem, m.valor_compra AS moto_custo,
-              ve.nome AS vendedor_nome
+              ve.nome AS vendedor_nome,
+              (SELECT COUNT(*) FROM venda_comprovantes vc WHERE vc.venda_id = v.id) AS comprovantes_count
        FROM vendas v
        LEFT JOIN motos m ON v.moto_id = m.id
        LEFT JOIN vendedores ve ON v.vendedor_id = ve.id

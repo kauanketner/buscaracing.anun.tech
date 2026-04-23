@@ -47,11 +47,23 @@ export async function GET(request: NextRequest, ctx: Ctx) {
     // Vendas + vendedor
     const vendas = db
       .prepare(
-        `SELECT v.*, ve.nome AS vendedor_nome
+        `SELECT v.*, ve.nome AS vendedor_nome,
+                (SELECT COUNT(*) FROM venda_comprovantes vc WHERE vc.venda_id = v.id) AS comprovantes_count
          FROM vendas v
          LEFT JOIN vendedores ve ON v.vendedor_id = ve.id
          WHERE v.moto_id = ?
          ORDER BY v.id DESC`,
+      )
+      .all(motoId);
+
+    // Comprovantes de todas as vendas desta moto (carregados de uma vez)
+    const comprovantes = db
+      .prepare(
+        `SELECT vc.*
+         FROM venda_comprovantes vc
+         JOIN vendas v ON v.id = vc.venda_id
+         WHERE v.moto_id = ?
+         ORDER BY vc.venda_id DESC, vc.id ASC`,
       )
       .all(motoId);
 
@@ -111,6 +123,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       fotos,
       ordens,
       vendas,
+      comprovantes,
       reservas,
       alugueis,
       consignacao: consignacao || null,

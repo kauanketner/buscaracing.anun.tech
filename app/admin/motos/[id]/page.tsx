@@ -23,7 +23,13 @@ type Detalhes = {
     id: number; comprador_nome: string; valor_venda: number;
     forma_pagamento: string; vendedor_nome: string | null;
     data_venda: string; comissao_valor: number;
+    comprovantes_count: number;
   })[];
+  comprovantes: {
+    id: number; venda_id: number; url: string;
+    nome_arquivo: string; tipo_mime: string; descricao: string;
+    created_at: string;
+  }[];
   reservas: (Record<string, unknown> & {
     id: number; cliente_nome: string; valor_sinal: number;
     status: string; data_inicio: string; data_expira: string;
@@ -362,20 +368,80 @@ export default function MotoDetalhePage() {
               <p className={styles.empty}>Não foi vendida ainda.</p>
             ) : (
               <div className={styles.list}>
-                {data.vendas.map((v) => (
-                  <Link key={v.id} href={`/admin/vendas`} className={styles.listItem}>
-                    <div className={styles.listItemMain}>
-                      <div className={styles.listItemTitle}>
-                        Venda #{v.id} — {v.comprador_nome}
-                      </div>
-                      <div className={styles.listItemSub}>
-                        {fmtDate(v.data_venda)} · {String(v.forma_pagamento || '').toUpperCase()}
-                        {v.vendedor_nome && ` · ${v.vendedor_nome}`}
-                      </div>
+                {data.vendas.map((v) => {
+                  const comps = data.comprovantes.filter((c) => c.venda_id === v.id);
+                  return (
+                    <div key={v.id} style={{ borderBottom: '1px solid #f1f1ee', paddingBottom: 10, marginBottom: 10 }}>
+                      <Link href={`/admin/vendas`} className={styles.listItem} style={{ borderBottom: 'none', marginBottom: 0, paddingBottom: 4 }}>
+                        <div className={styles.listItemMain}>
+                          <div className={styles.listItemTitle}>
+                            Venda #{v.id} — {v.comprador_nome}
+                          </div>
+                          <div className={styles.listItemSub}>
+                            {fmtDate(v.data_venda)} · {String(v.forma_pagamento || '').toUpperCase()}
+                            {v.vendedor_nome && ` · ${v.vendedor_nome}`}
+                          </div>
+                        </div>
+                        <div className={styles.listItemVal}>{fmtBRL(v.valor_venda)}</div>
+                      </Link>
+                      {comps.length > 0 && (
+                        <div style={{ marginTop: 6, paddingLeft: 4 }}>
+                          <div style={{
+                            fontFamily: "'Barlow Condensed', sans-serif",
+                            fontWeight: 700,
+                            fontSize: '0.7rem',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            color: '#777',
+                            marginBottom: 6,
+                          }}>
+                            Comprovantes ({comps.length})
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {comps.map((c) => {
+                              const isImg = c.tipo_mime && c.tipo_mime.startsWith('image/');
+                              return (
+                                <a
+                                  key={c.id}
+                                  href={c.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={c.nome_arquivo || 'comprovante'}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 56,
+                                    height: 56,
+                                    background: '#f1f1ee',
+                                    border: '1px solid #e4e4e0',
+                                    textDecoration: 'none',
+                                    color: '#27367D',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  {isImg ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={c.url}
+                                      alt=""
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                      <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className={styles.listItemVal}>{fmtBRL(v.valor_venda)}</div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
