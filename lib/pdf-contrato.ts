@@ -218,7 +218,7 @@ export async function gerarContratoVenda(vendaId: number): Promise<Buffer> {
   field(doc, 'Nome', String(v.comprador_nome || ''));
   field(doc, 'Telefone', String(v.comprador_tel || ''));
   field(doc, 'CPF/CNPJ', '');
-  field(doc, 'Endereço', '');
+  field(doc, 'Endereço', String(v.comprador_endereco || ''));
 
   sectionTitle(doc, 'Condições de venda');
   field(doc, 'Valor de venda', fmtBRL(v.valor_venda as number));

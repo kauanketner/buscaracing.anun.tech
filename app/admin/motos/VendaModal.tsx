@@ -19,6 +19,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
 
   const [compradorNome, setCompradorNome] = useState('');
   const [compradorTel, setCompradorTel] = useState('');
+  const [compradorEndereco, setCompradorEndereco] = useState('');
   const [valorVenda, setValorVenda] = useState(motoPreco ? String(motoPreco) : '');
   const [formaPagamento, setFormaPagamento] = useState('pix');
   const [vendedorId, setVendedorId] = useState('');
@@ -71,6 +72,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
           moto_id: motoId,
           comprador_nome: compradorNome.trim(),
           comprador_tel: compradorTel.trim(),
+          comprador_endereco: compradorEndereco.trim(),
           valor_venda: Number(valorVenda),
           forma_pagamento: formaPagamento,
           vendedor_id: vendedorId ? Number(vendedorId) : null,
@@ -128,6 +130,11 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                 <label>Telefone</label>
                 <input type="text" value={compradorTel} onChange={(e) => setCompradorTel(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Endereço completo</label>
+              <input type="text" value={compradorEndereco} onChange={(e) => setCompradorEndereco(e.target.value)}
+                placeholder="Rua, número, bairro, cidade - UF, CEP" />
             </div>
 
             {/* Valores */}

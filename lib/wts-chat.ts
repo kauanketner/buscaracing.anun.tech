@@ -160,3 +160,71 @@ export async function enviarLembreteChecklist(
 
   return { enviados, falhas };
 }
+
+/**
+ * Configuração de notificação de venda (template + destinatários).
+ * Lida no DB em configuracoes.
+ */
+function getVendaNotifConfig(): { templateId: string; numeros: string[] } {
+  const db = getDb();
+  const get = (k: string) => {
+    const r = db.prepare('SELECT valor FROM configuracoes WHERE chave=?').get(k) as { valor: string } | undefined;
+    return r?.valor || '';
+  };
+  const templateId = get('venda_notif_template_id');
+  const numerosRaw = get('venda_notif_numeros');
+  const numeros = numerosRaw
+    .split(/[,\n;]+/)
+    .map((n) => n.trim())
+    .filter(Boolean);
+  return { templateId, numeros };
+}
+
+export type VendaNotifData = {
+  vendedor: string;
+  moto: string;
+  chassi: string;
+  motor: string;
+  cliente: string;
+  endereco: string;
+  valor: string;   // já formatado ex: "12.000,00"
+  pagamento: string;
+};
+
+/**
+ * Envia notificação de venda realizada para os números configurados.
+ * Template usa parâmetros numerados {{1}}..{{8}}:
+ *   1=vendedor, 2=moto, 3=chassi, 4=motor, 5=cliente,
+ *   6=endereço, 7=valor, 8=forma de pagamento
+ */
+export async function enviarNotificacaoVenda(
+  data: VendaNotifData,
+): Promise<{ enviados: number; falhas: number; total: number }> {
+  const { templateId, numeros } = getVendaNotifConfig();
+  if (!templateId || numeros.length === 0) {
+    return { enviados: 0, falhas: 0, total: 0 };
+  }
+
+  const params: Record<string, string> = {
+    '1': data.vendedor || '—',
+    '2': data.moto || '—',
+    '3': data.chassi || '—',
+    '4': data.motor || '—',
+    '5': data.cliente || '—',
+    '6': data.endereco || '—',
+    '7': data.valor || '—',
+    '8': data.pagamento || '—',
+  };
+
+  let enviados = 0;
+  let falhas = 0;
+  for (const num of numeros) {
+    const r = await enviarMensagem(num, '', {
+      templateId,
+      parameters: params,
+    });
+    if (r.ok) enviados++;
+    else falhas++;
+  }
+  return { enviados, falhas, total: numeros.length };
+}

@@ -539,6 +539,9 @@ function initSchema(db: Database.Database): void {
     db.exec("ALTER TABLE vendas ADD COLUMN token TEXT DEFAULT ''");
     db.exec('CREATE INDEX IF NOT EXISTS idx_vendas_token ON vendas(token)');
   }
+  if (!existingVendasCols.has('comprador_endereco')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN comprador_endereco TEXT DEFAULT ''");
+  }
 
   // ----- Checklists -----
   db.exec(`
@@ -600,6 +603,7 @@ function initSchema(db: Database.Database): void {
     'logo', 'telefone', 'whatsapp', 'email', 'endereco',
     'hero_img', 'cat_rua_img', 'cat_offroad_img', 'cat_quad_img', 'cat_infantil_img',
     'wts_from', 'wts_template_id',
+    'venda_notif_template_id', 'venda_notif_numeros',
   ];
   // Seed WTS defaults if empty
   const setDefault = (k: string, v: string) => {
