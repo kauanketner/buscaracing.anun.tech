@@ -49,6 +49,7 @@ export default function ConfigPage() {
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [endereco, setEndereco] = useState('');
+  const [caucao, setCaucao] = useState('');
   const [savingContact, setSavingContact] = useState(false);
 
   // Vendedores
@@ -89,6 +90,7 @@ useEffect(() => {
         setWhatsapp(cfg.whatsapp || '');
         setEmail(cfg.email || '');
         setEndereco(cfg.endereco || '');
+        setCaucao(cfg.aluguel_caucao_padrao || '500');
         await loadVendedores();
         // Load vendedor slug
         fetch('/api/admin/vendedores/slug').then(r => r.json()).then(d => {
@@ -229,6 +231,7 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
           whatsapp: whatsapp.trim(),
           email: email.trim(),
           endereco: endereco.trim(),
+          aluguel_caucao_padrao: caucao.trim(),
         }),
       });
       if (!r.ok) throw new Error('fail');
@@ -358,6 +361,20 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
               onChange={(e) => setEndereco(e.target.value)}
               placeholder="Av. Villa Verde, 1212 - Vila Verde, Franco da Rocha - SP, 07813-000"
             />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Valor da caução para aluguel (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={caucao}
+              onChange={(e) => setCaucao(e.target.value)}
+              placeholder="500.00"
+            />
+            <span style={{ fontSize: '0.75rem', color: '#777', marginTop: 4, display: 'block' }}>
+              Valor único aplicado a todas as reservas de aluguel. O cliente vê na página e paga na retirada.
+            </span>
           </div>
           <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={savingContact}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
