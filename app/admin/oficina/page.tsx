@@ -19,6 +19,7 @@ type Ordem = {
   moto_modelo: string;
   moto_ano: number | null;
   moto_placa: string;
+  moto_chassi: string | null;
   moto_km: number | null;
   servico_descricao: string;
   observacoes: string;
@@ -127,7 +128,7 @@ export default function OficinaPage() {
     return ordens.filter((o) => {
       if (fStatus && o.status !== fStatus) return false;
       if (q) {
-        const t = `${o.cliente_nome} ${o.cliente_telefone} ${o.moto_marca} ${o.moto_modelo} ${o.moto_placa} ${o.servico_descricao}`.toLowerCase();
+        const t = `${o.cliente_nome} ${o.cliente_telefone} ${o.moto_marca} ${o.moto_modelo} ${o.moto_placa} ${o.moto_chassi || ''} ${o.servico_descricao}`.toLowerCase();
         if (!t.includes(q)) return false;
       }
       return true;
@@ -157,7 +158,7 @@ export default function OficinaPage() {
             </svg>
             <input
               type="text"
-              placeholder="Buscar por cliente, placa, moto ou serviço..."
+              placeholder="Buscar por cliente, placa, chassi, moto ou serviço..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -184,6 +185,7 @@ export default function OficinaPage() {
                 <th>Cliente</th>
                 <th>Moto</th>
                 <th>Placa</th>
+                <th>Chassi</th>
                 <th>Serviço</th>
                 <th>Entrada</th>
                 <th>Status</th>
@@ -204,6 +206,9 @@ export default function OficinaPage() {
                     {o.moto_ano && <div className={styles.tdSub}>{o.moto_ano}</div>}
                   </td>
                   <td className={styles.tdMono}>{o.moto_placa || '—'}</td>
+                  <td className={styles.tdMono} style={{ fontSize: '0.78rem', color: '#555' }}>
+                    {o.moto_chassi || '—'}
+                  </td>
                   <td className={styles.tdName} style={{ maxWidth: 260 }}>
                     {o.servico_descricao || '—'}
                   </td>

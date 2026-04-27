@@ -41,6 +41,7 @@ type Moto = {
   vendida?: number | null;
   estado?: string;
   origem?: string;
+  chassi?: string | null;
 };
 
 function diasEmEstoque(createdAt?: string | null): number {
@@ -279,6 +280,7 @@ export default function MotosPage() {
               <tr>
                 <th>Foto</th>
                 <th>Nome</th>
+                <th>Chassi</th>
                 <th>Categoria</th>
                 <th>Condição</th>
                 <th>Preço</th>
@@ -317,6 +319,9 @@ export default function MotosPage() {
                         {m.nome}
                       </Link>
                       <div className={styles.tdBrand}>{m.marca}</div>
+                    </td>
+                    <td style={{ fontFamily: "'Courier New', monospace", fontSize: '0.78rem', color: '#555' }}>
+                      {m.chassi || <span style={{ color: '#bbb' }}>—</span>}
                     </td>
                     <td>
                       <span className={`${styles.badge} ${styles.bgBlue}`}>

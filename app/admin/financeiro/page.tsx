@@ -13,6 +13,7 @@ type Lancamento = {
   ref_tipo: string | null;
   ref_id: number | null;
   data: string;
+  moto_chassi: string | null;
 };
 
 type Comissao = {
@@ -192,6 +193,7 @@ export default function FinanceiroPage() {
                 <th>Data</th>
                 <th>Tipo</th>
                 <th>Categoria</th>
+                <th>Chassi</th>
                 <th>Descrição</th>
                 <th style={{ textAlign: 'right' }}>Valor</th>
               </tr>
@@ -209,6 +211,9 @@ export default function FinanceiroPage() {
                     </span>
                   </td>
                   <td className={styles.tdSub}>{CAT_LABELS[l.categoria] || l.categoria}</td>
+                  <td style={{ fontFamily: "'Courier New', monospace", fontSize: '0.78rem', color: '#555' }}>
+                    {l.moto_chassi || <span style={{ color: '#bbb' }}>—</span>}
+                  </td>
                   <td style={{ maxWidth: 300 }}>{l.descricao}</td>
                   <td style={{ textAlign: 'right', fontWeight: 600, color: l.tipo === 'entrada' ? '#155724' : '#dc3545' }}>
                     {l.tipo === 'entrada' ? '+' : '-'} {fmtBRL(l.valor)}

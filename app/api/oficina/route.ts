@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const db = getDb();
     const rows = db
       .prepare(
-        `SELECT o.*, m.nome AS moto_nome
+        `SELECT o.*, m.nome AS moto_nome, m.chassi AS moto_chassi
          FROM oficina_ordens o
          LEFT JOIN motos m ON m.id = o.moto_id
          ORDER BY o.id DESC`,

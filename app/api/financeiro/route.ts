@@ -14,16 +14,36 @@ export async function GET(request: NextRequest) {
 
   const db = getDb();
 
-  let sql = 'SELECT * FROM lancamentos';
+  // Resolve chassi da moto associada via ref_tipo/ref_id
+  // (chassi do veículo é tratado como "CPF" — identifica a moto unicamente em todo o sistema)
+  let sql = `
+    SELECT l.*,
+      CASE l.ref_tipo
+        WHEN 'moto' THEN (SELECT chassi FROM motos WHERE id = l.ref_id)
+        WHEN 'venda' THEN (
+          SELECT m.chassi FROM vendas v LEFT JOIN motos m ON m.id = v.moto_id WHERE v.id = l.ref_id
+        )
+        WHEN 'aluguel' THEN (
+          SELECT m.chassi FROM alugueis a LEFT JOIN motos m ON m.id = a.moto_id WHERE a.id = l.ref_id
+        )
+        WHEN 'reserva' THEN (
+          SELECT m.chassi FROM reservas r LEFT JOIN motos m ON m.id = r.moto_id WHERE r.id = l.ref_id
+        )
+        WHEN 'consignacao' THEN (
+          SELECT m.chassi FROM consignacoes c LEFT JOIN motos m ON m.id = c.moto_id WHERE c.id = l.ref_id
+        )
+      END AS moto_chassi
+    FROM lancamentos l
+  `;
   const params: string[] = [];
   if (from && to) {
-    sql += ' WHERE data BETWEEN ? AND ?';
+    sql += ' WHERE l.data BETWEEN ? AND ?';
     params.push(from, to);
   } else if (from) {
-    sql += ' WHERE data >= ?';
+    sql += ' WHERE l.data >= ?';
     params.push(from);
   }
-  sql += ' ORDER BY data DESC, id DESC';
+  sql += ' ORDER BY l.data DESC, l.id DESC';
 
   const lancamentos = db.prepare(sql).all(...params);
 
