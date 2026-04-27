@@ -18,6 +18,7 @@ import FecharModal from '../FecharModal';
 import GarantiaModal from '../GarantiaModal';
 import OrdemModal from '../OrdemModal';
 import PecasSection from './PecasSection';
+import ServicosSection from './ServicosSection';
 import styles from './detail.module.css';
 import './print.css';
 
@@ -538,6 +539,9 @@ export default function OficinaDetailPage() {
 
         <div className={`${styles.gridFull} os-no-print`}>
           <PecasSection ordemId={ordem.id} />
+        </div>
+        <div className={`${styles.gridFull} os-no-print`}>
+          <ServicosSection ordemId={ordem.id} />
         </div>
 
         <div className={`${styles.card} ${styles.gridFull} os-print-card`}>

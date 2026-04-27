@@ -473,6 +473,33 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_pecas_mov_peca ON pecas_movimentacoes(peca_id);
     CREATE INDEX IF NOT EXISTS idx_pecas_mov_created ON pecas_movimentacoes(created_at);
 
+    -- Catálogo de serviços (espelho simplificado de pecas — sem estoque/imagem)
+    CREATE TABLE IF NOT EXISTS servicos (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome        TEXT    NOT NULL,
+      codigo      TEXT    DEFAULT '',
+      categoria   TEXT    DEFAULT 'outros',
+      descricao   TEXT    DEFAULT '',
+      preco       REAL,
+      ativo       INTEGER DEFAULT 1,
+      created_at  TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_servicos_categoria ON servicos(categoria);
+    CREATE INDEX IF NOT EXISTS idx_servicos_ativo ON servicos(ativo);
+
+    -- Serviços lançados em cada OS (snapshot de nome/preço; espelho de os_pecas)
+    CREATE TABLE IF NOT EXISTS os_servicos (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      ordem_id        INTEGER NOT NULL REFERENCES oficina_ordens(id) ON DELETE CASCADE,
+      servico_id      INTEGER REFERENCES servicos(id) ON DELETE SET NULL,
+      nome_snapshot   TEXT    NOT NULL,
+      codigo_snapshot TEXT    DEFAULT '',
+      quantidade      INTEGER NOT NULL DEFAULT 1,
+      preco_unitario  REAL    NOT NULL DEFAULT 0,
+      created_at      TEXT    DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_os_servicos_ordem ON os_servicos(ordem_id);
+
     -- Categorias gerenciáveis (motos + peças em tabela única por tipo)
     CREATE TABLE IF NOT EXISTS categorias (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
