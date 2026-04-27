@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
   // Resolve chassi da moto associada via ref_tipo/ref_id
   // (chassi do veículo é tratado como "CPF" — identifica a moto unicamente em todo o sistema)
+  // Resolve também a quantidade de comprovantes anexados (venda ou reserva).
   let sql = `
     SELECT l.*,
       CASE l.ref_tipo
@@ -32,7 +33,16 @@ export async function GET(request: NextRequest) {
         WHEN 'consignacao' THEN (
           SELECT m.chassi FROM consignacoes c LEFT JOIN motos m ON m.id = c.moto_id WHERE c.id = l.ref_id
         )
-      END AS moto_chassi
+      END AS moto_chassi,
+      CASE l.ref_tipo
+        WHEN 'venda' THEN (
+          SELECT COUNT(*) FROM venda_comprovantes vc WHERE vc.venda_id = l.ref_id
+        )
+        WHEN 'reserva' THEN (
+          SELECT COUNT(*) FROM reserva_comprovantes rc WHERE rc.reserva_id = l.ref_id
+        )
+        ELSE 0
+      END AS comprovantes_count
     FROM lancamentos l
   `;
   const params: string[] = [];

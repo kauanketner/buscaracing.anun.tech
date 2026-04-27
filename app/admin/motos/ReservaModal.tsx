@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
 import styles from './page.module.css';
 
@@ -11,6 +11,8 @@ type Props = {
   onSaved: () => void;
 };
 
+const MAX_COMPROVANTES = 10;
+
 export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Props) {
   const { showToast } = useToast();
   const [clienteNome, setClienteNome] = useState('');
@@ -18,6 +20,25 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
   const [valorSinal, setValorSinal] = useState('500');
   const [diasPrazo, setDiasPrazo] = useState('7');
   const [saving, setSaving] = useState(false);
+
+  // Comprovantes (uploaded depois que a reserva for criada)
+  const [comprovantes, setComprovantes] = useState<File[]>([]);
+  const comprovanteInputRef = useRef<HTMLInputElement>(null);
+
+  const onAddComprovantes = (files: FileList | null) => {
+    if (!files) return;
+    const novos = Array.from(files);
+    const total = comprovantes.length + novos.length;
+    if (total > MAX_COMPROVANTES) {
+      showToast(`Máximo ${MAX_COMPROVANTES} comprovantes`, 'error');
+      return;
+    }
+    setComprovantes((cur) => [...cur, ...novos]);
+    if (comprovanteInputRef.current) comprovanteInputRef.current.value = '';
+  };
+  const removeComprovante = (idx: number) => {
+    setComprovantes((cur) => cur.filter((_, i) => i !== idx));
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,6 +63,26 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
         throw new Error(d.error || 'fail');
       }
       const d = await r.json();
+
+      // Upload dos comprovantes anexados (se houver)
+      if (comprovantes.length > 0 && d.reserva_id) {
+        let fail = 0;
+        for (const file of comprovantes) {
+          const fd = new FormData();
+          fd.append('file', file);
+          try {
+            const up = await fetch(`/api/reservas/${d.reserva_id}/comprovantes`, {
+              method: 'POST',
+              body: fd,
+            });
+            if (!up.ok) fail++;
+          } catch { fail++; }
+        }
+        if (fail > 0) {
+          showToast(`Reserva criada, mas ${fail} comprovante(s) falharam.`, 'error');
+        }
+      }
+
       showToast(`Reserva criada! Expira em ${d.data_expira}`, 'success');
       onSaved();
     } catch (err) {
@@ -104,6 +145,71 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
                   value={diasPrazo}
                   onChange={(e) => setDiasPrazo(e.target.value)}
                 />
+              </div>
+            </div>
+
+            {/* Comprovantes */}
+            <div className={styles.formGroup}>
+              <label>
+                Comprovantes do sinal{' '}
+                <span style={{ fontWeight: 400, color: '#999', textTransform: 'none', letterSpacing: 0, fontSize: '0.75rem' }}>
+                  ({comprovantes.length}/{MAX_COMPROVANTES})
+                </span>
+              </label>
+              <div style={{ border: '1.5px dashed #e4e4e0', padding: 10, background: '#fafaf8' }}>
+                <input
+                  ref={comprovanteInputRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  onChange={(e) => onAddComprovantes(e.target.files)}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => comprovanteInputRef.current?.click()}
+                  disabled={comprovantes.length >= MAX_COMPROVANTES}
+                  style={{
+                    background: '#fff', border: '1.5px solid #e4e4e0', padding: '8px 14px',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '0.78rem',
+                    letterSpacing: '0.08em', textTransform: 'uppercase', color: '#27367D',
+                    cursor: comprovantes.length >= MAX_COMPROVANTES ? 'not-allowed' : 'pointer',
+                    opacity: comprovantes.length >= MAX_COMPROVANTES ? 0.5 : 1,
+                  }}
+                >
+                  + Adicionar
+                </button>
+                <span style={{ fontSize: '0.75rem', color: '#777', marginLeft: 8 }}>
+                  Imagens (PIX, print) ou PDF
+                </span>
+
+                {comprovantes.length > 0 && (
+                  <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {comprovantes.map((f, i) => (
+                      <li key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                        background: '#fff', border: '1px solid #e4e4e0', fontSize: '0.82rem',
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#27367D' }}>
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                          <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                        </svg>
+                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {f.name}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#777' }}>
+                          {(f.size / 1024).toFixed(0)} KB
+                        </span>
+                        <button type="button" onClick={() => removeComprovante(i)}
+                          style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', padding: 2 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
+import ComprovantesModal from '@/components/ComprovantesModal';
 import styles from '../vendas/page.module.css';
 
 type Lancamento = {
@@ -14,6 +15,7 @@ type Lancamento = {
   ref_id: number | null;
   data: string;
   moto_chassi: string | null;
+  comprovantes_count: number;
 };
 
 type Comissao = {
@@ -76,6 +78,9 @@ export default function FinanceiroPage() {
   const [data, setData] = useState<FinanceiroData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'lancamentos' | 'comissoes' | 'repasses'>('lancamentos');
+  const [compModal, setCompModal] = useState<
+    { kind: 'venda' | 'reserva'; refId: number; label: string } | null
+  >(null);
 
   const now = new Date();
   const [from, setFrom] = useState(() => toISO(new Date(now.getFullYear(), now.getMonth(), 1)));
@@ -195,31 +200,73 @@ export default function FinanceiroPage() {
                 <th>Categoria</th>
                 <th>Chassi</th>
                 <th>Descrição</th>
+                <th>Comprovantes</th>
                 <th style={{ textAlign: 'right' }}>Valor</th>
               </tr>
             </thead>
             <tbody>
-              {(data?.lancamentos || []).map((l) => (
-                <tr key={l.id}>
-                  <td className={styles.tdSub}>{fmtDate(l.data)}</td>
-                  <td>
-                    <span className={styles.badge} style={{
-                      background: l.tipo === 'entrada' ? '#d4edda' : '#fcdcdc',
-                      color: l.tipo === 'entrada' ? '#155724' : '#721c24',
-                    }}>
-                      {l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
-                    </span>
-                  </td>
-                  <td className={styles.tdSub}>{CAT_LABELS[l.categoria] || l.categoria}</td>
-                  <td style={{ fontFamily: "'Courier New', monospace", fontSize: '0.78rem', color: '#555' }}>
-                    {l.moto_chassi || <span style={{ color: '#bbb' }}>—</span>}
-                  </td>
-                  <td style={{ maxWidth: 300 }}>{l.descricao}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600, color: l.tipo === 'entrada' ? '#155724' : '#dc3545' }}>
-                    {l.tipo === 'entrada' ? '+' : '-'} {fmtBRL(l.valor)}
-                  </td>
-                </tr>
-              ))}
+              {(data?.lancamentos || []).map((l) => {
+                const podeAnexar = l.ref_tipo === 'venda' || l.ref_tipo === 'reserva';
+                const refId = l.ref_id;
+                return (
+                  <tr key={l.id}>
+                    <td className={styles.tdSub}>{fmtDate(l.data)}</td>
+                    <td>
+                      <span className={styles.badge} style={{
+                        background: l.tipo === 'entrada' ? '#d4edda' : '#fcdcdc',
+                        color: l.tipo === 'entrada' ? '#155724' : '#721c24',
+                      }}>
+                        {l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                      </span>
+                    </td>
+                    <td className={styles.tdSub}>{CAT_LABELS[l.categoria] || l.categoria}</td>
+                    <td style={{ fontFamily: "'Courier New', monospace", fontSize: '0.78rem', color: '#555' }}>
+                      {l.moto_chassi || <span style={{ color: '#bbb' }}>—</span>}
+                    </td>
+                    <td style={{ maxWidth: 300 }}>{l.descricao}</td>
+                    <td>
+                      {podeAnexar && refId != null ? (
+                        <button
+                          type="button"
+                          onClick={() => setCompModal({
+                            kind: l.ref_tipo as 'venda' | 'reserva',
+                            refId,
+                            label: l.descricao || `${l.ref_tipo} #${refId}`,
+                          })}
+                          style={{
+                            background: l.comprovantes_count > 0 ? '#fff3cd' : 'none',
+                            border: '1px solid',
+                            borderColor: l.comprovantes_count > 0 ? '#ffecb5' : '#e4e4e0',
+                            padding: '4px 10px',
+                            fontFamily: "'Barlow Condensed', sans-serif",
+                            fontWeight: 700,
+                            fontSize: '0.7rem',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            color: l.comprovantes_count > 0 ? '#856404' : '#27367D',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          {l.comprovantes_count > 0
+                            ? `${l.comprovantes_count} anexo${l.comprovantes_count > 1 ? 's' : ''}`
+                            : 'Anexar'}
+                        </button>
+                      ) : (
+                        <span style={{ color: '#bbb' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: l.tipo === 'entrada' ? '#155724' : '#dc3545' }}>
+                      {l.tipo === 'entrada' ? '+' : '-'} {fmtBRL(l.valor)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {!loading && (!data || data.lancamentos.length === 0) && (
@@ -337,6 +384,16 @@ export default function FinanceiroPage() {
             <div className={styles.empty}>Nenhum repasse de consignada.</div>
           )}
         </div>
+      )}
+
+      {compModal && (
+        <ComprovantesModal
+          kind={compModal.kind}
+          refId={compModal.refId}
+          label={compModal.label}
+          onClose={() => setCompModal(null)}
+          onChanged={() => reload()}
+        />
       )}
     </div>
   );

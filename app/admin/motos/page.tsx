@@ -62,6 +62,7 @@ export default function MotosPage() {
   const [fCat, setFCat] = useState('');
   const [fCond, setFCond] = useState('');
   const [fEstado, setFEstado] = useState('');
+  const [tab, setTab] = useState<'estoque' | 'vendidas'>('estoque');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -132,21 +133,37 @@ export default function MotosPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return motos.filter((m) => {
+      // Aba: estoque (não vendida) vs vendidas
+      const isVendida = !!m.vendida || m.estado === 'vendida';
+      if (tab === 'estoque' && isVendida) return false;
+      if (tab === 'vendidas' && !isVendida) return false;
       if (fCat && m.categoria !== fCat) return false;
       if (fCond && m.condicao !== fCond) return false;
       if (fEstado && m.estado !== fEstado) return false;
       if (q) {
-        const t = `${m.nome} ${m.marca} ${m.categoria}`.toLowerCase();
+        const t = `${m.nome} ${m.marca} ${m.categoria} ${m.chassi || ''}`.toLowerCase();
         if (!t.includes(q)) return false;
       }
       return true;
     });
-  }, [motos, search, fCat, fCond, fEstado]);
+  }, [motos, search, fCat, fCond, fEstado, tab]);
 
-  // Reset page when filters change
+  // Counts pra mostrar nos badges das tabs
+  const counts = useMemo(() => {
+    let estoque = 0;
+    let vendidas = 0;
+    for (const m of motos) {
+      const isVendida = !!m.vendida || m.estado === 'vendida';
+      if (isVendida) vendidas++;
+      else estoque++;
+    }
+    return { estoque, vendidas };
+  }, [motos]);
+
+  // Reset page when filters/tab change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, fCat, fCond, fEstado]);
+  }, [search, fCat, fCond, fEstado, tab]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -233,9 +250,46 @@ export default function MotosPage() {
     window.open(`/api/contratos/compra/${id}`, '_blank');
   };
 
+  const tabBtnStyle = (active: boolean): React.CSSProperties => ({
+    background: active ? '#27367D' : 'transparent',
+    color: active ? '#fff' : '#555',
+    border: '1.5px solid',
+    borderColor: active ? '#27367D' : '#e4e4e0',
+    padding: '8px 16px',
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontWeight: 700,
+    fontSize: '0.82rem',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    transition: 'all 0.15s',
+  });
+  const tabCountStyle = (active: boolean): React.CSSProperties => ({
+    background: active ? 'rgba(255,255,255,0.25)' : '#f1f1ee',
+    color: active ? '#fff' : '#777',
+    padding: '1px 8px',
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    letterSpacing: 0,
+  });
+
   return (
     <>
       <div className={styles.wrap}>
+        {/* Tabs Estoque / Vendidas */}
+        <div style={{ display: 'flex', gap: 8, padding: '1rem 1.25rem 0', borderBottom: '1px solid #e4e4e0', background: '#fff' }}>
+          <button type="button" onClick={() => setTab('estoque')} style={tabBtnStyle(tab === 'estoque')}>
+            Em estoque
+            <span style={tabCountStyle(tab === 'estoque')}>{counts.estoque}</span>
+          </button>
+          <button type="button" onClick={() => setTab('vendidas')} style={tabBtnStyle(tab === 'vendidas')}>
+            Vendidas
+            <span style={tabCountStyle(tab === 'vendidas')}>{counts.vendidas}</span>
+          </button>
+        </div>
         <div className={styles.toolbar}>
           <div className={styles.toolbarSearch}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -244,7 +298,7 @@ export default function MotosPage() {
             </svg>
             <input
               type="text"
-              placeholder="Buscar por nome, marca ou categoria..."
+              placeholder="Buscar por nome, marca, categoria ou chassi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

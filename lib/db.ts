@@ -585,6 +585,18 @@ function initSchema(db: Database.Database): void {
       created_at   TEXT DEFAULT (datetime('now','localtime'))
     );
     CREATE INDEX IF NOT EXISTS idx_venda_comprov_venda ON venda_comprovantes(venda_id);
+
+    -- Comprovantes de reserva (sinal pago, conversa cliente, etc.) — espelho de venda_comprovantes
+    CREATE TABLE IF NOT EXISTS reserva_comprovantes (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      reserva_id   INTEGER NOT NULL REFERENCES reservas(id) ON DELETE CASCADE,
+      url          TEXT NOT NULL,
+      nome_arquivo TEXT DEFAULT '',
+      tipo_mime    TEXT DEFAULT '',
+      descricao    TEXT DEFAULT '',
+      created_at   TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reserva_comprov_reserva ON reserva_comprovantes(reserva_id);
   `);
 
   // ----- Checklists -----

@@ -119,14 +119,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch { /* silencioso */ }
     }
 
-    // 2. Comprovantes de venda (em /uploads/) — coleta as URLs antes do DELETE
+    // 2. Comprovantes (venda + reserva) em /uploads/ — coleta as URLs antes do DELETE
     const comprovUrls = db
       .prepare(
         `SELECT vc.url FROM venda_comprovantes vc
          JOIN vendas v ON v.id = vc.venda_id
-         WHERE v.moto_id = ?`,
+         WHERE v.moto_id = ?
+         UNION ALL
+         SELECT rc.url FROM reserva_comprovantes rc
+         JOIN reservas r ON r.id = rc.reserva_id
+         WHERE r.moto_id = ?`,
       )
-      .all(motoId) as { url: string }[];
+      .all(motoId, motoId) as { url: string }[];
     for (const c of comprovUrls) {
       if (c.url && c.url.startsWith('/uploads/')) {
         const fp = path.join(UPLOADS_DIR, path.basename(c.url));

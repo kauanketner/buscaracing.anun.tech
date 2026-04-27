@@ -107,18 +107,33 @@ export default function OficinaPage() {
   useEffect(() => {
     if (!headerCtx) return;
     headerCtx.setActions(
-      <button
-        className={`${styles.btn} ${styles.btnPrimary}`}
-        onClick={() => {
-          setModalOpen(true);
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-        Nova Ordem
-      </button>,
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Link
+          href="/admin/oficina/tv"
+          className={`${styles.btn} ${styles.btnGhost}`}
+          style={{ textDecoration: 'none' }}
+          title="Abrir kanban em tela cheia (modo TV)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="4" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+            <line x1="8" y1="22" x2="16" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          Modo TV
+        </Link>
+        <button
+          className={`${styles.btn} ${styles.btnPrimary}`}
+          onClick={() => {
+            setModalOpen(true);
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          Nova Ordem
+        </button>
+      </div>,
     );
     return () => headerCtx.setActions(null);
   }, [headerCtx]);
