@@ -87,7 +87,13 @@ export async function GET(request: NextRequest) {
     const link = `${origin}/cl/${ag.checklist_id}`;
     const numeros = ag.numeros.split(',').map((n) => n.trim()).filter(Boolean);
 
-    const result = await enviarLembreteChecklist(numeros, ag.titulo, link, ag.mensagem || undefined);
+    const result = await enviarLembreteChecklist(
+      numeros,
+      ag.titulo,
+      link,
+      ag.mensagem || undefined,
+      ag.checklist_id,
+    );
     totalEnviados += result.enviados;
     totalFalhas += result.falhas;
 

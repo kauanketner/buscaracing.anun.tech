@@ -106,12 +106,15 @@ export async function enviarMensagem(
 /**
  * Envia lembrete de checklist para múltiplos números.
  * Usa template com parâmetros se disponível, senão texto puro.
+ *
+ * @param checklistId — id estável do checklist (vai como {{1}} no botão CTA dinâmico)
  */
 export async function enviarLembreteChecklist(
   numeros: string[],
   checklistTitulo: string,
   checklistLink: string,
   mensagemCustom?: string,
+  checklistId?: number,
 ): Promise<{ enviados: number; falhas: number }> {
   const config = getWtsConfig();
 
@@ -130,18 +133,23 @@ export async function enviarLembreteChecklist(
 
     let result: WtsSendResult;
     if (config.templateId) {
-      // Template "checklist_lembrete" usa parâmetros NOMEADOS (não numerados):
-      //   data    = ex: "17/04/2026"
-      //   horario = ex: "12h30"
-      // O botão "Acessar" tem URL configurada no próprio template (via WTS).
-      // Se o botão tiver variável, também passamos "link" como fallback.
+      // Parâmetros do template:
+      //   data    = ex: "17/04/2026"        — body
+      //   horario = ex: "12h30"             — body
+      //   link    = URL completa do checklist (caso body referencie {{link}})
+      //   1       = id do checklist          — botão CTA com URL dinâmica
+      //             https://buscaracing.com/cl/{{1}} resolve token atual via redirect
+      const params: Record<string, string> = {
+        data: dataBR,
+        horario: horaBR,
+        link: checklistLink,
+      };
+      if (checklistId != null) {
+        params['1'] = String(checklistId);
+      }
       result = await enviarMensagem(trimmed, '', {
         templateId: config.templateId,
-        parameters: {
-          data: dataBR,
-          horario: horaBR,
-          link: checklistLink,
-        },
+        parameters: params,
       });
     } else {
       // Fallback: texto puro (só funciona se conversa já está aberta)
