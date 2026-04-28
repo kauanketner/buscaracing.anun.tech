@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { OFICINA_STATUS_LABELS, type OficinaStatus } from '@/lib/oficina-status';
 
@@ -55,6 +55,7 @@ const STATUS_COLORS: Record<OficinaStatus, { bg: string; head: string; text: str
 };
 
 const REFRESH_MS = 15 * 60 * 1000; // 15 minutos
+const COLUMN_CYCLE_MS = 20 * 1000; // tempo em cada coluna (auto-scroll do carrossel)
 
 function fmtRelative(iso: string | null): string {
   if (!iso) return '—';
@@ -85,6 +86,9 @@ export default function OficinaTVPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [now, setNow] = useState<Date>(new Date());
+  const [focusCol, setFocusCol] = useState<number>(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const colRefs = useRef<Array<HTMLElement | null>>([]);
 
   const reload = useCallback(async () => {
     try {
@@ -119,6 +123,24 @@ export default function OficinaTVPage() {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Carrossel — avança pra próxima coluna a cada COLUMN_CYCLE_MS, loop
+  useEffect(() => {
+    const id = setInterval(() => {
+      setFocusCol((cur) => (cur + 1) % COLS.length);
+    }, COLUMN_CYCLE_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // Faz scroll suave pra coluna focada
+  useEffect(() => {
+    const el = colRefs.current[focusCol];
+    const wrap = scrollRef.current;
+    if (!el || !wrap) return;
+    // Calcula offset pra deixar a coluna alinhada à esquerda com pequena folga
+    const targetLeft = el.offsetLeft - 18;
+    wrap.scrollTo({ left: targetLeft, behavior: 'smooth' });
+  }, [focusCol]);
 
   const mecanicoById = useMemo(() => {
     const map = new Map<number, string>();
@@ -197,6 +219,31 @@ export default function OficinaTVPage() {
           </span>
         </div>
 
+        {/* Indicador de coluna em foco (dots) */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {COLS.map((status, idx) => {
+            const cor = STATUS_COLORS[status];
+            const focused = idx === focusCol;
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setFocusCol(idx)}
+                title={OFICINA_STATUS_LABELS[status]}
+                style={{
+                  width: focused ? 28 : 8,
+                  height: 8,
+                  background: focused ? cor.head : '#444',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'width 0.4s, background 0.4s',
+                }}
+              />
+            );
+          })}
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <div style={{ textAlign: 'right' }}>
             <div
@@ -241,8 +288,9 @@ export default function OficinaTVPage() {
         </div>
       </header>
 
-      {/* Body — Kanban scroll horizontal */}
+      {/* Body — Kanban scroll horizontal (auto-carrossel) */}
       <div
+        ref={scrollRef}
         style={{
           flex: 1,
           overflow: 'auto',
@@ -250,24 +298,30 @@ export default function OficinaTVPage() {
           gap: 14,
           padding: 18,
           alignItems: 'stretch',
+          scrollBehavior: 'smooth',
         }}
       >
         {loading ? (
           <div style={{ color: '#888', padding: 40, fontSize: '1.1rem' }}>Carregando...</div>
         ) : (
-          COLS.map((status) => {
+          COLS.map((status, idx) => {
             const items = grouped[status];
             const cor = STATUS_COLORS[status];
+            const focused = idx === focusCol;
             return (
               <section
                 key={status}
+                ref={(el) => { colRefs.current[idx] = el; }}
                 style={{
-                  flex: '0 0 320px',
+                  flex: '0 0 360px',
                   background: cor.bg,
-                  border: '1px solid #2a2a32',
+                  border: focused ? `2px solid ${cor.head}` : '1px solid #2a2a32',
+                  outline: focused ? `4px solid ${cor.head}33` : 'none',
                   display: 'flex',
                   flexDirection: 'column',
                   maxHeight: '100%',
+                  transition: 'border-color 0.4s, outline-color 0.4s, opacity 0.4s',
+                  opacity: focused ? 1 : 0.55,
                 }}
               >
                 <div
