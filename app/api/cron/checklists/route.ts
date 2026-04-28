@@ -80,11 +80,11 @@ export async function GET(request: NextRequest) {
     const dias = ag.dias_semana.split(',').map((d) => d.trim());
     if (!dias.includes(currentDay)) continue;
 
-    // Build link — usa rota redirect /c/<id> em vez de /checklist/<token>.
+    // Build link — usa rota redirect /cl/<id> em vez de /checklist/<token>.
     // Assim, se o token do checklist for regenerado, o link enviado em
-    // mensagens antigas continua válido (a rota /c/<id> resolve o token atual).
+    // mensagens antigas continua válido (a rota /cl/<id> resolve o token atual).
     const origin = process.env.NEXT_PUBLIC_URL || process.env.VERCEL_URL || 'https://buscaracing.com';
-    const link = `${origin}/c/${ag.checklist_id}`;
+    const link = `${origin}/cl/${ag.checklist_id}`;
     const numeros = ag.numeros.split(',').map((n) => n.trim()).filter(Boolean);
 
     const result = await enviarLembreteChecklist(numeros, ag.titulo, link, ag.mensagem || undefined);
