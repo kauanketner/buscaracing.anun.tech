@@ -109,6 +109,17 @@ function initSchema(db: Database.Database): void {
       created_at TEXT    DEFAULT (datetime('now','localtime'))
     );
 
+    -- Compradores: equipe interna que vai a leiloes/lojistas/particulares
+    -- comprar motos pra compor o estoque (responsavel_compra das motos)
+    CREATE TABLE IF NOT EXISTS compradores (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome       TEXT    NOT NULL,
+      telefone   TEXT    DEFAULT '',
+      email      TEXT    DEFAULT '',
+      ativo      INTEGER DEFAULT 1,
+      created_at TEXT    DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS oficina_ordens (
       id                 INTEGER PRIMARY KEY AUTOINCREMENT,
       cliente_nome       TEXT    NOT NULL,

@@ -199,22 +199,56 @@ type NavLink = {
   exact?: boolean;
 };
 
-const NAV_LINKS: NavLink[] = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
-  { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
-  { href: '/admin/pecas', label: 'Peças', icon: 'pecas' },
-  { href: '/admin/servicos', label: 'Serviços', icon: 'servicos' },
-  { href: '/admin/pdv', label: 'PDV', icon: 'pdv' },
-  { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
-  { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
-  { href: '/admin/alugueis', label: 'Aluguéis', icon: 'alugueis' },
-  { href: '/admin/consignacoes', label: 'Consignadas', icon: 'consignacoes' },
-  { href: '/admin/financeiro', label: 'Financeiro', icon: 'financeiro' },
-  { href: '/admin/clientes', label: 'Clientes', icon: 'clientes' },
-  { href: '/admin/checklists', label: 'Checklists', icon: 'checklists' },
-  { href: '/admin/mecanicos', label: 'Mecânicos', icon: 'mecanicos' },
-  { href: '/admin/blog', label: 'Blog', icon: 'blog' },
-  { href: '/admin/config', label: 'Configurações', icon: 'config' },
+type NavGroup = {
+  title: string;
+  items: NavLink[];
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: 'Dia a dia',
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
+      { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
+      { href: '/admin/pdv', label: 'PDV', icon: 'pdv' },
+      { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
+    ],
+  },
+  {
+    title: 'Negócio',
+    items: [
+      { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
+      { href: '/admin/alugueis', label: 'Aluguéis', icon: 'alugueis' },
+      { href: '/admin/consignacoes', label: 'Consignadas', icon: 'consignacoes' },
+    ],
+  },
+  {
+    title: 'Catálogos',
+    items: [
+      { href: '/admin/pecas', label: 'Peças', icon: 'pecas' },
+      { href: '/admin/servicos', label: 'Serviços', icon: 'servicos' },
+    ],
+  },
+  {
+    title: 'Pessoas',
+    items: [
+      { href: '/admin/clientes', label: 'Clientes', icon: 'clientes' },
+    ],
+  },
+  {
+    title: 'Gestão',
+    items: [
+      { href: '/admin/financeiro', label: 'Financeiro', icon: 'financeiro' },
+      { href: '/admin/checklists', label: 'Checklists', icon: 'checklists' },
+    ],
+  },
+  {
+    title: 'Outros',
+    items: [
+      { href: '/admin/blog', label: 'Blog', icon: 'blog' },
+      { href: '/admin/config', label: 'Configurações', icon: 'config' },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -282,21 +316,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className={styles.adminLayout}>
           <aside className={styles.sidebar}>
             <nav className={styles.sidebarNav} style={{ paddingTop: '1rem' }}>
-              {NAV_LINKS.map((link) => {
-                const active = link.exact
-                  ? pathname === link.href
-                  : pathname === link.href || pathname.startsWith(link.href + '/');
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+              {NAV_GROUPS.map((group, gi) => (
+                <div key={group.title} className={styles.navGroup}>
+                  <div
+                    className={styles.navGroupTitle}
+                    style={gi === 0 ? { marginTop: 0 } : undefined}
                   >
-                    <NavIcon name={link.icon} />
-                    {link.label}
-                  </Link>
-                );
-              })}
+                    {group.title}
+                  </div>
+                  {group.items.map((link) => {
+                    const active = link.exact
+                      ? pathname === link.href
+                      : pathname === link.href || pathname.startsWith(link.href + '/');
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+                      >
+                        <NavIcon name={link.icon} />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
             </nav>
 
             <div className={styles.sidebarFooter}>

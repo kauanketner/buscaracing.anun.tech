@@ -1,10 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState, ChangeEvent, FormEvent } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import CategoriasManager from './CategoriasManager';
 import NotificacoesVenda from './NotificacoesVenda';
+import PessoasCRUD from './PessoasCRUD';
 import styles from './page.module.css';
+
+type ConfigTab = 'geral' | 'vendedores' | 'compradores' | 'mecanicos';
+
+const TABS: { key: ConfigTab; label: string }[] = [
+  { key: 'geral', label: 'Geral' },
+  { key: 'vendedores', label: 'Vendedores' },
+  { key: 'compradores', label: 'Compradores' },
+  { key: 'mecanicos', label: 'Mecânicos' },
+];
 
 type ConfigMap = Record<string, string>;
 
@@ -40,6 +52,13 @@ const UploadIcon = () => (
 
 export default function ConfigPage() {
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get('tab') as ConfigTab | null;
+  const [tab, setTab] = useState<ConfigTab>(
+    tabParam && (['geral', 'vendedores', 'compradores', 'mecanicos'] as ConfigTab[]).includes(tabParam)
+      ? tabParam
+      : 'geral',
+  );
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<ConfigMap>({});
 
@@ -249,8 +268,40 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     return <div className={styles.loading}>Carregando configurações...</div>;
   }
 
+  const tabBtnStyle = (active: boolean): React.CSSProperties => ({
+    background: active ? '#27367D' : 'transparent',
+    color: active ? '#fff' : '#555',
+    border: '1.5px solid',
+    borderColor: active ? '#27367D' : '#e4e4e0',
+    padding: '8px 18px',
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontWeight: 700,
+    fontSize: '0.82rem',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  });
+
   return (
     <div className={styles.wrap}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, padding: '0 0 1.25rem', flexWrap: 'wrap' }}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            style={tabBtnStyle(tab === t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* TAB: GERAL */}
+      {tab === 'geral' && (
+      <>
       {/* Logo */}
       <section className={styles.configSection}>
         <h2 className={styles.configSectionTitle}>Logo do Site</h2>
@@ -389,7 +440,15 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         </form>
       </section>
 
-      {/* Vendedores */}
+      <NotificacoesVenda />
+
+      <CategoriasManager tipo="moto" titulo="Categorias de Motos" />
+      <CategoriasManager tipo="peca" titulo="Categorias de Peças" />
+      </>
+      )}
+
+      {/* TAB: VENDEDORES */}
+      {tab === 'vendedores' && (
       <section className={styles.configSection}>
         <h2 className={styles.configSectionTitle}>Vendedores</h2>
         <p style={{ fontSize: '0.85rem', color: '#777', margin: '0 0 1rem' }}>
@@ -552,11 +611,54 @@ const onLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
           </div>
         )}
       </section>
+      )}
 
-      <NotificacoesVenda />
+      {/* TAB: COMPRADORES */}
+      {tab === 'compradores' && (
+        <section className={styles.configSection}>
+          <PessoasCRUD
+            endpoint="/api/config/compradores"
+            singular="comprador"
+            plural="Compradores"
+            descricao="Equipe interna que vai a leilões, lojistas e particulares para comprar motos pro estoque. Aparece como responsável da compra quando a moto chega."
+          />
+        </section>
+      )}
 
-      <CategoriasManager tipo="moto" titulo="Categorias de Motos" />
-      <CategoriasManager tipo="peca" titulo="Categorias de Peças" />
+      {/* TAB: MECÂNICOS */}
+      {tab === 'mecanicos' && (
+        <section className={styles.configSection}>
+          <PessoasCRUD
+            endpoint="/api/config/mecanicos"
+            singular="mecânico"
+            plural="Mecânicos"
+            descricao="Cadastro rápido de mecânicos. Para configurar PIN de acesso ao app do mecânico, link compartilhado e gestão avançada, use o botão abaixo."
+            comEspecialidade
+            footer={
+              <Link
+                href="/admin/mecanicos"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 16px',
+                  background: 'transparent',
+                  border: '1.5px solid #e4e4e0',
+                  color: '#27367D',
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                }}
+              >
+                Gestão completa (PIN + link do app) →
+              </Link>
+            }
+          />
+        </section>
+      )}
 
     </div>
   );
