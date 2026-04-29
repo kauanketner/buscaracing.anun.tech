@@ -42,7 +42,19 @@ type Moto = {
   estado?: string;
   origem?: string;
   chassi?: string | null;
+  placa?: string | null;
 };
+
+/**
+ * Normaliza chassi/placa para comparação:
+ * - lowercase
+ * - remove qualquer caractere que não seja letra ou número (hífens, espaços, pontos)
+ *
+ * Assim "9C2-KC16 70AR" casa com "9c2kc1670ar".
+ */
+function normalizeAlphaNum(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
 
 function diasEmEstoque(createdAt?: string | null): number {
   if (!createdAt) return 0;
@@ -131,7 +143,9 @@ export default function MotosPage() {
   }, [headerCtx]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const qRaw = search.trim();
+    const q = qRaw.toLowerCase();
+    const qNorm = normalizeAlphaNum(qRaw);
     return motos.filter((m) => {
       // Aba: estoque (não vendida) vs vendidas
       const isVendida = !!m.vendida || m.estado === 'vendida';
@@ -141,12 +155,31 @@ export default function MotosPage() {
       if (fCond && m.condicao !== fCond) return false;
       if (fEstado && m.estado !== fEstado) return false;
       if (q) {
-        const t = `${m.nome} ${m.marca} ${m.categoria} ${m.chassi || ''}`.toLowerCase();
-        if (!t.includes(q)) return false;
+        // Match em texto livre (nome/marca/categoria) — case-insensitive
+        const t = `${m.nome} ${m.marca} ${m.categoria}`.toLowerCase();
+        if (t.includes(q)) return true;
+        // Match em chassi/placa — ignora hífens/espaços/pontos
+        if (qNorm) {
+          const chassiNorm = normalizeAlphaNum(m.chassi || '');
+          if (chassiNorm && chassiNorm.includes(qNorm)) return true;
+          const placaNorm = normalizeAlphaNum(m.placa || '');
+          if (placaNorm && placaNorm.includes(qNorm)) return true;
+        }
+        return false;
       }
       return true;
     });
   }, [motos, search, fCat, fCond, fEstado, tab]);
+
+  // Destaca visualmente um chassi/placa que casa com a busca
+  const buscaCasaChassi = useMemo(() => {
+    const qNorm = normalizeAlphaNum(search.trim());
+    if (!qNorm) return (_: string | null | undefined) => false;
+    return (val: string | null | undefined) => {
+      const v = normalizeAlphaNum(val || '');
+      return !!v && v.includes(qNorm);
+    };
+  }, [search]);
 
   // Counts pra mostrar nos badges das tabs
   const counts = useMemo(() => {
@@ -298,7 +331,7 @@ export default function MotosPage() {
             </svg>
             <input
               type="text"
-              placeholder="Buscar por nome, marca, categoria ou chassi..."
+              placeholder="Buscar por nome, marca, categoria, chassi ou placa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -375,7 +408,19 @@ export default function MotosPage() {
                       <div className={styles.tdBrand}>{m.marca}</div>
                     </td>
                     <td style={{ fontFamily: "'Courier New', monospace", fontSize: '0.78rem', color: '#555' }}>
-                      {m.chassi || <span style={{ color: '#bbb' }}>—</span>}
+                      {m.chassi ? (
+                        <span
+                          style={
+                            buscaCasaChassi(m.chassi)
+                              ? { background: '#fff3cd', padding: '2px 4px', fontWeight: 600, color: '#222' }
+                              : undefined
+                          }
+                        >
+                          {m.chassi}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#bbb' }}>—</span>
+                      )}
                     </td>
                     <td>
                       <span className={`${styles.badge} ${styles.bgBlue}`}>
