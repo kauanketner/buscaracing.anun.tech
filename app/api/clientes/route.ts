@@ -64,8 +64,19 @@ export async function GET(request: NextRequest) {
     )
     .all() as Record<string, unknown>[];
 
+  // PDV (vendas avulsas de peças) — só concluídas contam
+  const pdvRows = db
+    .prepare(
+      `SELECT cliente_nome AS nome, cliente_tel AS telefone, cliente_email AS email,
+              'pdv' AS tipo, pv.id AS ref_id, pv.valor_total AS valor,
+              pv.data_venda AS data, '' AS moto_nome
+       FROM pdv_vendas pv
+       WHERE pv.status = 'concluida'`,
+    )
+    .all() as Record<string, unknown>[];
+
   // Merge all into touchpoints
-  const allTouchpoints = [...compradores, ...oficina, ...leadsRows, ...reservasRows, ...alugueis];
+  const allTouchpoints = [...compradores, ...oficina, ...leadsRows, ...reservasRows, ...alugueis, ...pdvRows];
 
   // Group by normalized key (lowercase name + phone digits)
   const normalize = (nome: string, tel: string): string => {
@@ -121,8 +132,10 @@ export async function GET(request: NextRequest) {
     const leads = c.touchpoints.filter((t) => t.tipo === 'lead').length;
     const reservas = c.touchpoints.filter((t) => t.tipo === 'reserva').length;
     const alugueis = c.touchpoints.filter((t) => t.tipo === 'aluguel').length;
+    const pdv = c.touchpoints.filter((t) => t.tipo === 'pdv').length;
+    // Total gasto: vendas de moto + vendas PDV
     const totalGasto = c.touchpoints
-      .filter((t) => t.tipo === 'compra' && t.valor)
+      .filter((t) => (t.tipo === 'compra' || t.tipo === 'pdv') && t.valor)
       .reduce((s, t) => s + (t.valor || 0), 0);
     const ultimaInteracao = c.touchpoints[0]?.data || '';
 
@@ -133,6 +146,7 @@ export async function GET(request: NextRequest) {
       leads,
       reservas,
       alugueis,
+      pdv,
       total_gasto: totalGasto,
       ultima_interacao: ultimaInteracao,
       total_interacoes: c.touchpoints.length,

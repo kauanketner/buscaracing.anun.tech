@@ -31,6 +31,8 @@ const TIPO_LABELS: Record<string, { label: string; bg: string; color: string }> 
   oficina: { label: 'Oficina', bg: '#cce5ff', color: '#004085' },
   lead: { label: 'Lead', bg: '#fff3cd', color: '#856404' },
   reserva: { label: 'Reserva', bg: '#d6d8ff', color: '#27367D' },
+  aluguel: { label: 'Aluguel', bg: '#e2d5f0', color: '#5d2e8c' },
+  pdv: { label: 'PDV', bg: '#fde2c5', color: '#8b4a00' },
 };
 
 function fmtDate(iso: string): string {

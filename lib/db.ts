@@ -473,6 +473,43 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_pecas_mov_peca ON pecas_movimentacoes(peca_id);
     CREATE INDEX IF NOT EXISTS idx_pecas_mov_created ON pecas_movimentacoes(created_at);
 
+    -- PDV: vendas avulsas de peças (balcão / site / WhatsApp), sem OS
+    CREATE TABLE IF NOT EXISTS pdv_vendas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_nome    TEXT NOT NULL,
+      cliente_tel     TEXT DEFAULT '',
+      cliente_cpf     TEXT DEFAULT '',
+      cliente_email   TEXT DEFAULT '',
+      vendedor_id     INTEGER REFERENCES vendedores(id),
+      canal           TEXT DEFAULT 'balcao',     -- 'balcao' | 'site' | 'whatsapp' | 'outro'
+      forma_pagamento TEXT DEFAULT 'pix',        -- 'pix' | 'dinheiro' | 'debito' | 'credito'
+      parcelas        INTEGER DEFAULT 1,         -- só relevante p/ credito
+      valor_bruto     REAL NOT NULL,             -- soma dos itens
+      desconto        REAL DEFAULT 0,
+      valor_total     REAL NOT NULL,
+      observacoes     TEXT DEFAULT '',
+      status          TEXT DEFAULT 'concluida',  -- 'concluida' | 'cancelada'
+      cancelada_em    TEXT,
+      cancelada_motivo TEXT DEFAULT '',
+      data_venda      TEXT DEFAULT (date('now','localtime')),
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pdv_vendas_data ON pdv_vendas(data_venda);
+    CREATE INDEX IF NOT EXISTS idx_pdv_vendas_status ON pdv_vendas(status);
+    CREATE INDEX IF NOT EXISTS idx_pdv_vendas_vendedor ON pdv_vendas(vendedor_id);
+
+    CREATE TABLE IF NOT EXISTS pdv_itens (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      pdv_venda_id    INTEGER NOT NULL REFERENCES pdv_vendas(id) ON DELETE CASCADE,
+      peca_id         INTEGER REFERENCES pecas(id) ON DELETE SET NULL,
+      nome_snapshot   TEXT NOT NULL,
+      codigo_snapshot TEXT DEFAULT '',
+      quantidade      INTEGER NOT NULL,
+      preco_unitario  REAL NOT NULL,
+      created_at      TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pdv_itens_venda ON pdv_itens(pdv_venda_id);
+
     -- Catálogo de serviços (espelho simplificado de pecas — sem estoque/imagem)
     CREATE TABLE IF NOT EXISTS servicos (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,

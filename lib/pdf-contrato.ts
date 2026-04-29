@@ -427,3 +427,142 @@ export async function gerarContratoAluguel(aluguelId: number): Promise<Buffer> {
   signatures(doc, 'Busca Racing (Locadora)', String(row.cliente_nome || 'Locatário'));
   return collectPdf(doc);
 }
+
+// ---------------------------------------------------------------------------
+// RECIBO DE VENDA PDV (peças avulsas)
+// ---------------------------------------------------------------------------
+
+const FORMA_PAGTO_LABELS: Record<string, string> = {
+  pix: 'PIX',
+  dinheiro: 'Dinheiro',
+  debito: 'Cartão de débito',
+  credito: 'Cartão de crédito',
+};
+
+const CANAL_LABELS: Record<string, string> = {
+  balcao: 'Balcão',
+  site: 'Site',
+  whatsapp: 'WhatsApp',
+  outro: 'Outro',
+};
+
+export async function gerarReciboPDV(vendaId: number): Promise<Buffer> {
+  const db = getDb();
+  const v = db
+    .prepare(
+      `SELECT pv.*, ve.nome AS vendedor_nome
+       FROM pdv_vendas pv
+       LEFT JOIN vendedores ve ON pv.vendedor_id = ve.id
+       WHERE pv.id = ?`,
+    )
+    .get(vendaId) as Record<string, unknown> | undefined;
+  if (!v) throw new Error('Venda PDV não encontrada');
+
+  const itens = db
+    .prepare('SELECT * FROM pdv_itens WHERE pdv_venda_id = ? ORDER BY id ASC')
+    .all(vendaId) as Array<{
+      nome_snapshot: string;
+      codigo_snapshot: string;
+      quantidade: number;
+      preco_unitario: number;
+    }>;
+
+  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  header(doc, `RECIBO DE VENDA Nº ${vendaId}`);
+
+  // Cabeçalho da venda
+  sectionTitle(doc, 'Dados da venda');
+  fieldRow(doc, [
+    ['Data', fmtDate(v.data_venda as string)],
+    ['Canal', CANAL_LABELS[String(v.canal || 'balcao')] || String(v.canal || '—')],
+  ]);
+  field(doc, 'Atendido por', String(v.vendedor_nome || '—'));
+  if (v.status === 'cancelada') {
+    doc.moveDown(0.5);
+    doc.fillColor('#dc3545').font('Helvetica-Bold').fontSize(11)
+      .text('VENDA CANCELADA', { align: 'center' });
+    doc.fillColor('#000').font('Helvetica').fontSize(9);
+  }
+
+  // Cliente
+  sectionTitle(doc, 'Cliente');
+  field(doc, 'Nome', String(v.cliente_nome || ''));
+  if (v.cliente_cpf) field(doc, 'CPF', String(v.cliente_cpf));
+  if (v.cliente_tel) field(doc, 'Telefone', String(v.cliente_tel));
+  if (v.cliente_email) field(doc, 'E-mail', String(v.cliente_email));
+
+  // Itens — tabela manual
+  sectionTitle(doc, 'Itens');
+  const startX = 50;
+  const colWidths = { nome: 280, qtd: 50, preco: 80, subtotal: 85 };
+  let y = doc.y;
+
+  // Cabeçalho da tabela
+  doc.fontSize(8).font('Helvetica-Bold').fillColor('#27367D');
+  doc.text('Item', startX, y, { width: colWidths.nome });
+  doc.text('Qtd', startX + colWidths.nome, y, { width: colWidths.qtd, align: 'center' });
+  doc.text('Preço un.', startX + colWidths.nome + colWidths.qtd, y, { width: colWidths.preco, align: 'right' });
+  doc.text('Subtotal', startX + colWidths.nome + colWidths.qtd + colWidths.preco, y, { width: colWidths.subtotal, align: 'right' });
+  doc.fillColor('#000');
+  y += 14;
+  doc.moveTo(startX, y - 2).lineTo(startX + 495, y - 2).stroke('#e4e4e0');
+
+  // Linhas
+  doc.font('Helvetica').fontSize(9);
+  let totalCalc = 0;
+  for (const it of itens) {
+    const subtotal = Number(it.quantidade) * Number(it.preco_unitario);
+    totalCalc += subtotal;
+    const nomeLinha = it.codigo_snapshot
+      ? `${it.nome_snapshot}  (#${it.codigo_snapshot})`
+      : it.nome_snapshot;
+    doc.text(nomeLinha, startX, y, { width: colWidths.nome });
+    doc.text(String(it.quantidade), startX + colWidths.nome, y, { width: colWidths.qtd, align: 'center' });
+    doc.text(fmtBRL(it.preco_unitario), startX + colWidths.nome + colWidths.qtd, y, { width: colWidths.preco, align: 'right' });
+    doc.text(fmtBRL(subtotal), startX + colWidths.nome + colWidths.qtd + colWidths.preco, y, { width: colWidths.subtotal, align: 'right' });
+    y += 14;
+  }
+  doc.y = y + 4;
+  doc.moveTo(startX, doc.y).lineTo(startX + 495, doc.y).stroke('#e4e4e0');
+  doc.moveDown(0.5);
+
+  // Totais
+  const desconto = Number(v.desconto) || 0;
+  const valorTotal = Number(v.valor_total) || totalCalc;
+  doc.font('Helvetica').fontSize(9);
+  doc.text(`Subtotal: ${fmtBRL(totalCalc)}`, startX, doc.y, { width: 495, align: 'right' });
+  if (desconto > 0) {
+    doc.text(`Desconto: − ${fmtBRL(desconto)}`, startX, doc.y, { width: 495, align: 'right' });
+  }
+  doc.font('Helvetica-Bold').fontSize(11).fillColor('#27367D');
+  doc.text(`TOTAL: ${fmtBRL(valorTotal)}`, startX, doc.y + 4, { width: 495, align: 'right' });
+  doc.fillColor('#000').font('Helvetica').fontSize(9);
+  doc.moveDown(1.5);
+
+  // Pagamento
+  sectionTitle(doc, 'Pagamento');
+  const formaLabel = FORMA_PAGTO_LABELS[String(v.forma_pagamento || 'pix')] || String(v.forma_pagamento || '—');
+  const parcelas = Number(v.parcelas) || 1;
+  field(
+    doc,
+    'Forma',
+    v.forma_pagamento === 'credito' && parcelas > 1
+      ? `${formaLabel} em ${parcelas}x`
+      : formaLabel,
+  );
+
+  if (v.observacoes) {
+    sectionTitle(doc, 'Observações');
+    doc.fontSize(9).font('Helvetica').text(String(v.observacoes));
+  }
+
+  // Aviso final
+  doc.moveDown(2);
+  doc.fontSize(7).font('Helvetica').fillColor('#777');
+  doc.text(
+    'Este documento é um recibo informativo de venda — não substitui nota fiscal.',
+    { align: 'center' },
+  );
+
+  return collectPdf(doc);
+}

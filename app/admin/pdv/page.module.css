@@ -1,0 +1,336 @@
+.wrap {
+  background: #fafaf8;
+  height: calc(100vh - 80px);
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  padding: 16px;
+}
+@media (max-width: 900px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+/* Coluna esquerda: catálogo */
+.catalogo {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.catalogoHead {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4e4e0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.catalogoTitle {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #27367D;
+  margin: 0;
+}
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 9px 12px;
+  border: 1.5px solid #e4e4e0;
+  background: #fafaf8;
+  font-size: 0.92rem;
+  outline: none;
+}
+.searchInput:focus {
+  border-color: #27367D;
+}
+.grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+.card {
+  background: #fff;
+  border: 1.5px solid #e4e4e0;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  font-family: inherit;
+}
+.card:hover {
+  border-color: #27367D;
+  background: #f3f4f8;
+}
+.cardImg {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  background: #f1f1ee;
+  border: 1px solid #e4e4e0;
+  margin-bottom: 4px;
+}
+.cardImgPh {
+  width: 100%;
+  height: 80px;
+  background: #f1f1ee;
+  border: 1px solid #e4e4e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  color: #ccc;
+}
+.cardName {
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: #222;
+  line-height: 1.2;
+}
+.cardCode {
+  font-size: 0.7rem;
+  color: #999;
+}
+.cardPreco {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: #27367D;
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+.cardEstoque {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.estoqueOk {
+  color: #155724;
+}
+.estoqueBaixo {
+  color: #856404;
+}
+.estoqueZero {
+  color: #8b1820;
+}
+.cardDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cardDisabled:hover {
+  border-color: #e4e4e0;
+  background: #fff;
+}
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 20px;
+  color: #999;
+  font-size: 0.88rem;
+}
+
+/* Coluna direita: carrinho */
+.carrinho {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.carrinhoHead {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4e4e0;
+}
+.carrinhoTitle {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #27367D;
+  margin: 0;
+}
+.carrinhoBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+.itemRow {
+  display: grid;
+  grid-template-columns: 1fr 60px 80px 30px;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f1ee;
+  align-items: center;
+}
+.itemNome {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.itemSubtotal {
+  font-size: 0.82rem;
+  color: #777;
+}
+.miniInput {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #e4e4e0;
+  background: #fafaf8;
+  font-size: 0.86rem;
+  text-align: right;
+  outline: none;
+}
+.miniInput:focus {
+  border-color: #27367D;
+}
+.btnRemove {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btnRemove:hover {
+  background: #fdecea;
+}
+.carrinhoEmpty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 0.88rem;
+}
+
+/* Form bottom */
+.form {
+  border-top: 1.5px solid #e4e4e0;
+  padding: 12px 14px;
+  background: #fafaf8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.formGroup label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #777;
+}
+.formGroup input,
+.formGroup select {
+  padding: 7px 10px;
+  border: 1.5px solid #e4e4e0;
+  background: #fff;
+  font-size: 0.88rem;
+  outline: none;
+}
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #27367D;
+}
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.totals {
+  background: #fff;
+  border: 1px solid #e4e4e0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+}
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+}
+.totalGrande {
+  border-top: 1px solid #e4e4e0;
+  padding-top: 6px;
+  margin-top: 4px;
+  font-size: 1.05rem;
+  color: #155724;
+  font-weight: 700;
+}
+.btnFinalizar {
+  background: #27367D;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+.btnFinalizar:hover:not(:disabled) {
+  background: #1d2a66;
+}
+.btnFinalizar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Autocomplete cliente */
+.autoBox {
+  position: relative;
+}
+.autoSug {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #e4e4e0;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+.autoItem {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f1ee;
+  font-size: 0.86rem;
+}
+.autoItem:hover {
+  background: #f3f4f8;
+}
+.autoItem:last-child {
+  border-bottom: none;
+}
+.autoSub {
+  font-size: 0.74rem;
+  color: #777;
+}

@@ -12,6 +12,8 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin/motos': { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' },
   '/admin/pecas': { title: 'Peças', subtitle: 'Cadastre e publique peças no site' },
   '/admin/servicos': { title: 'Serviços', subtitle: 'Catálogo de serviços para lançar nas ordens da oficina' },
+  '/admin/pdv': { title: 'PDV', subtitle: 'Registrar venda avulsa de peças (balcão, site, WhatsApp)' },
+  '/admin/pdv/historico': { title: 'Histórico de vendas PDV', subtitle: 'Vendas avulsas registradas pelo PDV' },
   '/admin/oficina': { title: 'Oficina', subtitle: 'Ordens de serviço e motos em manutenção' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Histórico de vendas, comissões e faturamento' },
   '/admin/alugueis': { title: 'Aluguéis', subtitle: 'Reservas de locação — aprovar, ativar, finalizar' },
@@ -48,7 +50,7 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   return { title: 'Admin' };
 }
 
-function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'pecas' | 'servicos' | 'oficina' | 'vendas' | 'alugueis' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config' }) {
+function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'pecas' | 'servicos' | 'pdv' | 'oficina' | 'vendas' | 'alugueis' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config' }) {
   if (name === 'dashboard') {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -94,6 +96,16 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'pecas' | 'servicos' 
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M9 11l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M3 7h2M3 12h2M3 17h2M9 17h12M9 7h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (name === 'pdv') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="6" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+        <path d="M2 10h20" stroke="currentColor" strokeWidth="2" />
+        <path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2" stroke="currentColor" strokeWidth="2" />
+        <circle cx="9" cy="15" r="1" fill="currentColor" />
       </svg>
     );
   }
@@ -179,7 +191,7 @@ function NavIcon({ name }: { name: 'dashboard' | 'motos' | 'pecas' | 'servicos' 
 type NavLink = {
   href: string;
   label: string;
-  icon: 'dashboard' | 'motos' | 'pecas' | 'servicos' | 'oficina' | 'vendas' | 'alugueis' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config';
+  icon: 'dashboard' | 'motos' | 'pecas' | 'servicos' | 'pdv' | 'oficina' | 'vendas' | 'alugueis' | 'consignacoes' | 'financeiro' | 'clientes' | 'checklists' | 'mecanicos' | 'blog' | 'config';
   exact?: boolean;
 };
 
@@ -188,6 +200,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/admin/motos', label: 'Estoque', icon: 'motos' },
   { href: '/admin/pecas', label: 'Peças', icon: 'pecas' },
   { href: '/admin/servicos', label: 'Serviços', icon: 'servicos' },
+  { href: '/admin/pdv', label: 'PDV', icon: 'pdv' },
   { href: '/admin/oficina', label: 'Oficina', icon: 'oficina' },
   { href: '/admin/vendas', label: 'Vendas', icon: 'vendas' },
   { href: '/admin/alugueis', label: 'Aluguéis', icon: 'alugueis' },
