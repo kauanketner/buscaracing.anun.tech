@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
+import { formatCpfCnpj } from '@/lib/cpf-cnpj';
 import styles from './page.module.css';
 
 type Vendedor = { id: number; nome: string; tipo: string; ativo: number };
@@ -248,19 +249,12 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>CPF</label>
+                <label>CPF / CNPJ</label>
                 <input
                   type="text"
                   value={compradorCpf}
-                  onChange={(e) => {
-                    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
-                    let masked = d;
-                    if (d.length > 3) masked = `${d.slice(0, 3)}.${d.slice(3)}`;
-                    if (d.length > 6) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-                    if (d.length > 9) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-                    setCompradorCpf(masked);
-                  }}
-                  placeholder="000.000.000-00"
+                  onChange={(e) => setCompradorCpf(formatCpfCnpj(e.target.value))}
+                  placeholder="CPF ou CNPJ"
                   inputMode="numeric"
                 />
               </div>

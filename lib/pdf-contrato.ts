@@ -487,7 +487,12 @@ export async function gerarReciboPDV(vendaId: number): Promise<Buffer> {
   // Cliente
   sectionTitle(doc, 'Cliente');
   field(doc, 'Nome', String(v.cliente_nome || ''));
-  if (v.cliente_cpf) field(doc, 'CPF', String(v.cliente_cpf));
+  if (v.cliente_cpf) {
+    // Detecta automaticamente CPF (≤11 dígitos) ou CNPJ (12+)
+    const digits = String(v.cliente_cpf).replace(/\D/g, '');
+    const docLabel = digits.length === 14 ? 'CNPJ' : 'CPF';
+    field(doc, docLabel, String(v.cliente_cpf));
+  }
   if (v.cliente_tel) field(doc, 'Telefone', String(v.cliente_tel));
   if (v.cliente_email) field(doc, 'E-mail', String(v.cliente_email));
 

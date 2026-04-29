@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
+import { formatCpfCnpj } from '@/lib/cpf-cnpj';
 import { useHeaderActions } from '../HeaderActionsContext';
 import styles from './page.module.css';
 
@@ -430,20 +431,13 @@ export default function PdvPage() {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>CPF</label>
+              <label>CPF / CNPJ</label>
               <input
                 type="text"
                 value={clienteCpf}
-                onChange={(e) => {
-                  const d = e.target.value.replace(/\D/g, '').slice(0, 11);
-                  let masked = d;
-                  if (d.length > 3) masked = `${d.slice(0, 3)}.${d.slice(3)}`;
-                  if (d.length > 6) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-                  if (d.length > 9) masked = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-                  setClienteCpf(masked);
-                }}
+                onChange={(e) => setClienteCpf(formatCpfCnpj(e.target.value))}
                 inputMode="numeric"
-                placeholder="000.000.000-00"
+                placeholder="CPF ou CNPJ"
               />
             </div>
           </div>
