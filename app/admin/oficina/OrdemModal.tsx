@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import ClientePicker, { type Cliente } from '@/components/ClientePicker';
 import styles from './page.module.css';
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
 
 type FormState = {
   moto_id: string;
+  cliente_id: number | null;
+  // Snapshot de cliente (preservado pra exibição em OS antigas sem cliente_id)
   cliente_nome: string;
   cliente_telefone: string;
   cliente_email: string;
@@ -64,6 +67,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 
 const EMPTY: FormState = {
   moto_id: '',
+  cliente_id: null,
   cliente_nome: '',
   cliente_telefone: '',
   cliente_email: '',
@@ -98,6 +102,7 @@ function normNum(v: unknown): string {
 
 export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -131,6 +136,7 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
   useEffect(() => {
     if (!editingId) {
       setForm(EMPTY);
+      setCliente(null);
       return;
     }
     const load = async () => {
@@ -139,8 +145,11 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
         const r = await fetch(`/api/oficina/${editingId}`);
         if (!r.ok) throw new Error('fail');
         const d = await r.json();
+        const clienteIdRaw = d.cliente_id;
+        const clienteIdNum = clienteIdRaw != null ? Number(clienteIdRaw) : null;
         setForm({
           moto_id: normNum(d.moto_id),
+          cliente_id: clienteIdNum,
           cliente_nome: normStr(d.cliente_nome),
           cliente_telefone: normStr(d.cliente_telefone),
           cliente_email: normStr(d.cliente_email),
@@ -160,6 +169,20 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
           data_prevista: normDate(d.data_prevista),
           data_conclusao: normDate(d.data_conclusao),
         });
+        // Se a OS já tem cliente_id, carrega o cliente pra mostrar pré-selecionado
+        if (clienteIdNum) {
+          try {
+            const cr = await fetch(`/api/clientes/${clienteIdNum}`);
+            if (cr.ok) {
+              const c = await cr.json();
+              setCliente({
+                id: c.id, nome: c.nome, telefone: c.telefone || '',
+                email: c.email || '', cpf_cnpj: c.cpf_cnpj || '',
+                endereco: c.endereco || '',
+              });
+            }
+          } catch { /* cliente nao encontrado */ }
+        }
       } catch {
         onToast('Erro ao carregar ordem', 'error');
         onClose();
@@ -226,17 +249,23 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.cliente_nome.trim()) {
-      onToast('Informe o nome do cliente', 'error');
+    // Se temos cliente do banco, ele e a fonte de verdade. Senão, exige nome no snapshot
+    // (compatibilidade com OS antigas em edição).
+    const clienteNomeFinal = cliente ? cliente.nome : form.cliente_nome.trim();
+    const clienteTelFinal = cliente ? (cliente.telefone || '') : form.cliente_telefone.trim();
+    const clienteEmailFinal = cliente ? (cliente.email || '') : form.cliente_email.trim();
+    if (!clienteNomeFinal) {
+      onToast('Selecione ou cadastre o cliente', 'error');
       return;
     }
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {
         moto_id: form.moto_id || null,
-        cliente_nome: form.cliente_nome.trim(),
-        cliente_telefone: form.cliente_telefone.trim(),
-        cliente_email: form.cliente_email.trim(),
+        cliente_id: form.cliente_id || null,
+        cliente_nome: clienteNomeFinal,
+        cliente_telefone: clienteTelFinal,
+        cliente_email: clienteEmailFinal,
         moto_marca: form.moto_marca.trim(),
         moto_modelo: form.moto_modelo.trim(),
         moto_ano: form.moto_ano.trim(),
@@ -313,31 +342,45 @@ export default function OrdemModal({ editingId, onClose, onSaved, onToast }: Pro
                 <div className={styles.formSection}>
                   <div className={styles.formSectionTitle}>Cliente</div>
                   <div className={styles.formGroup}>
-                    <label>Nome *</label>
-                    <input
-                      type="text"
-                      value={form.cliente_nome}
-                      onChange={(e) => setField('cliente_nome', e.target.value)}
+                    <label>Cliente *</label>
+                    <ClientePicker
+                      value={form.cliente_id}
+                      cliente={cliente}
+                      onChange={(id, c) => {
+                        setCliente(c);
+                        setForm((prev) => ({
+                          ...prev,
+                          cliente_id: id,
+                          cliente_nome: c?.nome || '',
+                          cliente_telefone: c?.telefone || '',
+                          cliente_email: c?.email || '',
+                        }));
+                      }}
                       required
                     />
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Telefone</label>
-                      <input
-                        type="text"
-                        value={form.cliente_telefone}
-                        onChange={(e) => setField('cliente_telefone', e.target.value)}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Email</label>
-                      <input
-                        type="email"
-                        value={form.cliente_email}
-                        onChange={(e) => setField('cliente_email', e.target.value)}
-                      />
-                    </div>
+                    {cliente && (
+                      <div style={{ fontSize: '0.78rem', color: '#777', marginTop: 6 }}>
+                        {[cliente.telefone, cliente.cpf_cnpj, cliente.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+                      </div>
+                    )}
+                    {/* Compatibilidade: OS antiga sem cliente_id mas com snapshot */}
+                    {!cliente && form.cliente_nome && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: '8px 10px',
+                          background: '#fff8ec',
+                          border: '1px solid #f0b429',
+                          fontSize: '0.78rem',
+                          color: '#856404',
+                        }}
+                      >
+                        OS antiga — snapshot atual: <strong>{form.cliente_nome}</strong>
+                        {form.cliente_telefone && ` · ${form.cliente_telefone}`}
+                        {form.cliente_email && ` · ${form.cliente_email}`}.
+                        Selecione um cliente acima para vincular.
+                      </div>
+                    )}
                   </div>
                 </div>
 

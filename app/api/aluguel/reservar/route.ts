@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { upsertClientePorSnapshot } from '@/lib/clientes-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,16 +79,24 @@ export async function POST(request: NextRequest) {
       .get() as { valor: string } | undefined;
     const caucao = caucaoRow ? Number(caucaoRow.valor) || 0 : 0;
 
+    // Auto-vincula cliente no banco central (cria ou encontra)
+    const clienteId = upsertClientePorSnapshot(db, {
+      nome,
+      telefone: tel,
+      email: (body.email || '').trim(),
+      cpf_cnpj: cpf,
+    });
+
     const result = db
       .prepare(
         `INSERT INTO alugueis (
-          moto_id, status, data_inicio, data_fim, dias,
+          moto_id, cliente_id, status, data_inicio, data_fim, dias,
           valor_diaria, valor_total, valor_caucao,
           cliente_nome, telefone, email, cpf, cnh, observacoes
-        ) VALUES (?, 'pendente', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, 'pendente', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
-        motoId, inicio, fim, dias,
+        motoId, clienteId, inicio, fim, dias,
         moto.valor_diaria, valorTotal, caucao,
         nome, tel, (body.email || '').trim(),
         cpf, cnh, (body.observacoes || '').trim(),

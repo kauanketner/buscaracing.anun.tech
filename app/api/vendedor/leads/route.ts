@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVendedorFromRequest } from '@/lib/vendedor-auth';
 import { getDb } from '@/lib/db';
+import { upsertClientePorSnapshot } from '@/lib/clientes-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,13 +40,20 @@ export async function POST(request: NextRequest) {
     const nome = (body.nome || '').trim();
     if (!nome) return NextResponse.json({ error: 'Nome obrigatório' }, { status: 400 });
 
+    // Auto-vincula cliente no banco central (cria ou encontra)
+    const clienteId = upsertClientePorSnapshot(db, {
+      nome,
+      telefone: body.telefone,
+    });
+
     const result = db
       .prepare(
-        'INSERT INTO leads (moto_id, vendedor_id, nome, telefone, origem, notas) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO leads (moto_id, vendedor_id, cliente_id, nome, telefone, origem, notas) VALUES (?, ?, ?, ?, ?, ?, ?)',
       )
       .run(
         body.moto_id || null,
         vend.id,
+        clienteId,
         nome,
         (body.telefone || '').trim(),
         (body.origem || '').trim(),

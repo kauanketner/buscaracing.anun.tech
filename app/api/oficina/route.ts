@@ -64,15 +64,16 @@ export async function POST(request: NextRequest) {
     const tx = db.transaction(() => {
       const stmt = db.prepare(
         `INSERT INTO oficina_ordens (
-           cliente_nome, cliente_telefone, cliente_email,
+           cliente_id, cliente_nome, cliente_telefone, cliente_email,
            moto_id, moto_marca, moto_modelo, moto_ano, moto_placa, moto_km,
            servico_descricao, observacoes, mecanico, mecanico_id,
            valor_estimado, valor_final,
            status, data_entrada, data_prevista, data_conclusao,
            garantia_de_id
-         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       );
       const result = stmt.run(
+        toNullableNumber(body.cliente_id),
         cliente_nome,
         toStr(body.cliente_telefone),
         toStr(body.cliente_email),

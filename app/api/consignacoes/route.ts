@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { isAuthenticated } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { upsertClientePorSnapshot } from '@/lib/clientes-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,16 +46,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'moto_id e dono_nome obrigatórios' }, { status: 400 });
     }
 
+    // Auto-vincula cliente no banco central (cria ou encontra)
+    const clienteId = upsertClientePorSnapshot(db, {
+      nome: body.dono_nome,
+      telefone: body.dono_telefone,
+      email: body.dono_email,
+    });
+
     // Generate unique token for consignante app
     const token = crypto.randomBytes(16).toString('hex');
 
     const result = db
       .prepare(
-        `INSERT INTO consignacoes (moto_id, dono_nome, dono_telefone, dono_email, dono_pix, margem_pct, valor_repasse, token)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO consignacoes (moto_id, cliente_id, dono_nome, dono_telefone, dono_email, dono_pix, margem_pct, valor_repasse, token)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         body.moto_id,
+        clienteId,
         body.dono_nome.trim(),
         (body.dono_telefone || '').trim(),
         (body.dono_email || '').trim(),
