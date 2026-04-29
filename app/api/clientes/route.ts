@@ -5,155 +5,105 @@ import { getDb } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/clientes — unified CRM view
+ * GET /api/clientes — lista clientes da tabela `clientes`.
  *
- * Aggregates clients from: vendas (compradores), oficina (clientes),
- * leads, and reservas. Groups by normalized name + phone.
+ * Query params:
+ *   q     — busca por nome / telefone / cpf_cnpj / email
+ *   ativo — '1' (default), '0', '' (todos)
+ *
+ * Retorna cada cliente com agregados de transações:
+ *   compras, os, leads, reservas, alugueis, pdv, total_gasto, ultima_interacao
  */
 export async function GET(request: NextRequest) {
   if (!isAuthenticated(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
+  const { searchParams } = request.nextUrl;
+  const q = (searchParams.get('q') || '').trim();
+  const ativoParam = searchParams.get('ativo');
+  const ativo = ativoParam == null ? '1' : ativoParam;
 
   const db = getDb();
 
-  // Pull all client touchpoints
-  const compradores = db
-    .prepare(
-      `SELECT comprador_nome AS nome, comprador_tel AS telefone, comprador_email AS email,
-              'compra' AS tipo, v.id AS ref_id, v.valor_venda AS valor,
-              v.data_venda AS data, m.nome AS moto_nome
-       FROM vendas v LEFT JOIN motos m ON v.moto_id = m.id`,
-    )
-    .all() as Record<string, unknown>[];
-
-  const oficina = db
-    .prepare(
-      `SELECT cliente_nome AS nome, cliente_telefone AS telefone, cliente_email AS email,
-              'oficina' AS tipo, o.id AS ref_id, o.valor_final AS valor,
-              o.data_entrada AS data, COALESCE(m.nome, o.moto_marca || ' ' || o.moto_modelo) AS moto_nome
-       FROM oficina_ordens o LEFT JOIN motos m ON o.moto_id = m.id`,
-    )
-    .all() as Record<string, unknown>[];
-
-  const leadsRows = db
-    .prepare(
-      `SELECT l.nome, l.telefone, '' AS email,
-              'lead' AS tipo, l.id AS ref_id, NULL AS valor,
-              l.created_at AS data, m.nome AS moto_nome
-       FROM leads l LEFT JOIN motos m ON l.moto_id = m.id`,
-    )
-    .all() as Record<string, unknown>[];
-
-  const reservasRows = db
-    .prepare(
-      `SELECT r.cliente_nome AS nome, r.cliente_tel AS telefone, '' AS email,
-              'reserva' AS tipo, r.id AS ref_id, r.valor_sinal AS valor,
-              r.data_inicio AS data, m.nome AS moto_nome
-       FROM reservas r LEFT JOIN motos m ON r.moto_id = m.id`,
-    )
-    .all() as Record<string, unknown>[];
-
-  const alugueis = db
-    .prepare(
-      `SELECT cliente_nome AS nome, telefone, email, 'aluguel' AS tipo,
-              a.id AS ref_id, a.valor_total AS valor,
-              a.created_at AS data,
-              COALESCE(m.nome, '') AS moto_nome
-       FROM alugueis a LEFT JOIN motos m ON m.id = a.moto_id`,
-    )
-    .all() as Record<string, unknown>[];
-
-  // PDV (vendas avulsas de peças) — só concluídas contam
-  const pdvRows = db
-    .prepare(
-      `SELECT cliente_nome AS nome, cliente_tel AS telefone, cliente_email AS email,
-              'pdv' AS tipo, pv.id AS ref_id, pv.valor_total AS valor,
-              pv.data_venda AS data, '' AS moto_nome
-       FROM pdv_vendas pv
-       WHERE pv.status = 'concluida'`,
-    )
-    .all() as Record<string, unknown>[];
-
-  // Merge all into touchpoints
-  const allTouchpoints = [...compradores, ...oficina, ...leadsRows, ...reservasRows, ...alugueis, ...pdvRows];
-
-  // Group by normalized key (lowercase name + phone digits)
-  const normalize = (nome: string, tel: string): string => {
-    const n = (nome || '').trim().toLowerCase().replace(/\s+/g, ' ');
-    const t = (tel || '').replace(/\D/g, '');
-    return `${n}|${t}`;
-  };
-
-  type ClienteGroup = {
-    nome: string;
-    telefone: string;
-    email: string;
-    touchpoints: {
-      tipo: string;
-      ref_id: number;
-      valor: number | null;
-      data: string;
-      moto_nome: string | null;
-    }[];
-  };
-
-  const map = new Map<string, ClienteGroup>();
-
-  for (const tp of allTouchpoints) {
-    const nome = (tp.nome as string) || '';
-    const telefone = (tp.telefone as string) || '';
-    const email = (tp.email as string) || '';
-    if (!nome.trim()) continue;
-
-    const key = normalize(nome, telefone);
-    let group = map.get(key);
-    if (!group) {
-      group = { nome: nome.trim(), telefone: telefone.trim(), email: email.trim(), touchpoints: [] };
-      map.set(key, group);
-    }
-    // Update email if we have a better one
-    if (email.trim() && !group.email) group.email = email.trim();
-
-    group.touchpoints.push({
-      tipo: tp.tipo as string,
-      ref_id: tp.ref_id as number,
-      valor: tp.valor as number | null,
-      data: (tp.data as string) || '',
-      moto_nome: (tp.moto_nome as string) || null,
-    });
+  let sql = `
+    SELECT c.*,
+      (SELECT COUNT(*) FROM vendas v WHERE v.cliente_id = c.id) AS compras,
+      (SELECT COUNT(*) FROM oficina_ordens o WHERE o.cliente_id = c.id) AS os,
+      (SELECT COUNT(*) FROM leads l WHERE l.cliente_id = c.id) AS leads,
+      (SELECT COUNT(*) FROM reservas r WHERE r.cliente_id = c.id) AS reservas,
+      (SELECT COUNT(*) FROM alugueis a WHERE a.cliente_id = c.id) AS alugueis,
+      (SELECT COUNT(*) FROM pdv_vendas pv WHERE pv.cliente_id = c.id AND pv.status = 'concluida') AS pdv,
+      (
+        COALESCE((SELECT SUM(v.valor_venda) FROM vendas v WHERE v.cliente_id = c.id), 0)
+        + COALESCE((SELECT SUM(pv.valor_total) FROM pdv_vendas pv WHERE pv.cliente_id = c.id AND pv.status = 'concluida'), 0)
+      ) AS total_gasto,
+      (
+        SELECT MAX(d) FROM (
+          SELECT v.data_venda AS d FROM vendas v WHERE v.cliente_id = c.id
+          UNION ALL
+          SELECT o.data_entrada FROM oficina_ordens o WHERE o.cliente_id = c.id
+          UNION ALL
+          SELECT pv.data_venda FROM pdv_vendas pv WHERE pv.cliente_id = c.id
+          UNION ALL
+          SELECT r.data_inicio FROM reservas r WHERE r.cliente_id = c.id
+          UNION ALL
+          SELECT a.created_at FROM alugueis a WHERE a.cliente_id = c.id
+          UNION ALL
+          SELECT l.created_at FROM leads l WHERE l.cliente_id = c.id
+        )
+      ) AS ultima_interacao
+    FROM clientes c
+    WHERE 1=1
+  `;
+  const params: unknown[] = [];
+  if (ativo === '1') sql += ' AND c.ativo = 1';
+  else if (ativo === '0') sql += ' AND c.ativo = 0';
+  if (q) {
+    const t = `%${q}%`;
+    sql += ' AND (c.nome LIKE ? OR c.telefone LIKE ? OR c.cpf_cnpj LIKE ? OR c.email LIKE ?)';
+    params.push(t, t, t, t);
   }
+  sql += ' ORDER BY ultima_interacao DESC NULLS LAST, c.nome ASC';
 
-  // Convert to array and sort by most recent interaction
-  const clientes = Array.from(map.values()).map((c) => {
-    c.touchpoints.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
-    const compras = c.touchpoints.filter((t) => t.tipo === 'compra').length;
-    const os = c.touchpoints.filter((t) => t.tipo === 'oficina').length;
-    const leads = c.touchpoints.filter((t) => t.tipo === 'lead').length;
-    const reservas = c.touchpoints.filter((t) => t.tipo === 'reserva').length;
-    const alugueis = c.touchpoints.filter((t) => t.tipo === 'aluguel').length;
-    const pdv = c.touchpoints.filter((t) => t.tipo === 'pdv').length;
-    // Total gasto: vendas de moto + vendas PDV
-    const totalGasto = c.touchpoints
-      .filter((t) => (t.tipo === 'compra' || t.tipo === 'pdv') && t.valor)
-      .reduce((s, t) => s + (t.valor || 0), 0);
-    const ultimaInteracao = c.touchpoints[0]?.data || '';
+  const rows = db.prepare(sql).all(...params);
+  return NextResponse.json(rows);
+}
 
-    return {
-      ...c,
-      compras,
-      os,
-      leads,
-      reservas,
-      alugueis,
-      pdv,
-      total_gasto: totalGasto,
-      ultima_interacao: ultimaInteracao,
-      total_interacoes: c.touchpoints.length,
+/** POST /api/clientes — cria cliente */
+export async function POST(request: NextRequest) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+  try {
+    const db = getDb();
+    const body = (await request.json()) as {
+      nome: string;
+      telefone?: string;
+      email?: string;
+      cpf_cnpj?: string;
+      endereco?: string;
+      observacoes?: string;
     };
-  });
-
-  clientes.sort((a, b) => (b.ultima_interacao || '').localeCompare(a.ultima_interacao || ''));
-
-  return NextResponse.json(clientes);
+    const nome = (body.nome || '').trim();
+    if (!nome) {
+      return NextResponse.json({ error: 'Nome obrigatório' }, { status: 400 });
+    }
+    const result = db
+      .prepare(
+        `INSERT INTO clientes (nome, telefone, email, cpf_cnpj, endereco, observacoes)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        nome,
+        (body.telefone || '').trim(),
+        (body.email || '').trim(),
+        (body.cpf_cnpj || '').trim(),
+        (body.endereco || '').trim(),
+        (body.observacoes || '').trim(),
+      );
+    return NextResponse.json({ ok: true, id: Number(result.lastInsertRowid) });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erro interno';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

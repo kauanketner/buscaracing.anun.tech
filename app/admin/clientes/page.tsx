@@ -1,29 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useToast } from '@/components/Toast';
+import { useHeaderActions } from '../HeaderActionsContext';
 import styles from './page.module.css';
 
-type Touchpoint = {
-  tipo: string;
-  ref_id: number;
-  valor: number | null;
-  data: string;
-  moto_nome: string | null;
-};
-
 type Cliente = {
+  id: number;
   nome: string;
   telefone: string;
   email: string;
+  cpf_cnpj: string;
+  endereco: string;
+  observacoes: string;
+  ativo: number;
   compras: number;
   os: number;
   leads: number;
   reservas: number;
+  alugueis: number;
+  pdv: number;
   total_gasto: number;
-  ultima_interacao: string;
-  total_interacoes: number;
-  touchpoints: Touchpoint[];
+  ultima_interacao: string | null;
+  created_at: string;
 };
 
 const TIPO_LABELS: Record<string, { label: string; bg: string; color: string }> = {
@@ -35,10 +35,14 @@ const TIPO_LABELS: Record<string, { label: string; bg: string; color: string }> 
   pdv: { label: 'PDV', bg: '#fde2c5', color: '#8b4a00' },
 };
 
-function fmtDate(iso: string): string {
+function fmtDate(iso: string | null | undefined): string {
   if (!iso) return '—';
-  const d = iso.slice(0, 10);
-  return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
+  const s = String(iso).slice(0, 10);
+  return new Date(s + 'T00:00:00').toLocaleDateString('pt-BR');
+}
+
+function fmtBRL(v: number): string {
+  return v ? `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
 }
 
 export default function ClientesPage() {
@@ -46,157 +50,144 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = search.trim()
+        ? `/api/clientes?q=${encodeURIComponent(search.trim())}&ativo=1`
+        : '/api/clientes?ativo=1';
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('fail');
+      setClientes(await r.json());
+    } catch {
+      showToast('Erro ao carregar clientes', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [search, showToast]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/clientes');
-        if (!r.ok) throw new Error('fail');
-        setClientes(await r.json());
-      } catch {
-        showToast('Erro ao carregar clientes', 'error');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [showToast]);
+    const t = setTimeout(reload, 220);
+    return () => clearTimeout(t);
+  }, [reload]);
 
-  const filtered = search
-    ? clientes.filter((c) =>
-        `${c.nome} ${c.telefone} ${c.email}`.toLowerCase().includes(search.toLowerCase()),
-      )
-    : clientes;
+  // Botão "+ Novo cliente" no header
+  useHeaderActions(
+    <Link
+      href="/admin/clientes/novo"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '8px 16px',
+        background: '#27367D',
+        color: '#FDFDFB',
+        textDecoration: 'none',
+        fontFamily: "'Barlow Condensed', sans-serif",
+        fontWeight: 700,
+        fontSize: '0.85rem',
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+        border: 'none',
+        cursor: 'pointer',
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      Novo cliente
+    </Link>,
+    [],
+  );
 
-  const totalClientes = clientes.length;
-  const compradores = clientes.filter((c) => c.compras > 0).length;
-  const totalGasto = clientes.reduce((s, c) => s + c.total_gasto, 0);
-
-  const toggleExpand = (key: string) => {
-    setExpanded((prev) => (prev === key ? null : key));
-  };
+  const stats = useMemo(() => {
+    const totalGasto = clientes.reduce((s, c) => s + (c.total_gasto || 0), 0);
+    const compradores = clientes.filter((c) => c.compras > 0 || c.pdv > 0).length;
+    return { total: clientes.length, compradores, totalGasto };
+  }, [clientes]);
 
   return (
     <div className={styles.wrap}>
-      {/* Summary cards */}
+      {/* Cards resumo */}
       <div className={styles.cards}>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>Clientes</div>
-          <div className={styles.cardValue}>{totalClientes}</div>
+          <div className={styles.cardLabel}>Clientes ativos</div>
+          <div className={styles.cardValue}>{stats.total}</div>
         </div>
         <div className={styles.card}>
           <div className={styles.cardLabel}>Compradores</div>
-          <div className={styles.cardValue}>{compradores}</div>
+          <div className={styles.cardValue}>{stats.compradores}</div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>Total gasto</div>
-          <div className={styles.cardValue}>R$ {totalGasto.toLocaleString('pt-BR')}</div>
+          <div className={styles.cardLabel}>Faturamento total</div>
+          <div className={styles.cardValue}>{fmtBRL(stats.totalGasto)}</div>
         </div>
       </div>
 
-      {/* Search */}
+      {/* Busca */}
       <div className={styles.searchWrap}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
           <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-          <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
         <input
           type="text"
-          placeholder="Buscar por nome, telefone ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nome, telefone, CPF/CNPJ ou e-mail..."
         />
       </div>
 
-      {/* Client list */}
-      <div className={styles.listWrap}>
-        {loading && <div className={styles.empty}>Carregando...</div>}
-        {!loading && filtered.length === 0 && (
-          <div className={styles.empty}>
-            {search ? 'Nenhum cliente encontrado.' : 'Nenhum cliente registrado. Clientes aparecem automaticamente ao registrar vendas, OSs e leads.'}
-          </div>
-        )}
-        {filtered.map((c) => {
-          const key = `${c.nome}|${c.telefone}`;
-          const isOpen = expanded === key;
-          return (
-            <div key={key} className={styles.clientCard}>
-              <div className={styles.clientHeader} onClick={() => toggleExpand(key)}>
-                <div className={styles.clientInfo}>
-                  <div className={styles.clientName}>{c.nome}</div>
-                  <div className={styles.clientSub}>
-                    {c.telefone || '—'}
-                    {c.email ? ` · ${c.email}` : ''}
+      {loading && <div className={styles.empty}>Carregando...</div>}
+      {!loading && clientes.length === 0 && (
+        <div className={styles.empty}>
+          {search.trim()
+            ? 'Nenhum cliente encontrado pra esse termo.'
+            : 'Nenhum cliente cadastrado ainda. Use o botão "+ Novo cliente".'}
+        </div>
+      )}
+
+      {!loading && clientes.length > 0 && (
+        <div className={styles.listWrap}>
+          {clientes.map((c) => {
+            const totalInteracoes =
+              (c.compras || 0) + (c.os || 0) + (c.leads || 0) + (c.reservas || 0) + (c.alugueis || 0) + (c.pdv || 0);
+            return (
+              <Link
+                key={c.id}
+                href={`/admin/clientes/${c.id}`}
+                className={styles.clientCard}
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+              >
+                <div className={styles.clientHeader}>
+                  <div className={styles.clientInfo}>
+                    <div className={styles.clientName}>{c.nome}</div>
+                    <div className={styles.clientSub}>
+                      {[c.telefone, c.cpf_cnpj, c.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+                    </div>
+                  </div>
+                  <div className={styles.clientBadges}>
+                    {c.compras > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.compra.bg, color: TIPO_LABELS.compra.color }}>{c.compras} compra{c.compras > 1 ? 's' : ''}</span>}
+                    {c.pdv > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.pdv.bg, color: TIPO_LABELS.pdv.color }}>{c.pdv} PDV</span>}
+                    {c.os > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.oficina.bg, color: TIPO_LABELS.oficina.color }}>{c.os} OS</span>}
+                    {c.alugueis > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.aluguel.bg, color: TIPO_LABELS.aluguel.color }}>{c.alugueis} aluguel{c.alugueis > 1 ? 's' : ''}</span>}
+                    {c.reservas > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.reserva.bg, color: TIPO_LABELS.reserva.color }}>{c.reservas} reserva{c.reservas > 1 ? 's' : ''}</span>}
+                    {c.leads > 0 && <span className={styles.badge} style={{ background: TIPO_LABELS.lead.bg, color: TIPO_LABELS.lead.color }}>{c.leads} lead{c.leads > 1 ? 's' : ''}</span>}
+                    {totalInteracoes === 0 && <span className={styles.badge} style={{ background: '#e2e3e5', color: '#6c757d' }}>Sem interações</span>}
+                  </div>
+                  <div className={styles.clientMeta}>
+                    <div className={styles.clientGasto}>{fmtBRL(c.total_gasto)}</div>
+                    <div className={styles.clientDate}>{fmtDate(c.ultima_interacao)}</div>
                   </div>
                 </div>
-                <div className={styles.clientBadges}>
-                  {c.compras > 0 && (
-                    <span className={styles.badge} style={{ background: '#d4edda', color: '#155724' }}>
-                      {c.compras} compra{c.compras > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {c.os > 0 && (
-                    <span className={styles.badge} style={{ background: '#cce5ff', color: '#004085' }}>
-                      {c.os} OS{c.os > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {c.leads > 0 && (
-                    <span className={styles.badge} style={{ background: '#fff3cd', color: '#856404' }}>
-                      {c.leads} lead{c.leads > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {c.reservas > 0 && (
-                    <span className={styles.badge} style={{ background: '#d6d8ff', color: '#27367D' }}>
-                      {c.reservas} reserva{c.reservas > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.clientMeta}>
-                  {c.total_gasto > 0 && (
-                    <span className={styles.clientGasto}>R$ {c.total_gasto.toLocaleString('pt-BR')}</span>
-                  )}
-                  <span className={styles.clientDate}>{fmtDate(c.ultima_interacao)}</span>
-                  <svg
-                    width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: '#999' }}
-                  >
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-              {isOpen && (
-                <div className={styles.clientTimeline}>
-                  <div className={styles.timelineTitle}>Histórico completo</div>
-                  {c.touchpoints.map((tp, i) => {
-                    const tl = TIPO_LABELS[tp.tipo] || TIPO_LABELS.lead;
-                    return (
-                      <div key={i} className={styles.timelineItem}>
-                        <span className={styles.timelineDot} style={{ background: tl.color }} />
-                        <div className={styles.timelineContent}>
-                          <div className={styles.timelineRow}>
-                            <span className={styles.badge} style={{ background: tl.bg, color: tl.color, fontSize: '0.65rem' }}>
-                              {tl.label}
-                            </span>
-                            {tp.moto_nome && (
-                              <span className={styles.timelineMoto}>{tp.moto_nome}</span>
-                            )}
-                            {tp.valor != null && tp.valor > 0 && (
-                              <span className={styles.timelineValor}>
-                                R$ {Number(tp.valor).toLocaleString('pt-BR')}
-                              </span>
-                            )}
-                          </div>
-                          <span className={styles.timelineDate}>{fmtDate(tp.data)}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

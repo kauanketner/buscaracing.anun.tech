@@ -752,6 +752,214 @@ function initSchema(db: Database.Database): void {
         'ON CONFLICT(chave) DO UPDATE SET valor=excluded.valor',
     ).run(slug);
   }
+
+  // ───────────────────────────────────────────────────────────────────
+  // Centralização de cliente — tabela `clientes` + cliente_id em tabelas filhas
+  // (Approach A do design 2026-04-29-clientes-centralizado-design.md)
+  // ───────────────────────────────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS clientes (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome        TEXT NOT NULL,
+      telefone    TEXT DEFAULT '',
+      email       TEXT DEFAULT '',
+      cpf_cnpj    TEXT DEFAULT '',
+      endereco    TEXT DEFAULT '',
+      observacoes TEXT DEFAULT '',
+      ativo       INTEGER DEFAULT 1,
+      created_at  TEXT DEFAULT (datetime('now','localtime')),
+      updated_at  TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_clientes_telefone ON clientes(telefone);
+    CREATE INDEX IF NOT EXISTS idx_clientes_cpf      ON clientes(cpf_cnpj);
+    CREATE INDEX IF NOT EXISTS idx_clientes_ativo    ON clientes(ativo);
+  `);
+
+  // Adiciona cliente_id em cada tabela filha (idempotente)
+  const addClienteIdCol = (tabela: string): void => {
+    const cols = (db.prepare(`PRAGMA table_info(${tabela})`).all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    if (!cols.includes('cliente_id')) {
+      db.exec(`ALTER TABLE ${tabela} ADD COLUMN cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_${tabela}_cliente_id ON ${tabela}(cliente_id)`);
+    }
+  };
+  for (const t of ['vendas', 'oficina_ordens', 'reservas', 'consignacoes', 'alugueis', 'leads', 'pdv_vendas']) {
+    try { addClienteIdCol(t); } catch { /* tabela pode não existir em DBs antigos */ }
+  }
+
+  // Migração de dados: popular `clientes` a partir do CRM virtual
+  // Idempotente — só roda quando a tabela está vazia.
+  const clientesCount = (db.prepare('SELECT COUNT(*) AS c FROM clientes').get() as { c: number }).c;
+  if (clientesCount === 0) {
+    migrarClientesDoCrmVirtual(db);
+  }
+}
+
+/**
+ * Popula a tabela `clientes` a partir dos snapshots existentes em
+ * vendas/oficina/reservas/consignacoes/alugueis/leads/pdv_vendas.
+ * Agrupa por (nome normalizado + dígitos do telefone) para evitar duplicatas.
+ * Atualiza `cliente_id` em cada tabela origem com o id correspondente.
+ */
+function migrarClientesDoCrmVirtual(db: Database.Database): void {
+  type Touch = {
+    tabela: string;
+    coluna_id: string;
+    coluna_cliente_id: string;
+    ref_id: number;
+    nome: string;
+    telefone: string;
+    email: string;
+    cpf_cnpj: string;
+    endereco: string;
+  };
+
+  const touches: Touch[] = [];
+
+  // vendas
+  for (const r of db.prepare(
+    `SELECT id, comprador_nome AS nome, comprador_tel AS telefone,
+            comprador_email AS email, comprador_cpf AS cpf,
+            comprador_endereco AS endereco
+     FROM vendas`,
+  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string; endereco: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'vendas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
+      cpf_cnpj: r.cpf || '', endereco: r.endereco || '',
+    });
+  }
+
+  // oficina_ordens
+  for (const r of db.prepare(
+    `SELECT id, cliente_nome AS nome, cliente_telefone AS telefone, cliente_email AS email
+     FROM oficina_ordens`,
+  ).all() as Array<{ id: number; nome: string; telefone: string; email: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'oficina_ordens', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
+      cpf_cnpj: '', endereco: '',
+    });
+  }
+
+  // reservas
+  for (const r of db.prepare(
+    `SELECT id, cliente_nome AS nome, cliente_tel AS telefone FROM reservas`,
+  ).all() as Array<{ id: number; nome: string; telefone: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'reservas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: '',
+      cpf_cnpj: '', endereco: '',
+    });
+  }
+
+  // consignacoes (proprietário)
+  for (const r of db.prepare(
+    `SELECT id, dono_nome AS nome, dono_telefone AS telefone, dono_email AS email
+     FROM consignacoes`,
+  ).all() as Array<{ id: number; nome: string; telefone: string; email: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'consignacoes', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
+      cpf_cnpj: '', endereco: '',
+    });
+  }
+
+  // alugueis
+  for (const r of db.prepare(
+    `SELECT id, cliente_nome AS nome, telefone, email, cpf
+     FROM alugueis`,
+  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'alugueis', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
+      cpf_cnpj: r.cpf || '', endereco: '',
+    });
+  }
+
+  // leads
+  for (const r of db.prepare(
+    `SELECT id, nome, telefone FROM leads`,
+  ).all() as Array<{ id: number; nome: string; telefone: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'leads', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: '',
+      cpf_cnpj: '', endereco: '',
+    });
+  }
+
+  // pdv_vendas
+  for (const r of db.prepare(
+    `SELECT id, cliente_nome AS nome, cliente_tel AS telefone,
+            cliente_email AS email, cliente_cpf AS cpf
+     FROM pdv_vendas`,
+  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string }>) {
+    if ((r.nome || '').trim()) touches.push({
+      tabela: 'pdv_vendas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
+      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
+      cpf_cnpj: r.cpf || '', endereco: '',
+    });
+  }
+
+  // Agrupa por chave normalizada
+  const normalize = (nome: string, tel: string): string =>
+    `${(nome || '').trim().toLowerCase().replace(/\s+/g, ' ')}|${(tel || '').replace(/\D/g, '')}`;
+
+  type ClienteAgg = {
+    nome: string;
+    telefone: string;
+    email: string;
+    cpf_cnpj: string;
+    endereco: string;
+    touchpoints: Touch[];
+  };
+
+  const grupos = new Map<string, ClienteAgg>();
+  for (const t of touches) {
+    const key = normalize(t.nome, t.telefone);
+    let g = grupos.get(key);
+    if (!g) {
+      g = {
+        nome: t.nome.trim(),
+        telefone: t.telefone || '',
+        email: t.email || '',
+        cpf_cnpj: t.cpf_cnpj || '',
+        endereco: t.endereco || '',
+        touchpoints: [],
+      };
+      grupos.set(key, g);
+    }
+    // Mantém o melhor dado (não-vazio) entre touchpoints
+    if (!g.email && t.email) g.email = t.email;
+    if (!g.cpf_cnpj && t.cpf_cnpj) g.cpf_cnpj = t.cpf_cnpj;
+    if (!g.endereco && t.endereco) g.endereco = t.endereco;
+    g.touchpoints.push(t);
+  }
+
+  const tx = db.transaction(() => {
+    const insertCliente = db.prepare(
+      `INSERT INTO clientes (nome, telefone, email, cpf_cnpj, endereco)
+       VALUES (?, ?, ?, ?, ?)`,
+    );
+
+    grupos.forEach((g) => {
+      const result = insertCliente.run(g.nome, g.telefone, g.email, g.cpf_cnpj, g.endereco);
+      const clienteId = Number(result.lastInsertRowid);
+      // Atualiza cada touchpoint com o cliente_id
+      for (const t of g.touchpoints) {
+        try {
+          db.prepare(
+            `UPDATE ${t.tabela} SET ${t.coluna_cliente_id} = ? WHERE ${t.coluna_id} = ?`,
+          ).run(clienteId, t.ref_id);
+        } catch {
+          // Ignora erros individuais (ex: tabela sem coluna ainda)
+        }
+      }
+    });
+  });
+  tx();
 }
 
 /** Gera um slug base32 (a-z, 2-7) de 12 caracteres. ~60 bits de entropia. */

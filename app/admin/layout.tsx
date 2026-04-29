@@ -19,7 +19,8 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/admin/alugueis': { title: 'Aluguéis', subtitle: 'Reservas de locação — aprovar, ativar, finalizar' },
   '/admin/consignacoes': { title: 'Consignadas', subtitle: 'Motos de terceiros, repasses e links' },
   '/admin/financeiro': { title: 'Financeiro', subtitle: 'Fluxo de caixa, comissões e repasses' },
-  '/admin/clientes': { title: 'Clientes', subtitle: 'CRM — histórico unificado de todos os clientes' },
+  '/admin/clientes': { title: 'Clientes', subtitle: 'Cadastro centralizado e histórico unificado' },
+  '/admin/clientes/novo': { title: 'Novo cliente', subtitle: 'Cadastrar cliente no banco central' },
   '/admin/checklists': { title: 'Checklists', subtitle: 'Crie checklists e acompanhe preenchimentos' },
   '/admin/mecanicos': { title: 'Mecânicos', subtitle: 'Acesso dos mecânicos ao app da oficina' },
   '/admin/blog': { title: 'Blog', subtitle: 'Gerencie posts, categorias e publicações' },
@@ -34,6 +35,9 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
   }
   if (/^\/admin\/motos\/\d+$/.test(pathname)) {
     return { title: 'Detalhes da moto', subtitle: 'Histórico completo, manutenções, vendas, aluguéis e financeiro' };
+  }
+  if (/^\/admin\/clientes\/\d+$/.test(pathname)) {
+    return { title: 'Cliente', subtitle: 'Editar dados e ver histórico unificado' };
   }
   if (pathname.startsWith('/admin/motos')) {
     return { title: 'Estoque', subtitle: 'Controle completo do estoque de motos' };
