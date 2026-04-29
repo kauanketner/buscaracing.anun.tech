@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     const db = getDb();
     const body = (await request.json()) as {
       moto_id: number;
+      cliente_id?: number | null;
       comprador_nome: string;
       comprador_tel?: string;
       comprador_email?: string;
@@ -111,13 +112,14 @@ export async function POST(request: NextRequest) {
       // 1. Create venda
       const vendaResult = db
         .prepare(
-          `INSERT INTO vendas (moto_id, comprador_nome, comprador_tel, comprador_email, comprador_cpf, comprador_endereco,
+          `INSERT INTO vendas (moto_id, cliente_id, comprador_nome, comprador_tel, comprador_email, comprador_cpf, comprador_endereco,
              vendedor_id, vendedor_tipo, valor_venda, valor_sinal, forma_pagamento,
              troca_moto_id, troca_valor, comissao_valor, observacoes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           body.moto_id,
+          body.cliente_id || null,
           compradorNome,
           (body.comprador_tel || '').trim(),
           (body.comprador_email || '').trim(),

@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const body = (await request.json()) as {
+      cliente_id?: number | null;
       cliente_nome: string;
       cliente_tel?: string;
       cliente_cpf?: string;
@@ -125,12 +126,13 @@ export async function POST(request: NextRequest) {
       const result = db
         .prepare(
           `INSERT INTO pdv_vendas
-            (cliente_nome, cliente_tel, cliente_cpf, cliente_email, vendedor_id,
+            (cliente_id, cliente_nome, cliente_tel, cliente_cpf, cliente_email, vendedor_id,
              canal, forma_pagamento, parcelas, valor_bruto, desconto, valor_total,
              observacoes, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'concluida')`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'concluida')`,
         )
         .run(
+          body.cliente_id || null,
           clienteNome,
           (body.cliente_tel || '').trim(),
           (body.cliente_cpf || '').trim(),

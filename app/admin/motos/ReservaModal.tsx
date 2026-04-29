@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
+import ClientePicker, { type Cliente } from '@/components/ClientePicker';
 import styles from './page.module.css';
 
 type Props = {
@@ -15,8 +16,8 @@ const MAX_COMPROVANTES = 10;
 
 export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Props) {
   const { showToast } = useToast();
-  const [clienteNome, setClienteNome] = useState('');
-  const [clienteTel, setClienteTel] = useState('');
+  const [clienteId, setClienteId] = useState<number | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [valorSinal, setValorSinal] = useState('500');
   const [diasPrazo, setDiasPrazo] = useState('7');
   const [saving, setSaving] = useState(false);
@@ -42,8 +43,8 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!clienteNome.trim()) {
-      showToast('Nome do cliente obrigatório', 'error');
+    if (!cliente || clienteId == null) {
+      showToast('Selecione ou cadastre o cliente', 'error');
       return;
     }
     setSaving(true);
@@ -52,8 +53,9 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_nome: clienteNome.trim(),
-          cliente_tel: clienteTel.trim(),
+          cliente_id: clienteId,
+          cliente_nome: cliente.nome,
+          cliente_tel: cliente.telefone || '',
           valor_sinal: Number(valorSinal) || 500,
           dias_prazo: Number(diasPrazo) || 7,
         }),
@@ -109,24 +111,18 @@ export default function ReservaModal({ motoId, motoLabel, onClose, onSaved }: Pr
               {motoLabel}
             </p>
             <div className={styles.formGroup}>
-              <label>Nome do cliente *</label>
-              <input
-                type="text"
-                value={clienteNome}
-                onChange={(e) => setClienteNome(e.target.value)}
-                placeholder="Maria Santos"
+              <label>Cliente *</label>
+              <ClientePicker
+                value={clienteId}
+                cliente={cliente}
+                onChange={(id, c) => { setClienteId(id); setCliente(c); }}
                 required
-                autoFocus
               />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Telefone</label>
-              <input
-                type="text"
-                value={clienteTel}
-                onChange={(e) => setClienteTel(e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
+              {cliente && (
+                <div style={{ fontSize: '0.78rem', color: '#777', marginTop: 6 }}>
+                  {[cliente.telefone, cliente.cpf_cnpj, cliente.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+                </div>
+              )}
             </div>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>

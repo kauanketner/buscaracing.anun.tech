@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useToast } from '@/components/Toast';
-import { formatCpfCnpj } from '@/lib/cpf-cnpj';
+import ClientePicker, { type Cliente } from '@/components/ClientePicker';
 import styles from './page.module.css';
 
 type Vendedor = { id: number; nome: string; tipo: string; ativo: number };
@@ -18,9 +18,10 @@ type Props = {
 export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSaved }: Props) {
   const { showToast } = useToast();
 
-  const [compradorNome, setCompradorNome] = useState('');
-  const [compradorTel, setCompradorTel] = useState('');
-  const [compradorCpf, setCompradorCpf] = useState('');
+  // Cliente — via ClientePicker centralizado
+  const [clienteId, setClienteId] = useState<number | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  // Endereço de entrega — por venda (não fica fixo no cadastro do cliente)
   const [compradorCep, setCompradorCep] = useState('');
   const [compradorEndereco, setCompradorEndereco] = useState('');
   const [compradorNumero, setCompradorNumero] = useState('');
@@ -108,8 +109,8 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!compradorNome.trim()) {
-      showToast('Nome do comprador obrigatório', 'error');
+    if (!cliente || clienteId == null) {
+      showToast('Selecione ou cadastre o comprador', 'error');
       return;
     }
     if (!valorVenda || Number(valorVenda) <= 0) {
@@ -123,9 +124,11 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           moto_id: motoId,
-          comprador_nome: compradorNome.trim(),
-          comprador_tel: compradorTel.trim(),
-          comprador_cpf: compradorCpf.trim(),
+          cliente_id: clienteId,
+          comprador_nome: cliente.nome,
+          comprador_tel: cliente.telefone || '',
+          comprador_cpf: cliente.cpf_cnpj || '',
+          comprador_email: cliente.email || '',
           comprador_endereco: montarEndereco(compradorEndereco, compradorNumero, compradorComplemento),
           valor_venda: Number(valorVenda),
           forma_pagamento: formaPagamento,
@@ -138,7 +141,7 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
           troca_placa: trocaPlaca.trim(),
           troca_km: trocaKm,
           troca_valor: valorTroca,
-          troca_nome_cliente: compradorNome.trim(),
+          troca_nome_cliente: cliente.nome,
         }),
       });
       if (!r.ok) {
@@ -233,50 +236,54 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
               ) : null}
             </div>
 
-            {/* ───── DADOS DO COMPRADOR ───── */}
+            {/* ───── COMPRADOR ───── */}
             <p className={styles.formSectionTitle} style={{ marginBottom: '0.75rem' }}>
-              Dados do comprador
+              Comprador
             </p>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Nome *</label>
-                <input type="text" value={compradorNome} onChange={(e) => setCompradorNome(e.target.value)} placeholder="Maria Santos" required autoFocus />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Telefone</label>
-                <input type="text" value={compradorTel} onChange={(e) => setCompradorTel(e.target.value)} placeholder="(11) 99999-9999" />
-              </div>
+            <div className={styles.formGroup}>
+              <label>Cliente *</label>
+              <ClientePicker
+                value={clienteId}
+                cliente={cliente}
+                onChange={(id, c) => {
+                  setClienteId(id);
+                  setCliente(c);
+                  // Pré-preenche endereço se cliente tiver
+                  if (c && c.endereco && !compradorEndereco.trim()) {
+                    setCompradorEndereco(c.endereco);
+                  }
+                }}
+                required
+              />
+              {cliente && (
+                <div style={{ fontSize: '0.78rem', color: '#777', marginTop: 6 }}>
+                  {[cliente.telefone, cliente.cpf_cnpj, cliente.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+                </div>
+              )}
             </div>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>CPF / CNPJ</label>
-                <input
-                  type="text"
-                  value={compradorCpf}
-                  onChange={(e) => setCompradorCpf(formatCpfCnpj(e.target.value))}
-                  placeholder="CPF ou CNPJ"
-                  inputMode="numeric"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>CEP</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={9}
-                  value={compradorCep}
-                  onChange={(e) => {
-                    const d = e.target.value.replace(/\D/g, '').slice(0, 8);
-                    const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
-                    setCompradorCep(masked);
-                    if (d.length === 8) buscarCep(d);
-                  }}
-                  placeholder="00000-000"
-                  disabled={cepLoading}
-                />
-                {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando endereço...</span>}
-                {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
-              </div>
+
+            {/* ───── ENDEREÇO DE ENTREGA ───── */}
+            <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+              Endereço de entrega
+            </p>
+            <div className={styles.formGroup} style={{ maxWidth: 200 }}>
+              <label>CEP</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={9}
+                value={compradorCep}
+                onChange={(e) => {
+                  const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+                  const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+                  setCompradorCep(masked);
+                  if (d.length === 8) buscarCep(d);
+                }}
+                placeholder="00000-000"
+                disabled={cepLoading}
+              />
+              {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando endereço...</span>}
+              {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
             </div>
             <div className={styles.formGroup}>
               <label>Endereço</label>

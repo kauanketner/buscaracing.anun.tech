@@ -25,6 +25,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const body = (await request.json()) as {
+      cliente_id?: number | null;
       cliente_nome?: string;
       cliente_tel?: string;
       valor_sinal?: number;
@@ -45,10 +46,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const tx = db.transaction(() => {
       const result = db
         .prepare(
-          `INSERT INTO reservas (moto_id, cliente_nome, cliente_tel, valor_sinal, dias_prazo, data_expira)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO reservas (moto_id, cliente_id, cliente_nome, cliente_tel, valor_sinal, dias_prazo, data_expira)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run(moto.id, clienteNome, (body.cliente_tel || '').trim(), sinal, dias, dataExpira);
+        .run(moto.id, body.cliente_id || null, clienteNome, (body.cliente_tel || '').trim(), sinal, dias, dataExpira);
 
       // Transition moto → reservada
       db.prepare("UPDATE motos SET estado='reservada', ativo=1 WHERE id=?").run(moto.id);

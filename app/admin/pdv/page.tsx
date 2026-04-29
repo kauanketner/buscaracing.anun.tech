@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
-import { formatCpfCnpj } from '@/lib/cpf-cnpj';
+import ClientePicker, { type Cliente } from '@/components/ClientePicker';
 import { useHeaderActions } from '../HeaderActionsContext';
 import styles from './page.module.css';
 
@@ -22,12 +22,6 @@ type Vendedor = {
   id: number;
   nome: string;
   ativo: number;
-};
-
-type ClienteSugestao = {
-  nome: string;
-  telefone: string;
-  email: string;
 };
 
 type ItemCarrinho = {
@@ -62,15 +56,11 @@ export default function PdvPage() {
 
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
-  const [clientes, setClientes] = useState<ClienteSugestao[]>([]);
   const [busca, setBusca] = useState('');
 
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
-  const [clienteNome, setClienteNome] = useState('');
-  const [clienteTel, setClienteTel] = useState('');
-  const [clienteCpf, setClienteCpf] = useState('');
-  const [clienteEmail, setClienteEmail] = useState('');
-  const [showSug, setShowSug] = useState(false);
+  const [clienteId, setClienteId] = useState<number | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [vendedorId, setVendedorId] = useState('');
   const [canal, setCanal] = useState('balcao');
   const [forma, setForma] = useState('pix');
@@ -111,17 +101,12 @@ export default function PdvPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [rP, rV, rC] = await Promise.all([
+        const [rP, rV] = await Promise.all([
           fetch('/api/pecas'),
           fetch('/api/config/vendedores'),
-          fetch('/api/clientes'),
         ]);
         if (rP.ok) setPecas(await rP.json());
         if (rV.ok) setVendedores((await rV.json() as Vendedor[]).filter((v) => v.ativo));
-        if (rC.ok) {
-          const data = await rC.json() as ClienteSugestao[];
-          setClientes(Array.isArray(data) ? data : []);
-        }
       } catch {
         showToast('Erro ao carregar dados iniciais', 'error');
       }
@@ -138,16 +123,6 @@ export default function PdvPage() {
     }
     return arr.slice(0, 60);
   }, [pecas, busca]);
-
-  const sugestoesCliente = useMemo(() => {
-    const q = clienteNome.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return clientes
-      .filter((c) =>
-        `${c.nome} ${c.telefone} ${c.email}`.toLowerCase().includes(q),
-      )
-      .slice(0, 6);
-  }, [clienteNome, clientes]);
 
   const adicionar = useCallback((p: Peca) => {
     const estoque = Number(p.estoque_qtd) || 0;
@@ -208,20 +183,22 @@ export default function PdvPage() {
   const valorTotal = Math.max(0, valorBruto - descontoNum);
 
   const podeFinalizar =
-    itens.length > 0 && clienteNome.trim() && vendedorId && !salvando;
+    itens.length > 0 && clienteId != null && cliente && vendedorId && !salvando;
 
   const finalizar = async () => {
-    if (!podeFinalizar) return;
+    if (!podeFinalizar || !cliente) return;
     setSalvando(true);
     try {
       const r = await fetch('/api/pdv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_nome: clienteNome.trim(),
-          cliente_tel: clienteTel.trim(),
-          cliente_cpf: clienteCpf.trim(),
-          cliente_email: clienteEmail.trim(),
+          cliente_id: clienteId,
+          // Snapshot dos dados (auditoria)
+          cliente_nome: cliente.nome,
+          cliente_tel: cliente.telefone || '',
+          cliente_cpf: cliente.cpf_cnpj || '',
+          cliente_email: cliente.email || '',
           vendedor_id: Number(vendedorId),
           canal,
           forma_pagamento: forma,
@@ -245,10 +222,8 @@ export default function PdvPage() {
       window.open(`/api/contratos/pdv/${d.id}`, '_blank');
       // Limpa form
       setItens([]);
-      setClienteNome('');
-      setClienteTel('');
-      setClienteCpf('');
-      setClienteEmail('');
+      setClienteId(null);
+      setCliente(null);
       setDesconto('0');
       setObservacoes('');
       // Recarrega peças pra refletir estoque atualizado
@@ -259,13 +234,6 @@ export default function PdvPage() {
     } finally {
       setSalvando(false);
     }
-  };
-
-  const selecionarSugestao = (c: ClienteSugestao) => {
-    setClienteNome(c.nome);
-    setClienteTel(c.telefone || '');
-    setClienteEmail(c.email || '');
-    setShowSug(false);
   };
 
   return (
@@ -386,60 +354,20 @@ export default function PdvPage() {
         </div>
 
         <div className={styles.form}>
-          {/* Cliente */}
+          {/* Cliente — picker centralizado */}
           <div className={styles.formGroup}>
             <label>Cliente *</label>
-            <div className={styles.autoBox}>
-              <input
-                type="text"
-                value={clienteNome}
-                onChange={(e) => { setClienteNome(e.target.value); setShowSug(true); }}
-                onFocus={() => setShowSug(true)}
-                onBlur={() => setTimeout(() => setShowSug(false), 200)}
-                placeholder="Nome do cliente"
-              />
-              {showSug && sugestoesCliente.length > 0 && (
-                <div className={styles.autoSug}>
-                  {sugestoesCliente.map((c, i) => (
-                    <div
-                      key={`${c.nome}-${c.telefone}-${i}`}
-                      className={styles.autoItem}
-                      onMouseDown={() => selecionarSugestao(c)}
-                    >
-                      <div>{c.nome}</div>
-                      {(c.telefone || c.email) && (
-                        <div className={styles.autoSub}>
-                          {c.telefone}
-                          {c.telefone && c.email && ' · '}
-                          {c.email}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label>Telefone</label>
-              <input
-                type="text"
-                value={clienteTel}
-                onChange={(e) => setClienteTel(e.target.value)}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>CPF / CNPJ</label>
-              <input
-                type="text"
-                value={clienteCpf}
-                onChange={(e) => setClienteCpf(formatCpfCnpj(e.target.value))}
-                inputMode="numeric"
-                placeholder="CPF ou CNPJ"
-              />
-            </div>
+            <ClientePicker
+              value={clienteId}
+              cliente={cliente}
+              onChange={(id, c) => { setClienteId(id); setCliente(c); }}
+              required
+            />
+            {cliente && (
+              <div style={{ fontSize: '0.74rem', color: '#777', marginTop: 4 }}>
+                {[cliente.telefone, cliente.cpf_cnpj, cliente.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+              </div>
+            )}
           </div>
 
           {/* Vendedor + canal */}
