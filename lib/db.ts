@@ -754,6 +754,26 @@ function initSchema(db: Database.Database): void {
   }
 
   // ───────────────────────────────────────────────────────────────────
+  // Leads — captados pelo vendedor PWA / formulários
+  // (tabela referenciada em /api/vendedor/leads e /api/clientes;
+  // estava implícita em DBs antigos mas faltava CREATE TABLE explícito)
+  // ───────────────────────────────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS leads (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      moto_id     INTEGER REFERENCES motos(id) ON DELETE SET NULL,
+      vendedor_id INTEGER REFERENCES vendedores(id) ON DELETE SET NULL,
+      nome        TEXT NOT NULL,
+      telefone    TEXT DEFAULT '',
+      origem      TEXT DEFAULT '',
+      notas       TEXT DEFAULT '',
+      created_at  TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_leads_vendedor ON leads(vendedor_id);
+    CREATE INDEX IF NOT EXISTS idx_leads_moto ON leads(moto_id);
+  `);
+
+  // ───────────────────────────────────────────────────────────────────
   // Centralização de cliente — tabela `clientes` + cliente_id em tabelas filhas
   // (Approach A do design 2026-04-29-clientes-centralizado-design.md)
   // ───────────────────────────────────────────────────────────────────
@@ -789,175 +809,154 @@ function initSchema(db: Database.Database): void {
     try { addClienteIdCol(t); } catch { /* tabela pode não existir em DBs antigos */ }
   }
 
-  // Migração de dados: popular `clientes` a partir do CRM virtual
-  // Idempotente — só roda quando a tabela está vazia.
-  const clientesCount = (db.prepare('SELECT COUNT(*) AS c FROM clientes').get() as { c: number }).c;
-  if (clientesCount === 0) {
-    migrarClientesDoCrmVirtual(db);
-  }
+  // Migração idempotente: liga registros sem cliente_id a clientes existentes
+  // (ou cria novos). Sempre roda — só toca registros com cliente_id IS NULL.
+  linkarSnapshotsRestantes(db);
 }
 
 /**
- * Popula a tabela `clientes` a partir dos snapshots existentes em
- * vendas/oficina/reservas/consignacoes/alugueis/leads/pdv_vendas.
- * Agrupa por (nome normalizado + dígitos do telefone) para evitar duplicatas.
- * Atualiza `cliente_id` em cada tabela origem com o id correspondente.
+ * Para cada tabela com snapshot de cliente, processa os registros que ainda
+ * não têm `cliente_id` e os linka a um cliente existente (matched por nome
+ * normalizado + dígitos do telefone) ou cria um cliente novo.
+ *
+ * É idempotente: pode rodar a cada boot. Não duplica clientes nem reprocessa
+ * registros já linkados.
  */
-function migrarClientesDoCrmVirtual(db: Database.Database): void {
-  type Touch = {
+function linkarSnapshotsRestantes(db: Database.Database): void {
+  const sources: Array<{
     tabela: string;
-    coluna_id: string;
-    coluna_cliente_id: string;
-    ref_id: number;
-    nome: string;
-    telefone: string;
-    email: string;
-    cpf_cnpj: string;
-    endereco: string;
-  };
+    sql: string;
+    extractor: (r: Record<string, unknown>) => {
+      ref_id: number;
+      nome: string;
+      telefone: string;
+      email: string;
+      cpf_cnpj: string;
+      endereco: string;
+    };
+  }> = [
+    {
+      tabela: 'vendas',
+      sql: `SELECT id, comprador_nome AS nome, comprador_tel AS telefone,
+                   comprador_email AS email, comprador_cpf AS cpf,
+                   comprador_endereco AS endereco
+            FROM vendas WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: String(r.email || ''), cpf_cnpj: String(r.cpf || ''), endereco: String(r.endereco || ''),
+      }),
+    },
+    {
+      tabela: 'oficina_ordens',
+      sql: `SELECT id, cliente_nome AS nome, cliente_telefone AS telefone, cliente_email AS email
+            FROM oficina_ordens WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: String(r.email || ''), cpf_cnpj: '', endereco: '',
+      }),
+    },
+    {
+      tabela: 'reservas',
+      sql: `SELECT id, cliente_nome AS nome, cliente_tel AS telefone
+            FROM reservas WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: '', cpf_cnpj: '', endereco: '',
+      }),
+    },
+    {
+      tabela: 'consignacoes',
+      sql: `SELECT id, dono_nome AS nome, dono_telefone AS telefone, dono_email AS email
+            FROM consignacoes WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: String(r.email || ''), cpf_cnpj: '', endereco: '',
+      }),
+    },
+    {
+      tabela: 'alugueis',
+      sql: `SELECT id, cliente_nome AS nome, telefone, email, cpf
+            FROM alugueis WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: String(r.email || ''), cpf_cnpj: String(r.cpf || ''), endereco: '',
+      }),
+    },
+    {
+      tabela: 'leads',
+      sql: `SELECT id, nome, telefone FROM leads WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: '', cpf_cnpj: '', endereco: '',
+      }),
+    },
+    {
+      tabela: 'pdv_vendas',
+      sql: `SELECT id, cliente_nome AS nome, cliente_tel AS telefone,
+                   cliente_email AS email, cliente_cpf AS cpf
+            FROM pdv_vendas WHERE cliente_id IS NULL`,
+      extractor: (r) => ({
+        ref_id: Number(r.id), nome: String(r.nome || ''), telefone: String(r.telefone || ''),
+        email: String(r.email || ''), cpf_cnpj: String(r.cpf || ''), endereco: '',
+      }),
+    },
+  ];
 
-  const touches: Touch[] = [];
+  // Helper local de upsert (espelho de lib/clientes-helper.ts pra evitar dep circular)
+  const upsertCliente = (snap: { nome: string; telefone: string; email: string; cpf_cnpj: string; endereco: string }): number | null => {
+    const nome = snap.nome.trim();
+    if (!nome) return null;
+    const tel = snap.telefone.trim();
+    const telDigits = tel.replace(/\D/g, '');
+    const nomeNorm = nome.toLowerCase().replace(/\s+/g, ' ');
 
-  // vendas
-  for (const r of db.prepare(
-    `SELECT id, comprador_nome AS nome, comprador_tel AS telefone,
-            comprador_email AS email, comprador_cpf AS cpf,
-            comprador_endereco AS endereco
-     FROM vendas`,
-  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string; endereco: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'vendas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
-      cpf_cnpj: r.cpf || '', endereco: r.endereco || '',
-    });
-  }
-
-  // oficina_ordens
-  for (const r of db.prepare(
-    `SELECT id, cliente_nome AS nome, cliente_telefone AS telefone, cliente_email AS email
-     FROM oficina_ordens`,
-  ).all() as Array<{ id: number; nome: string; telefone: string; email: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'oficina_ordens', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
-      cpf_cnpj: '', endereco: '',
-    });
-  }
-
-  // reservas
-  for (const r of db.prepare(
-    `SELECT id, cliente_nome AS nome, cliente_tel AS telefone FROM reservas`,
-  ).all() as Array<{ id: number; nome: string; telefone: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'reservas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: '',
-      cpf_cnpj: '', endereco: '',
-    });
-  }
-
-  // consignacoes (proprietário)
-  for (const r of db.prepare(
-    `SELECT id, dono_nome AS nome, dono_telefone AS telefone, dono_email AS email
-     FROM consignacoes`,
-  ).all() as Array<{ id: number; nome: string; telefone: string; email: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'consignacoes', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
-      cpf_cnpj: '', endereco: '',
-    });
-  }
-
-  // alugueis
-  for (const r of db.prepare(
-    `SELECT id, cliente_nome AS nome, telefone, email, cpf
-     FROM alugueis`,
-  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'alugueis', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
-      cpf_cnpj: r.cpf || '', endereco: '',
-    });
-  }
-
-  // leads
-  for (const r of db.prepare(
-    `SELECT id, nome, telefone FROM leads`,
-  ).all() as Array<{ id: number; nome: string; telefone: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'leads', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: '',
-      cpf_cnpj: '', endereco: '',
-    });
-  }
-
-  // pdv_vendas
-  for (const r of db.prepare(
-    `SELECT id, cliente_nome AS nome, cliente_tel AS telefone,
-            cliente_email AS email, cliente_cpf AS cpf
-     FROM pdv_vendas`,
-  ).all() as Array<{ id: number; nome: string; telefone: string; email: string; cpf: string }>) {
-    if ((r.nome || '').trim()) touches.push({
-      tabela: 'pdv_vendas', coluna_id: 'id', coluna_cliente_id: 'cliente_id',
-      ref_id: r.id, nome: r.nome, telefone: r.telefone || '', email: r.email || '',
-      cpf_cnpj: r.cpf || '', endereco: '',
-    });
-  }
-
-  // Agrupa por chave normalizada
-  const normalize = (nome: string, tel: string): string =>
-    `${(nome || '').trim().toLowerCase().replace(/\s+/g, ' ')}|${(tel || '').replace(/\D/g, '')}`;
-
-  type ClienteAgg = {
-    nome: string;
-    telefone: string;
-    email: string;
-    cpf_cnpj: string;
-    endereco: string;
-    touchpoints: Touch[];
-  };
-
-  const grupos = new Map<string, ClienteAgg>();
-  for (const t of touches) {
-    const key = normalize(t.nome, t.telefone);
-    let g = grupos.get(key);
-    if (!g) {
-      g = {
-        nome: t.nome.trim(),
-        telefone: t.telefone || '',
-        email: t.email || '',
-        cpf_cnpj: t.cpf_cnpj || '',
-        endereco: t.endereco || '',
-        touchpoints: [],
-      };
-      grupos.set(key, g);
+    let clienteId: number | null = null;
+    if (telDigits.length > 0) {
+      const candidatos = db
+        .prepare("SELECT id, telefone FROM clientes WHERE LOWER(TRIM(REPLACE(nome, '  ', ' '))) = ? AND ativo = 1")
+        .all(nomeNorm) as { id: number; telefone: string }[];
+      for (const c of candidatos) {
+        const cTel = (c.telefone || '').replace(/\D/g, '');
+        if (cTel === telDigits) { clienteId = c.id; break; }
+      }
+    } else {
+      const semTel = db
+        .prepare("SELECT id FROM clientes WHERE LOWER(TRIM(REPLACE(nome, '  ', ' '))) = ? AND ativo = 1")
+        .all(nomeNorm) as { id: number }[];
+      if (semTel.length === 1) clienteId = semTel[0].id;
     }
-    // Mantém o melhor dado (não-vazio) entre touchpoints
-    if (!g.email && t.email) g.email = t.email;
-    if (!g.cpf_cnpj && t.cpf_cnpj) g.cpf_cnpj = t.cpf_cnpj;
-    if (!g.endereco && t.endereco) g.endereco = t.endereco;
-    g.touchpoints.push(t);
-  }
+
+    if (clienteId == null) {
+      try {
+        const result = db
+          .prepare(`INSERT INTO clientes (nome, telefone, email, cpf_cnpj, endereco) VALUES (?, ?, ?, ?, ?)`)
+          .run(nome, tel, snap.email, snap.cpf_cnpj, snap.endereco);
+        clienteId = Number(result.lastInsertRowid);
+      } catch { return null; }
+    }
+    return clienteId;
+  };
 
   const tx = db.transaction(() => {
-    const insertCliente = db.prepare(
-      `INSERT INTO clientes (nome, telefone, email, cpf_cnpj, endereco)
-       VALUES (?, ?, ?, ?, ?)`,
-    );
-
-    grupos.forEach((g) => {
-      const result = insertCliente.run(g.nome, g.telefone, g.email, g.cpf_cnpj, g.endereco);
-      const clienteId = Number(result.lastInsertRowid);
-      // Atualiza cada touchpoint com o cliente_id
-      for (const t of g.touchpoints) {
-        try {
-          db.prepare(
-            `UPDATE ${t.tabela} SET ${t.coluna_cliente_id} = ? WHERE ${t.coluna_id} = ?`,
-          ).run(clienteId, t.ref_id);
-        } catch {
-          // Ignora erros individuais (ex: tabela sem coluna ainda)
+    for (const src of sources) {
+      let rows: Record<string, unknown>[];
+      try {
+        rows = db.prepare(src.sql).all() as Record<string, unknown>[];
+      } catch {
+        // tabela pode não existir ou não ter cliente_id ainda — segue
+        continue;
+      }
+      for (const r of rows) {
+        const snap = src.extractor(r);
+        if (!snap.nome.trim()) continue;
+        const cid = upsertCliente(snap);
+        if (cid != null) {
+          try {
+            db.prepare(`UPDATE ${src.tabela} SET cliente_id = ? WHERE id = ?`).run(cid, snap.ref_id);
+          } catch { /* silencioso */ }
         }
       }
-    });
+    }
   });
   tx();
 }
