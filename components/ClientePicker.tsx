@@ -20,6 +20,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useToast } from '@/components/Toast';
 import { formatCpfCnpj } from '@/lib/cpf-cnpj';
 
@@ -52,8 +53,15 @@ export default function ClientePicker({
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number }>({
+    top: 0, left: 0, width: 0,
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Marca como montado pra createPortal só rodar no client (evita SSR mismatch)
+  useEffect(() => { setMounted(true); }, []);
 
   // Sincroniza query com cliente externo
   useEffect(() => {
@@ -64,7 +72,32 @@ export default function ClientePicker({
     }
   }, [cliente, value]);
 
-  // Busca debounced
+  // Calcula posição do dropdown a partir do bounding box do input
+  const updateDropdownPos = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setDropdownPos({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+    });
+  }, []);
+
+  // Atualiza posição quando dropdown abre + em scroll/resize
+  useEffect(() => {
+    if (!showDropdown) return;
+    updateDropdownPos();
+    const handler = () => updateDropdownPos();
+    window.addEventListener('scroll', handler, true); // capture pra pegar scroll de containers
+    window.addEventListener('resize', handler);
+    return () => {
+      window.removeEventListener('scroll', handler, true);
+      window.removeEventListener('resize', handler);
+    };
+  }, [showDropdown, updateDropdownPos]);
+
+  // Busca debounced — agora reporta erro via toast (era silencioso antes)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!showDropdown) return;
@@ -75,16 +108,22 @@ export default function ClientePicker({
           ? `/api/clientes?q=${encodeURIComponent(query)}&ativo=1`
           : '/api/clientes?ativo=1';
         const r = await fetch(url);
-        if (r.ok) {
-          const data = await r.json();
-          setResults(Array.isArray(data) ? data.slice(0, 10) : []);
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}));
+          throw new Error(errData?.error || `HTTP ${r.status}`);
         }
-      } catch { /* silencioso */ } finally {
+        const data = await r.json();
+        setResults(Array.isArray(data) ? data.slice(0, 10) : []);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'falha';
+        showToast(`Erro ao buscar clientes: ${msg}`, 'error');
+        setResults([]);
+      } finally {
         setLoading(false);
       }
     }, 220);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [query, showDropdown]);
+  }, [query, showDropdown, showToast]);
 
   const selecionar = (c: Cliente) => {
     onChange(c.id, c);
@@ -155,21 +194,23 @@ export default function ClientePicker({
           </button>
         )}
 
-        {showDropdown && (
+        {showDropdown && mounted && createPortal(
           <div
             style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
+              position: 'fixed',
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              width: dropdownPos.width,
               background: '#fff',
-              border: '1.5px solid #e4e4e0',
+              border: '1.5px solid #27367D',
               borderTop: 'none',
-              maxHeight: 280,
+              maxHeight: 320,
               overflowY: 'auto',
-              zIndex: 100,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              zIndex: 9999,
+              boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
             }}
+            // mousedown preventDefault evita perder foco do input
+            onMouseDown={(e) => e.preventDefault()}
           >
             {/* Botão "+ Novo cliente" sempre disponível no topo */}
             <button
@@ -234,7 +275,8 @@ export default function ClientePicker({
                 </div>
               ))
             )}
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
 
