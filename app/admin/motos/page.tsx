@@ -499,20 +499,30 @@ export default function MotosPage() {
                           </button>
                         )}
 
-                        {/* Kebab menu com ações secundárias */}
+                        {/* Menu "Ações" com ações secundárias */}
                         <div className={kebabStyles.kebabWrap}>
                           <button
                             type="button"
                             className={`${kebabStyles.kebabBtn} ${menuOpenId === m.id ? kebabStyles.kebabActive : ''}`}
                             onClick={() => setMenuOpenId((cur) => (cur === m.id ? null : m.id))}
-                            aria-label="Mais ações"
+                            aria-label="Ações"
                             aria-haspopup="menu"
                             aria-expanded={menuOpenId === m.id}
+                            style={{
+                              width: 'auto',
+                              height: 'auto',
+                              padding: '6px 10px',
+                              gap: 6,
+                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontWeight: 700,
+                              fontSize: '0.74rem',
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                            }}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="5" r="1.6" fill="currentColor" />
-                              <circle cx="12" cy="12" r="1.6" fill="currentColor" />
-                              <circle cx="12" cy="19" r="1.6" fill="currentColor" />
+                            Ações
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                              <polyline points="6 9 12 15 18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </button>
                           {menuOpenId === m.id && (
