@@ -620,6 +620,17 @@ function initSchema(db: Database.Database): void {
   if (!existingVendasCols.has('comprador_cpf')) {
     db.exec("ALTER TABLE vendas ADD COLUMN comprador_cpf TEXT DEFAULT ''");
   }
+  // Estorno de venda — soft delete
+  if (!existingVendasCols.has('status')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN status TEXT DEFAULT 'concluida'");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_vendas_status ON vendas(status)");
+  }
+  if (!existingVendasCols.has('estornada_em')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN estornada_em TEXT");
+  }
+  if (!existingVendasCols.has('estornada_motivo')) {
+    db.exec("ALTER TABLE vendas ADD COLUMN estornada_motivo TEXT DEFAULT ''");
+  }
 
   // Comprovantes de venda (PIX, transferência, nota assinada, etc.)
   db.exec(`
