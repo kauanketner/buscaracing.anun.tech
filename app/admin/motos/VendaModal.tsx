@@ -26,6 +26,8 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
   const [compradorEndereco, setCompradorEndereco] = useState('');
   const [compradorNumero, setCompradorNumero] = useState('');
   const [compradorComplemento, setCompradorComplemento] = useState('');
+  // Quando true, força mostrar seção de endereço (mesmo se cliente já tem endereço)
+  const [enderecoOverride, setEnderecoOverride] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepErr, setCepErr] = useState<string | null>(null);
   const [valorVenda, setValorVenda] = useState(motoPreco ? String(motoPreco) : '');
@@ -129,7 +131,12 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
           comprador_tel: cliente.telefone || '',
           comprador_cpf: cliente.cpf_cnpj || '',
           comprador_email: cliente.email || '',
-          comprador_endereco: montarEndereco(compradorEndereco, compradorNumero, compradorComplemento),
+          // Se cliente tem endereço cadastrado e usuário não pediu override,
+          // usa o endereço do cliente direto (entrega = cadastro)
+          comprador_endereco:
+            cliente.endereco && !enderecoOverride
+              ? cliente.endereco
+              : montarEndereco(compradorEndereco, compradorNumero, compradorComplemento),
           valor_venda: Number(valorVenda),
           forma_pagamento: formaPagamento,
           vendedor_id: vendedorId ? Number(vendedorId) : null,
@@ -248,62 +255,115 @@ export default function VendaModal({ motoId, motoLabel, motoPreco, onClose, onSa
                 onChange={(id, c) => {
                   setClienteId(id);
                   setCliente(c);
-                  // Pré-preenche endereço se cliente tiver
-                  if (c && c.endereco && !compradorEndereco.trim()) {
-                    setCompradorEndereco(c.endereco);
-                  }
+                  // Reset do override quando troca de cliente — usa default (endereço do cadastro)
+                  setEnderecoOverride(false);
                 }}
                 required
               />
               {cliente && (
                 <div style={{ fontSize: '0.78rem', color: '#777', marginTop: 6 }}>
                   {[cliente.telefone, cliente.cpf_cnpj, cliente.email].filter(Boolean).join(' · ') || 'Sem dados de contato'}
+                  {cliente.endereco && (
+                    <>
+                      <br />
+                      <span style={{ color: '#155724' }}>📍 {cliente.endereco}</span>
+                    </>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* ───── ENDEREÇO DE ENTREGA ───── */}
-            <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
-              Endereço de entrega
-            </p>
-            <div className={styles.formGroup} style={{ maxWidth: 200 }}>
-              <label>CEP</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={9}
-                value={compradorCep}
-                onChange={(e) => {
-                  const d = e.target.value.replace(/\D/g, '').slice(0, 8);
-                  const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
-                  setCompradorCep(masked);
-                  if (d.length === 8) buscarCep(d);
-                }}
-                placeholder="00000-000"
-                disabled={cepLoading}
-              />
-              {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando endereço...</span>}
-              {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
-            </div>
-            <div className={styles.formGroup}>
-              <label>Endereço</label>
-              <input
-                type="text"
-                value={compradorEndereco}
-                onChange={(e) => setCompradorEndereco(e.target.value)}
-                placeholder="Rua, bairro, cidade/UF — preenchido pelo CEP"
-              />
-            </div>
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Número</label>
-                <input type="text" value={compradorNumero} onChange={(e) => setCompradorNumero(e.target.value)} placeholder="123" />
+            {/*
+              Endereço de entrega só aparece se:
+              - não tem cliente selecionado, ou
+              - cliente selecionado não tem endereço cadastrado, ou
+              - usuário marcou "entregar em outro endereço"
+              Quando o cliente já tem endereço, esse é usado por padrão.
+            */}
+            {(!cliente || !cliente.endereco || enderecoOverride) ? (
+              <>
+                <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+                  Endereço de entrega
+                  {cliente?.endereco && enderecoOverride && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnderecoOverride(false);
+                        setCompradorCep('');
+                        setCompradorEndereco('');
+                        setCompradorNumero('');
+                        setCompradorComplemento('');
+                      }}
+                      style={{
+                        marginLeft: 10, background: 'none', border: 'none',
+                        color: '#27367D', fontSize: '0.7rem', cursor: 'pointer',
+                        textTransform: 'none', letterSpacing: 0, fontWeight: 600,
+                      }}
+                    >
+                      ← usar endereço do cadastro
+                    </button>
+                  )}
+                </p>
+                <div className={styles.formGroup} style={{ maxWidth: 200 }}>
+                  <label>CEP</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={9}
+                    value={compradorCep}
+                    onChange={(e) => {
+                      const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+                      const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+                      setCompradorCep(masked);
+                      if (d.length === 8) buscarCep(d);
+                    }}
+                    placeholder="00000-000"
+                    disabled={cepLoading}
+                  />
+                  {cepLoading && <span style={{ fontSize: '0.72rem', color: '#777' }}>Buscando endereço...</span>}
+                  {cepErr && <span style={{ fontSize: '0.72rem', color: '#dc3545' }}>{cepErr}</span>}
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Endereço</label>
+                  <input
+                    type="text"
+                    value={compradorEndereco}
+                    onChange={(e) => setCompradorEndereco(e.target.value)}
+                    placeholder="Rua, bairro, cidade/UF — preenchido pelo CEP"
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Número</label>
+                    <input type="text" value={compradorNumero} onChange={(e) => setCompradorNumero(e.target.value)} placeholder="123" />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Complemento</label>
+                    <input type="text" value={compradorComplemento} onChange={(e) => setCompradorComplemento(e.target.value)} placeholder="Apto, bloco, referência..." />
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Cliente tem endereço — mostra resumo + botão "Usar outro endereço"
+              <div style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setEnderecoOverride(true)}
+                  style={{
+                    background: 'none', border: '1px solid #e4e4e0',
+                    padding: '6px 12px',
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+                    fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+                    color: '#27367D', cursor: 'pointer',
+                  }}
+                >
+                  Entregar em outro endereço
+                </button>
+                <span style={{ fontSize: '0.74rem', color: '#999', marginLeft: 10 }}>
+                  Por padrão, a entrega é no endereço do cadastro do cliente.
+                </span>
               </div>
-              <div className={styles.formGroup}>
-                <label>Complemento</label>
-                <input type="text" value={compradorComplemento} onChange={(e) => setCompradorComplemento(e.target.value)} placeholder="Apto, bloco, referência..." />
-              </div>
-            </div>
+            )}
 
             {/* ───── DADOS DA VENDA ───── */}
             <p className={styles.formSectionTitle} style={{ marginTop: '1.5rem', marginBottom: '0.75rem' }}>
