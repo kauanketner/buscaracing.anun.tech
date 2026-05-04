@@ -10,6 +10,7 @@ import EntradaModal from './EntradaModal';
 import ReservaModal from './ReservaModal';
 import VendaModal from './VendaModal';
 import DeleteConfirm from './DeleteConfirm';
+import EstornoModal, { type EstornoVenda } from '../vendas/EstornoModal';
 import styles from './page.module.css';
 import kebabStyles from '../mecanicos/page.module.css';
 
@@ -85,6 +86,7 @@ export default function MotosPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [sellTarget, setSellTarget] = useState<{ id: number; label: string; preco: number | null } | null>(null);
+  const [estornoTarget, setEstornoTarget] = useState<EstornoVenda | null>(null);
 
   // Kebab menu (1 aberto por vez — chave = id da moto)
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
@@ -281,6 +283,36 @@ export default function MotosPage() {
 
   const abrirPdfContrato = (id: number) => {
     window.open(`/api/contratos/compra/${id}`, '_blank');
+  };
+
+  // Busca a venda ativa (status='concluida') de uma moto vendida e abre o modal de estorno.
+  const abrirEstornoVenda = async (m: Moto) => {
+    try {
+      const r = await fetch('/api/vendas');
+      if (!r.ok) throw new Error('fail');
+      const lista = (await r.json()) as Array<{
+        id: number; moto_id: number; moto_nome: string | null; moto_origem: string | null;
+        comprador_nome: string; valor_venda: number;
+        troca_moto_id: number | null; status: string;
+      }>;
+      const venda = lista.find(
+        (v) => v.moto_id === m.id && v.status !== 'estornada',
+      );
+      if (!venda) {
+        showToast('Não foi encontrada uma venda ativa para esta moto.', 'error');
+        return;
+      }
+      setEstornoTarget({
+        id: venda.id,
+        moto_nome: venda.moto_nome ?? m.nome,
+        moto_origem: venda.moto_origem ?? m.origem ?? null,
+        comprador_nome: venda.comprador_nome,
+        valor_venda: venda.valor_venda,
+        troca_moto_id: venda.troca_moto_id,
+      });
+    } catch {
+      showToast('Erro ao buscar a venda', 'error');
+    }
   };
 
   const tabBtnStyle = (active: boolean): React.CSSProperties => ({
@@ -627,6 +659,23 @@ export default function MotosPage() {
                                 </li>
                               )}
 
+                              {/* Estornar venda — só pra motos vendidas/entregues/em revisão */}
+                              {(m.estado === 'vendida' || m.estado === 'entregue' || m.estado === 'em_revisao') && (
+                                <li role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className={`${kebabStyles.menuItem} ${kebabStyles.menuItemDanger}`}
+                                    onClick={() => { setMenuOpenId(null); abrirEstornoVenda(m); }}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                      <path d="M3 12a9 9 0 109-9M3 12l4-4M3 12l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Estornar venda
+                                  </button>
+                                </li>
+                              )}
+
                               <li role="none" className={kebabStyles.menuDivider} aria-hidden="true" />
                               <li role="none">
                                 <button
@@ -732,6 +781,17 @@ export default function MotosPage() {
           onSaved={async () => {
             setSellTarget(null);
             showToast('Venda registrada!', 'success');
+            await reload();
+          }}
+        />
+      )}
+
+      {estornoTarget && (
+        <EstornoModal
+          venda={estornoTarget}
+          onClose={() => setEstornoTarget(null)}
+          onDone={async () => {
+            setEstornoTarget(null);
             await reload();
           }}
         />
