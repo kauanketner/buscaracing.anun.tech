@@ -280,7 +280,7 @@ export default function ClientePicker({
         )}
       </div>
 
-      {showNewModal && (
+      {showNewModal && mounted && createPortal(
         <NovoClienteModal
           nomeInicial={query.trim()}
           onClose={() => setShowNewModal(false)}
@@ -290,7 +290,8 @@ export default function ClientePicker({
             setQuery(c.nome);
             showToast('Cliente cadastrado!', 'success');
           }}
-        />
+        />,
+        document.body,
       )}
     </>
   );
